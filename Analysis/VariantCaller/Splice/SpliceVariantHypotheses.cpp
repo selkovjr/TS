@@ -25,20 +25,12 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
   splice_end_idx.assign(my_hypotheses.size(), -1);
 
   // 1) Null hypothesis is read as called
-  if (global_context.resolve_clipped_bases) {
-    unsigned int null_hyp_length = current_read.read_bases.length() - current_read.left_sc - current_read.right_sc;
-    my_hypotheses[0] = current_read.read_bases.substr(current_read.start_sc, null_hyp_length);
-  }
-  else
-    my_hypotheses[0] = current_read.read_bases;
+  my_hypotheses[0] = current_read.read_bases;
 
   // Initialize hypotheses variables for splicing
   for (unsigned int i_hyp = 1; i_hyp < my_hypotheses.size(); i_hyp++) {
     my_hypotheses[i_hyp].clear();
     my_hypotheses[i_hyp].reserve(current_read.alignment.QueryBases.length() + 20 + local_context.reference_allele.length());
-    // Add soft clipped bases on the left side of alignment if desired
-    if (!global_context.resolve_clipped_bases)
-      my_hypotheses[i_hyp] += current_read.alignment.QueryBases.substr(0, current_read.left_sc);
   }
 
   int read_idx = current_read.left_sc;
@@ -109,8 +101,6 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
       else if (just_did_splicing) { // Log length of hypothesis after splicing
         splice_end_idx[0] = read_idx  - current_read.left_sc;
         int clipped_bases = 0;
-        if (!global_context.resolve_clipped_bases)
-          clipped_bases = current_read.left_sc;
         for (unsigned int i_hyp=1; i_hyp<my_hypotheses.size(); i_hyp++)
           splice_end_idx[i_hyp] = my_hypotheses[i_hyp].length()-1 - clipped_bases; // Hyp length depends on whether there is resolving!
         just_did_splicing = false;
@@ -133,8 +123,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
   if (did_splicing) {
     // --- Add soft clipped bases to the right of the alignment and reverse complement ---
     for (unsigned int i_hyp = 1; i_hyp<my_hypotheses.size(); i_hyp++) {
-      if (!global_context.resolve_clipped_bases)
-        my_hypotheses[i_hyp] += current_read.alignment.QueryBases.substr(current_read.alignment.QueryBases.length()-current_read.right_sc, current_read.right_sc);
+      my_hypotheses[i_hyp] += current_read.alignment.QueryBases.substr(current_read.alignment.QueryBases.length()-current_read.right_sc, current_read.right_sc);
 
       if (current_read.is_reverse_strand)
         RevComplementInPlace(my_hypotheses[i_hyp]);
@@ -304,10 +293,8 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
   // Hypotheses have already been reverse complemented by the time we call this function
   // Set relevant indices
   int added_SC_bases = 0;
-  if (!global_context.resolve_clipped_bases) {
-    // We added the soft clipped bases to our hypotheses to be simulated
-    added_SC_bases = current_read.left_sc + current_read.right_sc;
-  }
+  // We added the soft clipped bases to our hypotheses to be simulated
+  added_SC_bases = current_read.left_sc + current_read.right_sc;
   for (unsigned int i_hyp = 0; i_hyp < my_hypotheses.size(); i_hyp++) {
     if (splice_end_idx[i_hyp] == -1) { // We did not splice another base after the variant window
       // splice start & end indices are w.r.t the aligned portion of the read
@@ -355,8 +342,7 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
     splice_start_flow = current_read.flow_index[current_read.start_sc + my_start_idx];
   // ---
 
-  if (!global_context.resolve_clipped_bases)
-    my_start_idx += current_read.start_sc; // Add soft clipped start to index
+  my_start_idx += current_read.start_sc; // Add soft clipped start to index
 
   my_start_idx++; // my_start_idx is now pointing at the first spliced base
 

@@ -129,18 +129,11 @@ void UnpackOnLoad(Alignment *rai, const InputStructures &global_context)
   rai->start_flow = 0;
   CreateFlowIndex(rai);
 
-  if (global_context.resolve_clipped_bases) {
-    // Increment start flow to first aligned base
-    rai->start_flow = rai->flow_index[rai->start_sc];
-  }
-
   // Retrieve read group name
-
   if (not rai->alignment.GetTag("RG", rai->read_group)) {
     cerr << "WARNING: No read group found in read " << rai->alignment.Name << endl;
     // No big problem, we'll just have to solve the prefix like it's 2013!
     rai->read_group.clear();
   }
-
 }
 

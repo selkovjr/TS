@@ -19,10 +19,6 @@
 #include "LinearCalibrationModel.h"
 #include "../Splice/ErrorMotifs.h"
 #include "ExtendParameters.h"
-#ifdef __SSE3__
-#include "TreephaserSSE.h"
-#endif
-#include "DPTreephaser.h"
 #include "Realigner.h"
 
 using namespace std;
@@ -148,17 +144,13 @@ public:
   map<string, int>          num_flows_by_run_id;
   map<string, string>       key_by_read_group;
 
-  bool                      use_SSE_basecaller;
-  bool                      resolve_clipped_bases;
   int                       DEBUG;
 
   // Reusable objects
   TIonMotifSet              ErrorMotifs;
 
-
   InputStructures();
-  void Initialize(ExtendParameters &parameters, const ReferenceReader& ref_reader,
-      const SamHeader &bam_header);
+  void Initialize(ExtendParameters &parameters, const ReferenceReader& ref_reader, const SamHeader &bam_header);
   void read_error_motifs(string & fname){ErrorMotifs.load_from_file(fname.c_str());};
   void DetectFlowOrderzAndKeyFromBam(const SamHeader &samHeader);
 };
@@ -170,75 +162,9 @@ class PersistingThreadObjects {
 public:
 
     PersistingThreadObjects(const InputStructures &global_context);
-    ~PersistingThreadObjects() {
-#ifdef __SSE3__
-        for (vector<TreephaserSSE*>::iterator iter = treephaserSSE_vector.begin(); (iter != treephaserSSE_vector.end()); ++iter) {
-            delete *iter;
-            *iter = NULL;
-        }
-#endif
-    };
-
-    //@brief Interface for setting the phasing model parameters
-    void SetModelParameters(const int & flow_order_index, const vector<float> & phase_params) {
-#ifdef __SSE3__
-      if (use_SSE_basecaller)
-        treephaserSSE_vector.at(flow_order_index)->SetModelParameters(phase_params.at(0), phase_params.at(1));
-      else
-#endif
-        dpTreephaser_vector.at(flow_order_index).SetModelParameters(phase_params.at(0), phase_params.at(1), phase_params.at(2));
-    };
-
-    //@brief Interface for setting the phasing model parameters
-    void DisableRecalibration(const int & flow_order_index)
-    {
-#ifdef __SSE3__
-       if (use_SSE_basecaller)
-         treephaserSSE_vector.at(flow_order_index)->DisableRecalibration();
-       else
-#endif
-         dpTreephaser_vector.at(flow_order_index).DisableRecalibration();
-    };
-
-    //@brief Interface set the calibration coefficients
-    bool SetAsBs(const int & flow_order_index, const vector<vector< vector<float> > > *As, const vector<vector< vector<float> > > *Bs)
-    {
-#ifdef __SSE3__
-      if (use_SSE_basecaller)
-        return (treephaserSSE_vector.at(flow_order_index)->SetAsBs(As, Bs));
-      else
-#endif
-        return (dpTreephaser_vector.at(flow_order_index).SetAsBs(As, Bs));
-    };
-
-    //@brief Interface for simulating and solving read bases
-    void SolveRead(const int & flow_order_index, BasecallerRead& read, const int & begin_flow, const int & end_flow){
-#ifdef __SSE3__
-      if (use_SSE_basecaller)
-        treephaserSSE_vector.at(flow_order_index)->SolveRead(read, begin_flow, end_flow);
-      else
-#endif
-        dpTreephaser_vector.at(flow_order_index).Solve(read, end_flow, begin_flow);
-    };
-
-
-    bool                   use_SSE_basecaller;    // Switch that tells us which basecaller is active
+    ~PersistingThreadObjects() {};
 
     Realigner              realigner;             // realignment tool
-    vector<DPTreephaser >  dpTreephaser_vector;   // c++ treephaser
-#ifdef __SSE3__
-    vector<TreephaserSSE*>  treephaserSSE_vector;  // vectorized treephaser
-#endif
-
-
-
-
-
-
 };
-
-
-
-
 
 #endif //INPUTSTRUCTURES_H

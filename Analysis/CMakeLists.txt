@@ -562,7 +562,6 @@ set(tvcSRCS
   VariantCaller/Splice/ErrorMotifs.cpp
   VariantCaller/Splice/LocalContext.cpp
   VariantCaller/Splice/ClassifyVariant.cpp
-  VariantCaller/Splice/ErrorMotifs.cpp
   VariantCaller/Splice/SpliceVariantHypotheses.cpp
 
   VariantCaller/Filter/DecisionTreeData.cpp

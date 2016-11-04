@@ -33,7 +33,7 @@ void VariantCallerHelp() {
   printf("  -g,--sample-name                      STRING      sample for which variants are called (In case of input BAM files with multiple samples) [optional if there is only one sample]\n");
   printf("     --force-sample-name                STRING      force all read groups to have this sample name [off]\n");
   printf("  -t,--target-file                      FILE        only process targets in this bed file [optional]\n");
-  printf("  -D,--downsample-to-coverage           INT         ?? [2000]\n");
+  printf("  -D,--downsample-to-coverage           INT         limit the number of reads examined to evaluate a candidate (does not apply to candidate generation) [2000]\n");
   printf("     --model-file                       FILE        HP recalibration model input file.\n");
   printf("     --recal-model-hp-thres             INT         Lower threshold for HP recalibration.\n");
   printf("\n");
@@ -81,8 +81,6 @@ void VariantCallerHelp() {
   printf("\n");
 
   printf("Advanced variant candidate scoring options:\n");
-  printf("     --use-sse-basecaller               on/off      Switch to use the vectorized version of the basecaller [on].\n");
-  printf("     --resolve-clipped-bases            on/off      If 'true', the basecaller is used to solve soft clipped bases [off].\n");
   printf("     --prediction-precision             FLOAT       prior weight in bias estimator [30.0]\n");
   printf("     --shift-likelihood-penalty         FLOAT       penalize log-likelihood for solutions involving large systematic bias [0.3]\n");
   printf("     --minimum-sigma-prior              FLOAT       prior variance per data point, constant [0.085]\n");
@@ -205,17 +203,10 @@ ProgramControlSettings::ProgramControlSettings() {
   DEBUG = 0;
   do_indel_assembly = true;
 
-#ifdef __SSE3__
-  use_SSE_basecaller = true;
-#else
-  use_SSE_basecaller = false;
-#endif
   rich_json_diagnostic = false;
   minimal_diagnostic = false;
   json_plot_dir = "./json_diagnostic/";
   inputPositionsOnly = false;
-  suppress_recalibration = true;
-  resolve_clipped_bases = false;
 
   is_multi_min_allele_freq = false;
   snp_multi_min_allele_freq.clear();
@@ -745,20 +736,11 @@ void ProgramControlSettings::SetOpts(OptArgs &opts, Json::Value &tvc_params) {
   DEBUG                                 = opts.GetFirstInt   ('d', "debug", 0);
   nThreads                              = RetrieveParameterInt   (opts, tvc_params, 'n', "num-threads", 12);
   nVariantsPerThread                    = RetrieveParameterInt   (opts, tvc_params, 'N', "num-variants-per-thread", 250);
-#ifdef __SSE3__
-  use_SSE_basecaller                    = RetrieveParameterBool  (opts, tvc_params, '-', "use-sse-basecaller", true);
-#else
-  use_SSE_basecaller                    = RetrieveParameterBool  (opts, tvc_params, '-', "use-sse-basecaller", false);
-#endif
   // decide diagnostic
   rich_json_diagnostic                  = RetrieveParameterBool  (opts, tvc_params, '-', "do-json-diagnostic", false);
   minimal_diagnostic                    = RetrieveParameterBool  (opts, tvc_params, '-', "do-minimal-diagnostic", false);
 
   inputPositionsOnly                    = RetrieveParameterBool  (opts, tvc_params, '-', "process-input-positions-only", false);
-  suppress_recalibration                = RetrieveParameterBool  (opts, tvc_params, '-', "suppress-recalibration", true);
-  resolve_clipped_bases                 = RetrieveParameterBool  (opts, tvc_params, '-', "resolve-clipped-bases", false);
-
-  use_SSE_basecaller                    = RetrieveParameterBool  (opts, tvc_params, '-', "use-sse-basecaller", true);
 
   do_indel_assembly                     = RetrieveParameterBool  (opts, tvc_params, '-', "do-indel-assembly", true);
 

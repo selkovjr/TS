@@ -202,11 +202,7 @@ class ProgramControlSettings {
 
     bool rich_json_diagnostic;
     bool minimal_diagnostic;
-     string json_plot_dir;
-
-    bool use_SSE_basecaller;
-    bool suppress_recalibration;
-    bool resolve_clipped_bases;
+    string json_plot_dir;
 
     bool inputPositionsOnly;
 
