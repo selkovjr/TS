@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
   ref_reader.Initialize(parameters.fasta);
 
   TargetsManager targets_manager;
-  targets_manager.Initialize(ref_reader, parameters.targets, parameters.trim_ampliseq_primers);
+  targets_manager.Initialize(ref_reader, parameters.targets);
 
   BAMWalkerEngine bam_walker;
   bam_walker.Initialize(ref_reader, targets_manager, parameters.bams, parameters.postprocessed_bam);
@@ -348,18 +348,12 @@ void * VariantCallerWorker(void *input)
           continue;
         }
 
-        // 2) Alignment information-altering methods (can also filter a read)
-        /*
-        if (not vc.tag_trimmer->GetTagsFromBamAlignment(new_read[i]->alignment, new_read[i]->tag_info)){
-          new_read[i]->filtered = true;
-          continue;
-        }
-        */
-        vc.targets_manager->TrimAmpliseqPrimers(new_read[i], vc.bam_walker->GetRecentUnmergedTarget());
-        if (new_read[i]->filtered) {
-          cerr << "filtered by TrimAmpliseqPrimers(): " << new_read[i]->alignment.Name << endl;
-          continue;
-        }
+        // // 2) Alignment information-altering methods (can also filter a read)
+        // do_something(new_read[i]);
+        // if (new_read[i]->filtered) {
+        //   cerr << "filtered by do_something(): " << new_read[i]->alignment.Name << endl;
+        //   continue;
+        // }
 
         // 3) Parsing alignment: Read filtering & populating allele specific data types in an Alignment object
         // cerr << "UnpackReadAlleles( " << new_read[i]->alignment.Name << " )\n" << flush;

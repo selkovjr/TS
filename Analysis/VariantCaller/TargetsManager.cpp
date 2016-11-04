@@ -14,7 +14,6 @@
 
 TargetsManager::TargetsManager()
 {
-  trim_ampliseq_primers = false;
 }
 
 TargetsManager::~TargetsManager()
@@ -41,13 +40,8 @@ bool CompareTargets(TargetsManager::UnmergedTarget *i, TargetsManager::UnmergedT
 //   - Possibly support unsorted BEDs (low priority)
 //   - If no BED provided, build a fake one covering entire reference
 //   - Validation
-// * Ampliseq primer trimming
-//   - Detect and trim Ampliseq primers
-//   - Save region name to read's tags, maybe other primer-trimming info
 
-
-
-void TargetsManager::Initialize(const ReferenceReader& ref_reader, const string& _targets, bool _trim_ampliseq_primers /*const ExtendParameters& parameters*/)
+void TargetsManager::Initialize(const ReferenceReader& ref_reader, const string& _targets)
 {
 
   //
@@ -118,7 +112,8 @@ void TargetsManager::Initialize(const ReferenceReader& ref_reader, const string&
   if (_targets.empty()) {
     cout << "TargetsManager: No targets file specified, processing entire reference" << endl;
 
-  } else  {
+  }
+  else  {
     cout << "TargetsManager: Loaded targets file " << _targets << endl;
 
     cout << "TargetsManager: " << num_unmerged << " target(s)";
@@ -127,13 +122,7 @@ void TargetsManager::Initialize(const ReferenceReader& ref_reader, const string&
     cout << endl;
     if (not already_sorted)
       cout << "TargetsManager: Targets required sorting" << endl;
-
-    trim_ampliseq_primers = _trim_ampliseq_primers;
-    if (trim_ampliseq_primers)
-      cout << "TargetsManager: Trimming of AmpliSeq primers is enabled" << endl;
   }
-
-
 }
 
 
@@ -181,288 +170,29 @@ void TargetsManager::LoadRawTargets(const ReferenceReader& ref_reader, const str
 
     if (target.chr < 0) {
       cerr << "ERROR: Target region " << target.name << " (" << chr_name << ":" << begin << "-" << end << ")"
-           << " has unrecognized chromosome name" << endl;
+        << " has unrecognized chromosome name" << endl;
       exit(1);
     }
 
     if (begin < 0 || end > ref_reader.chr_size(target.chr)) {
       cerr << "ERROR: Target region " << target.name << " (" << chr_name << ":" << begin << "-" << end << ")"
-           << " is outside of reference sequence bounds ("
-           << chr_name << ":0-" << ref_reader.chr_size(target.chr) << ")" << endl;
+        << " is outside of reference sequence bounds ("
+        << chr_name << ":0-" << ref_reader.chr_size(target.chr) << ")" << endl;
       exit(1);
     }
     if (end < begin) {
       cerr << "ERROR: Target region " << target.name << " (" << chr_name << ":" << begin << "-" << end << ")"
-           << " has inverted coordinates" << endl;
+        << " has inverted coordinates" << endl;
       exit(1);
     }
-    AddExtraTrim(target, line, num_fields);
   }
 
   fclose(bed_file);
 
   if (raw_targets.empty()) {
     cerr << "ERROR: No targets loaded from " << bed_filename
-         << " after parsing " << line_number << " lines" << endl;
+      << " after parsing " << line_number << " lines" << endl;
     exit(1);
   }
 }
-
-void TargetsManager::AddExtraTrim(UnmergedTarget& target, char *line, int num_fields)
-{
-  // parse extra trimming out of the bed file
-  // would be nice to unify with validate_bed using BedFile.h
-  char keybuffer[4096];
-  target.trim_left = 0;
-  target.trim_right = 0;
-
-  int numfields = sscanf(line, "%*s\t%*d\t%*d\t%*s\t%*s\t%*s\t%*s\t%s", keybuffer);
-  if (numfields == 1) {
-    string keypairs = keybuffer; 
-    string left = "TRIM_LEFT=";
-    string right = "TRIM_RIGHT=";
-    long int trim_l = 0;
-    long int trim_r = 0;
-
-    // look for a trim_left field
-    size_t found = keypairs.find(left);
-    if (found != string::npos){
-      string r1 = keypairs;
-      r1.erase(0, found+left.size());
-      trim_l = strtol (r1.c_str(), NULL, 0);
-    }
-
-    // look for a trim_right field
-    found = keypairs.find(right);
-    if (found != string::npos){
-      string r1 = keypairs;
-      r1.erase(0, found+right.size());
-      trim_r = strtol (r1.c_str(), NULL, 0);
-    }
-    assert(trim_l>=0);
-    assert(trim_r>=0);
-    target.trim_left = trim_l;
-    target.trim_right = trim_r;
-  }
-  // cout << "trim assigned to amplicon starting " << target.begin << " with trimming " << target.trim_left << " and " << target.trim_right << endl;
-}
-
-
-void TargetsManager::TrimAmpliseqPrimers(Alignment *rai, int unmerged_target_hint) const
-{
-  // set these before any trimming
-  rai->align_start = rai->alignment.Position;
-  rai->align_end = rai->alignment.GetEndPosition(false, true);
-  rai->old_cigar = rai->alignment.CigarData;
-
-  if (not trim_ampliseq_primers)
-    return;
-
-  // Step 1: Find the first potential target region
-
-  int target_idx = unmerged_target_hint;
-  while (target_idx and (rai->alignment.RefID < unmerged[target_idx].chr or
-          (rai->alignment.RefID == unmerged[target_idx].chr and rai->alignment.Position < unmerged[target_idx].end)))
-    --target_idx;
-
-  while (target_idx < (int)unmerged.size() and (rai->alignment.RefID > unmerged[target_idx].chr or
-          (rai->alignment.RefID == unmerged[target_idx].chr and rai->alignment.Position >= unmerged[target_idx].end)))
-    ++target_idx;
-
-
-  // Step 2: Iterate over potential target regions, evaluate fit, pick the best fit
-
-  int best_target_idx = -1;
-  int best_fit_penalty = 100;
-  int best_overlap = 0;
-
-  while (target_idx < (int)unmerged.size() and rai->alignment.RefID == unmerged[target_idx].chr and rai->end >= unmerged[target_idx].begin) {
-
-    int read_start = rai->alignment.Position;
-    int read_end = rai->end;
-    int read_prefix_size = unmerged[target_idx].begin - read_start;
-    int read_postfix_size = read_end - unmerged[target_idx].end;
-    int overlap = min(unmerged[target_idx].end, read_end) - max(unmerged[target_idx].begin, read_start);
-    int fit_penalty = 100;
-
-    if (not rai->alignment.IsReverseStrand()) {
-      if (read_prefix_size > 0)
-        fit_penalty = min(read_prefix_size,50) + max(0,50-overlap);
-      else
-        fit_penalty = min(-3*read_prefix_size,50) + max(0,50-overlap);
-    } else {
-      if (read_postfix_size > 0)
-        fit_penalty = min(read_postfix_size,50) + max(0,50-overlap);
-      else
-        fit_penalty = min(-3*read_postfix_size,50) + max(0,50-overlap);
-    }
-    if (read_prefix_size > 0 and read_postfix_size > 0)
-      fit_penalty -= 10;
-
-    if ((best_fit_penalty > fit_penalty and overlap > 0) or (best_fit_penalty == fit_penalty and overlap > best_overlap)) {
-      best_fit_penalty = fit_penalty;
-      best_target_idx = target_idx;
-      best_overlap = overlap;
-    }
-
-    ++target_idx;
-  }
-
-  if (best_target_idx == -1) {
-    rai->filtered = true;
-    return;
-  }
-
-
-  // Step 3: Do the actual primer trimming.
-  //
-  // For now, only adjust Position and Cigar.
-  // Later, also adjust MD tag.
-  // Even later, ensure the reads stay sorted, so no extra sorting is required outside of tvc
-
-  vector<CigarOp>& old_cigar = rai->alignment.CigarData;
-  vector<CigarOp> new_cigar;
-  new_cigar.reserve(old_cigar.size() + 2);
-  vector<CigarOp>::iterator old_op = old_cigar.begin();
-  int ref_pos = rai->alignment.Position;
-
-  // 3A: Cigar ops left of the target
-
-  int begin = unmerged[best_target_idx].begin + unmerged[best_target_idx].trim_left;
-  if (begin > unmerged[best_target_idx].end)
-    begin = unmerged[best_target_idx].end;
-
-  int end = unmerged[best_target_idx].end - unmerged[best_target_idx].trim_right;
-  if (end <= begin)
-    end = begin;
-    
-
-  while (old_op != old_cigar.end() and ref_pos <= begin) {
-    if (old_op->Type == 'H') {
-      ++old_op;
-      continue;
-    }
-
-    if (old_op->Type == 'S' or old_op->Type == 'I') {
-      if (new_cigar.empty())
-        new_cigar.push_back(CigarOp('S'));
-      new_cigar.back().Length += old_op->Length;
-      ++old_op;
-      continue;
-    }
-
-    unsigned int gap = begin - ref_pos;
-    if (gap == 0)
-      break;
-
-    if (old_op->Type == 'M' or old_op->Type == 'N') {
-      if (new_cigar.empty())
-        new_cigar.push_back(CigarOp('S'));
-      if (old_op->Length > gap) {
-        new_cigar.back().Length += gap;
-        old_op->Length -= gap;
-        ref_pos += gap;
-        break;
-      } else {
-        new_cigar.back().Length += old_op->Length;
-        ref_pos += old_op->Length;
-        ++old_op;
-        continue;
-      }
-    }
-
-    if (old_op->Type == 'D') {
-      if (old_op->Length > gap) {
-        old_op->Length -= gap;
-        ref_pos += gap;
-        break;
-      } else {
-        ref_pos += old_op->Length;
-        ++old_op;
-        continue;
-      }
-    }
-  }
-
-
-  // 3B: Cigar ops in the middle of the target
-
-  rai->alignment.Position = ref_pos;
-
-  while (old_op != old_cigar.end() and ref_pos < end) {
-    if (old_op->Type == 'H') {
-      ++old_op;
-      continue;
-    }
-
-    unsigned int gap = end - ref_pos;
-
-    if (old_op->Type == 'S' or old_op->Type == 'I') {
-      new_cigar.push_back(*old_op);
-      ++old_op;
-      continue;
-    }
-
-    if (old_op->Type == 'M' or old_op->Type == 'N') {
-      new_cigar.push_back(CigarOp(old_op->Type));
-      if (old_op->Length > gap) {
-        new_cigar.back().Length = gap;
-        old_op->Length -= gap;
-        ref_pos += gap;
-        break;
-      } else {
-        new_cigar.back().Length = old_op->Length;
-        ref_pos += old_op->Length;
-        ++old_op;
-        continue;
-      }
-    }
-
-    if (old_op->Type == 'D') {
-      new_cigar.push_back(CigarOp('D'));
-      if (old_op->Length > gap) {
-        new_cigar.back().Length = gap;
-        old_op->Length -= gap;
-        ref_pos += gap;
-        break;
-      } else {
-        new_cigar.back().Length = old_op->Length;
-        ref_pos += old_op->Length;
-        ++old_op;
-        continue;
-      }
-    }
-  }
-
-
-  // 3C: Cigar ops to the right of the target
-
-  for (; old_op != old_cigar.end(); ++old_op) {
-    if (old_op->Type == 'H' or old_op->Type == 'D')
-      continue;
-
-    if (new_cigar.empty() or new_cigar.back().Type != 'S')
-      new_cigar.push_back(CigarOp('S'));
-    new_cigar.back().Length += old_op->Length;
-  }
-
-  rai->alignment.CigarData.swap(new_cigar);
-
-
-  // Debugging info
-
-  stringstream ZL;
-  ZL << unmerged[best_target_idx].name << ":" <<  best_fit_penalty << ":" << best_overlap;
-
-  rai->alignment.AddTag("ZL", "Z", ZL.str());
-
-
-}
-
-
-
-
-
-
-
 

@@ -33,7 +33,6 @@ void VariantCallerHelp() {
   printf("  -g,--sample-name                      STRING      sample for which variants are called (In case of input BAM files with multiple samples) [optional if there is only one sample]\n");
   printf("     --force-sample-name                STRING      force all read groups to have this sample name [off]\n");
   printf("  -t,--target-file                      FILE        only process targets in this bed file [optional]\n");
-  printf("     --trim-ampliseq-primers            on/off      match reads to targets and trim the ends that reach outside them [off]\n");
   printf("  -D,--downsample-to-coverage           INT         ?? [2000]\n");
   printf("     --model-file                       FILE        HP recalibration model input file.\n");
   printf("     --recal-model-hp-thres             INT         Lower threshold for HP recalibration.\n");
@@ -160,8 +159,6 @@ void VariantCallerHelp() {
   printf("\n");
   printf("     --heal-snps                        on/off      suppress in/dels not participating in diploid variant genotypes if the genotype contains a SNP or MNP [on].\n");
   printf("\n");
-
-  MolecularTagTrimmer::PrintHelp(true);
 
   printf("Debugging:\n");
   printf("  -d,--debug                            INT         (0/1/2) display extra debug messages [0]\n");
@@ -358,20 +355,20 @@ string RetrieveParameterString(OptArgs &opts, Json::Value& json, char short_name
 
 string GetRidOfDomainAndHyphens(const string& name)
 {
-	string s(name);
-	int index = name.rfind("::");
-	if(index > -1)
-	{
-		s = name.substr(index + 2, name.length() - index - 2);
-	}
+  string s(name);
+  int index = name.rfind("::");
+  if(index > -1)
+  {
+    s = name.substr(index + 2, name.length() - index - 2);
+  }
 
-	for (unsigned int i = 0; i < s.size(); ++i)
-	{
-		if (s[i] == '-')
-		s[i] = '_';
-	}
+  for (unsigned int i = 0; i < s.size(); ++i)
+  {
+    if (s[i] == '-')
+    s[i] = '_';
+  }
 
-	return s;
+  return s;
 }
 
 void Split(const string& s, char c, vector<string>& v)
@@ -408,29 +405,29 @@ int RetrieveParameterVectorFloat(OptArgs &opts, Json::Value& json, char short_na
 
   if(value.length() > 0)
   {
-	  vector<string> words;
-	  Split(value,',',words);
-	  ret_vector.clear();
-	  for (size_t i = 0; i < words.size(); i++) {
-		char *end;
-		int err = errno;
-		errno = 0;
-		ret_vector.push_back(strtod(words[i].c_str(), &end));
-		if (errno != 0 || *end != '\0') {
-		  cout << "Error converting: " + words[i] + " to an float for option: " + long_name_hyphens << endl;
-		  return errno;
-		}
-		errno = err;
-	  }
+    vector<string> words;
+    Split(value,',',words);
+    ret_vector.clear();
+    for (size_t i = 0; i < words.size(); i++) {
+    char *end;
+    int err = errno;
+    errno = 0;
+    ret_vector.push_back(strtod(words[i].c_str(), &end));
+    if (errno != 0 || *end != '\0') {
+      cout << "Error converting: " + words[i] + " to an float for option: " + long_name_hyphens << endl;
+      return errno;
+    }
+    errno = err;
+    }
   }
   string source = "builtin default";
 
   if (json.isMember(long_name_underscores)) {
-	  ret_vector.clear();
-	  size_t sz = json[long_name_underscores].size();
-	  char buf[1000];
+    ret_vector.clear();
+    size_t sz = json[long_name_underscores].size();
+    char buf[1000];
       if(sz > 0)
-	  {
+    {
           if(sz == 1)
           {
               if(json[long_name_underscores][0].isString())
@@ -483,38 +480,38 @@ int RetrieveParameterVectorFloat(OptArgs &opts, Json::Value& json, char short_na
   }
 
   if (opts.HasOption(short_name, long_name_hyphens)) {
-	  ret_vector.clear();
-	  vector<double> ret_vector2;
-	  opts.GetOption(ret_vector2, default_value, short_name, long_name_hyphens);
-	  for(size_t i = 0; i < ret_vector2.size(); i++)
-	  {
-		  ret_vector.push_back((float)ret_vector2[i]);
-	  }
+    ret_vector.clear();
+    vector<double> ret_vector2;
+    opts.GetOption(ret_vector2, default_value, short_name, long_name_hyphens);
+    for(size_t i = 0; i < ret_vector2.size(); i++)
+    {
+      ret_vector.push_back((float)ret_vector2[i]);
+    }
 
-	  char buf[1000];
-	  if(ret_vector.empty())
-	  {
-	      cout << "Error setting: there is no value set for option: " + long_name_hyphens << endl;
-		  return 1;
-	  }
-	  else if(ret_vector.size() == 1)
-	  {
-		  sprintf(buf, "%f", ret_vector[0]);
-		  value = buf;
-	  }
-	  else
-	  {
-		  value = "";
-		  for(size_t i = 0; i < ret_vector.size() - 1; i++) {
-			  sprintf(buf, "%f,", ret_vector[i]);
-			  string ss = buf;
-			  value += ss;
-		  }
-		  sprintf(buf, "%f", ret_vector[ret_vector.size() - 1]);
-		  string ss = buf;
-		  value += ss;
-	  }
-	  source = "command line option";
+    char buf[1000];
+    if(ret_vector.empty())
+    {
+        cout << "Error setting: there is no value set for option: " + long_name_hyphens << endl;
+      return 1;
+    }
+    else if(ret_vector.size() == 1)
+    {
+      sprintf(buf, "%f", ret_vector[0]);
+      value = buf;
+    }
+    else
+    {
+      value = "";
+      for(size_t i = 0; i < ret_vector.size() - 1; i++) {
+        sprintf(buf, "%f,", ret_vector[i]);
+        string ss = buf;
+        value += ss;
+      }
+      sprintf(buf, "%f", ret_vector[ret_vector.size() - 1]);
+      string ss = buf;
+      value += ss;
+    }
+    source = "command line option";
   }
 
   cout << setw(35) << long_name_hyphens << " = " << setw(10) << value << " (float,  " << source << ")" << endl;
@@ -533,7 +530,7 @@ void EnsembleEvalTuningParameters::SetOpts(OptArgs &opts, Json::Value& tvc_param
   outlier_prob                          = RetrieveParameterDouble(opts, tvc_params, '-', "outlier-probability", 0.01);
   germline_prior_strength               = RetrieveParameterDouble(opts, tvc_params, '-', "germline-prior-strength", 0.0f);
   heavy_tailed                          = RetrieveParameterInt   (opts, tvc_params, '-', "heavy-tailed", 3);
-  
+
   filter_unusual_predictions            = RetrieveParameterDouble(opts, tvc_params, '-', "filter-unusual-predictions", 0.3f);
   soft_clip_bias_checker                = RetrieveParameterDouble(opts, tvc_params, '-', "soft-clip-bias-checker", 0.1f);
   filter_deletion_bias                  = RetrieveParameterDouble(opts, tvc_params, '-', "filter-deletion-predictions", 100.0f);
@@ -672,7 +669,7 @@ void ControlCallAndFilters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
   lod_multiplier                        = RetrieveParameterDouble(opts, tvc_params, '-', "lod-multiplier",0.6f);
 
   downSampleCoverage                    = RetrieveParameterInt   (opts, tvc_params, '-', "downsample-to-coverage", 2000);
-  
+
   //xbias_tune                            = RetrieveParameterDouble(opts, tvc_params, '-', "tune-xbias", 0.005f);
   sbias_tune                            = RetrieveParameterDouble(opts, tvc_params, '-', "tune-sbias", 0.01f);
 
@@ -726,20 +723,20 @@ void ProgramControlSettings::CheckParameterLimits() {
   CheckParameterLowerUpperBound<int>  ("num-threads",              nThreads,             1, 128);
   CheckParameterLowerUpperBound<int>  ("num-variants-per-thread",  nVariantsPerThread,   1, 10000);
   for(unsigned int i_freq = 0; i_freq < snp_multi_min_allele_freq.size(); ++i_freq){
-	  string identifier = "multi-min-allele-freq[" + convertToString(i_freq) + "]";
-	  CheckParameterLowerUpperBound<float>  (identifier, snp_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
+    string identifier = "multi-min-allele-freq[" + convertToString(i_freq) + "]";
+    CheckParameterLowerUpperBound<float>  (identifier, snp_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
   }
   for(unsigned int i_freq = 0; i_freq < mnp_multi_min_allele_freq.size(); ++i_freq){
-	  string identifier = "mnp-multi-min-allele-freq[" + convertToString(i_freq) + "]";
-	  CheckParameterLowerUpperBound<float>  (identifier, mnp_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
+    string identifier = "mnp-multi-min-allele-freq[" + convertToString(i_freq) + "]";
+    CheckParameterLowerUpperBound<float>  (identifier, mnp_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
   }
   for(unsigned int i_freq = 0; i_freq < indel_multi_min_allele_freq.size(); ++i_freq){
-	  string identifier = "indel-multi-min-allele-freq[" + convertToString(i_freq) + "]";
-	  CheckParameterLowerUpperBound<float>  (identifier, indel_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
+    string identifier = "indel-multi-min-allele-freq[" + convertToString(i_freq) + "]";
+    CheckParameterLowerUpperBound<float>  (identifier, indel_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
   }
   for(unsigned int i_freq = 0; i_freq < hotspot_multi_min_allele_freq.size(); ++i_freq){
-	  string identifier = "hotspot-multi-min-allele-freq[" + convertToString(i_freq) + "]";
-	  CheckParameterLowerUpperBound<float>  (identifier, hotspot_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
+    string identifier = "hotspot-multi-min-allele-freq[" + convertToString(i_freq) + "]";
+    CheckParameterLowerUpperBound<float>  (identifier, hotspot_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
   }
 }
 
@@ -768,10 +765,10 @@ void ProgramControlSettings::SetOpts(OptArgs &opts, Json::Value &tvc_params) {
   RetrieveParameterVectorFloat(opts, tvc_params, '-', "snp-multi-min-allele-freq", "0.05,0.1,0.15,0.2", snp_multi_min_allele_freq);
   string snp_multi_min_allele_freq_str = "";
   for(unsigned i_freq = 0; i_freq < snp_multi_min_allele_freq.size(); ++i_freq){
-	  snp_multi_min_allele_freq_str += convertToString(snp_multi_min_allele_freq[i_freq]);
-	  if(i_freq < snp_multi_min_allele_freq.size() - 1){
-		  snp_multi_min_allele_freq_str += ",";
-	  }
+    snp_multi_min_allele_freq_str += convertToString(snp_multi_min_allele_freq[i_freq]);
+    if(i_freq < snp_multi_min_allele_freq.size() - 1){
+      snp_multi_min_allele_freq_str += ",";
+    }
   }
   RetrieveParameterVectorFloat(opts, tvc_params, '-', "mnp-multi-min-allele-freq", snp_multi_min_allele_freq_str, mnp_multi_min_allele_freq);
   RetrieveParameterVectorFloat(opts, tvc_params, '-', "indel-multi-min-allele-freq", "0.05,0.1,0.15,0.2", indel_multi_min_allele_freq);
@@ -826,16 +823,16 @@ void ExtendParameters::SetupFileIO(OptArgs &opts, Json::Value& tvc_params) {
   // freeBayes slot
   blacklistFile                     = opts.GetFirstString('l', "blacklist-vcf", "");
   if (blacklistFile.empty()) {
-	cerr << "INFO: No blacklist VCF file specified via -l,--blacklist-vcf" << endl;
+  cerr << "INFO: No blacklist VCF file specified via -l,--blacklist-vcf" << endl;
   }
   else
-	ValidateAndCanonicalizePath(blacklistFile);
+  ValidateAndCanonicalizePath(blacklistFile);
   variantPriorsFile                     = opts.GetFirstString('c', "input-vcf", "");
   if (variantPriorsFile.empty()) {
     cerr << "INFO: No input VCF (Hotspot) file specified via -c,--input-vcf" << endl;
   }
   else
-	ValidateAndCanonicalizePath(variantPriorsFile);
+  ValidateAndCanonicalizePath(variantPriorsFile);
 
   sseMotifsFileName                     = opts.GetFirstString('e', "error-motifs", "");
   sseMotifsProvided = true;
@@ -880,22 +877,17 @@ void ExtendParameters::SetFreeBayesParameters(OptArgs &opts, Json::Value& fb_par
   // primarily used in candidate generation
 
   targets                               = opts.GetFirstString('t', "target-file", "");
-  trim_ampliseq_primers                 = opts.GetFirstBoolean('-', "trim-ampliseq-primers", false);
-  if (targets.empty() and trim_ampliseq_primers) {
-    cerr << "ERROR: --trim-ampliseq-primers enabled but no --target-file provided" << endl;
-    exit(1);
-  }
 
   allowIndels                           = RetrieveParameterBool  (opts, fb_params, '-', "allow-indels", true);
   allowSNPs                             = RetrieveParameterBool  (opts, fb_params, '-', "allow-snps", true);
   allowMNPs                             = RetrieveParameterBool  (opts, fb_params, '-', "allow-mnps", true);
   allowComplex                          = RetrieveParameterBool  (opts, fb_params, '-', "allow-complex", false);
-  mergeLookAhead			= RetrieveParameterInt   (opts, fb_params, '-', "merge-variant-lookahead", 3);
-  
+  mergeLookAhead      = RetrieveParameterInt   (opts, fb_params, '-', "merge-variant-lookahead", 3);
+
   // deprecated:
   // leftAlignIndels                       = RetrieveParameterBool  (opts, fb_params, '-', "left-align-indels", false);
   RetrieveParameterBool  (opts, fb_params, '-', "left-align-indels", false);
-  
+
   //useBestNAlleles = 0;
   useBestNAlleles                       = RetrieveParameterInt   (opts, fb_params, 'm', "use-best-n-alleles", 2);
   onlyUseInputAlleles                   = RetrieveParameterBool  (opts, fb_params, '-', "use-input-allele-only", false);
@@ -934,7 +926,7 @@ void ExtendParameters::ParametersFromJSON(OptArgs &opts, Json::Value &tvc_params
       fprintf(stderr, "[tvc] FATAL ERROR: cannot open %s\n", parameters_file.c_str());
       exit(-1);
     }
-    
+
     // This line can cause seg-faults if we don't have a json file at the input
     in >> parameters_json;
     in.close();
@@ -978,7 +970,6 @@ ExtendParameters::ExtendParameters(int argc, char** argv)
   outputFile = "";
 
   // operation parameters
-  trim_ampliseq_primers = false;
   useDuplicateReads = false;      // -E --use-duplicate-reads
   useBestNAlleles = 0;         // -n --use-best-n-alleles
   allowIndels = true;            // -i --no-indels
@@ -1031,7 +1022,6 @@ ExtendParameters::ExtendParameters(int argc, char** argv)
   my_controls.SetOpts(opts, tvc_params);
   my_eval_control.SetOpts(opts, tvc_params);
   program_flow.SetOpts(opts, tvc_params);
-  tag_trimmer_parameters = MolecularTagTrimmer::ReadOpts(opts);
 
   // Preserve the data for all flows if we want to do rich diagnostic
   // Otherwise we only keep the data for test flows
@@ -1040,9 +1030,6 @@ ExtendParameters::ExtendParameters(int argc, char** argv)
   // Dummy lines for HP recalibration
   recal_model_file_name = opts.GetFirstString ('-', "model-file", "");
   recalModelHPThres = opts.GetFirstInt('-', "recal-model-hp-thres", 4);
-
-  prefixExclusion =  opts.GetFirstInt('-', "prefix-exclude", 6);
-  cerr << "prefix-exclude = " <<  prefixExclusion << endl;
 
   SetFreeBayesParameters(opts, freebayes_params);
   bool overrideLimits          = RetrieveParameterBool  (opts, tvc_params, '-', "override-limits", false);
@@ -1078,32 +1065,32 @@ ExtendParameters::ExtendParameters(int argc, char** argv)
 
 // check whether parameter contains only the characters in context
 bool CheckParameterStringContext(string identifier, string &parameter, const string &contains_only, const string &default_value){
-	bool is_ok = true; // for the case where parameter is an empty string. Will return true if parameter is empty.
+  bool is_ok = true; // for the case where parameter is an empty string. Will return true if parameter is empty.
 
-	cout << "Check parameter " << identifier << ": "
-			<< parameter << " contains only " << contains_only << "? ";
+  cout << "Check parameter " << identifier << ": "
+      << parameter << " contains only " << contains_only << "? ";
 
-	for(unsigned int i = 0; i < parameter.size(); ++i){
-		is_ok = false;
-		for(unsigned int j = 0; j < contains_only.size(); ++j){
-			if(parameter[i] == contains_only[j]){
-				is_ok = true;
-				break;
-			}
-		}
-		if(not is_ok){
-			break;
-		}
-	}
-	if(is_ok){
-		cout<< "OK!";
-	}else{
-		cout<< "The parameter "<< identifier
-				<< " should only contain the characters in " << contains_only <<". "
-				<< "Using the default value " << default_value <<" instead!";
-	}
-	cout << endl;
-	return is_ok;
+  for(unsigned int i = 0; i < parameter.size(); ++i){
+    is_ok = false;
+    for(unsigned int j = 0; j < contains_only.size(); ++j){
+      if(parameter[i] == contains_only[j]){
+        is_ok = true;
+        break;
+      }
+    }
+    if(not is_ok){
+      break;
+    }
+  }
+  if(is_ok){
+    cout<< "OK!";
+  }else{
+    cout<< "The parameter "<< identifier
+        << " should only contain the characters in " << contains_only <<". "
+        << "Using the default value " << default_value <<" instead!";
+  }
+  cout << endl;
+  return is_ok;
 }
 
 

@@ -11,7 +11,6 @@
 #include <vector>
 #include "OptArgs.h"
 #include "json/json.h"
-#include "MolecularTagTrimmer.h"
 
 using namespace std;
 
@@ -44,7 +43,7 @@ class EnsembleEvalTuningParameters {
     int   max_detail_level;
     int   min_detail_level_for_fast_scan;
     bool  try_few_restart_freq;
-    
+
     bool preserve_full_data; // Preserve the data for all flows if true, otherwise preserve the data only at test flows
 
     EnsembleEvalTuningParameters() {
@@ -120,7 +119,7 @@ class ClassifyFilters {
     float sseProbThreshold;
     float minRatioReadsOnNonErrorStrand;
     // don't worry about small relative SSE events
-    float sse_relative_safety_level; 
+    float sse_relative_safety_level;
 
     // local realignment per variant type
     bool  do_snp_realignment;    //
@@ -178,9 +177,9 @@ class ControlCallAndFilters {
 
     ClassifyFilters filter_variant;
 
-    // tuning parameter for xbias 
+    // tuning parameter for xbias
   //  float xbias_tune;
-    float sbias_tune; 
+    float sbias_tune;
 
     BasicFilters filter_snps;
     BasicFilters filter_mnp;
@@ -238,9 +237,6 @@ public:
   bool              onlyUseInputAlleles;
   bool              processInputPositionsOnly;
 
-  bool              trim_ampliseq_primers;
-  int               prefixExclusion;
-
   // operation parameters
   bool useDuplicateReads;      // -E --use-duplicate-reads
   int useBestNAlleles;         // -n --use-best-n-alleles
@@ -266,7 +262,6 @@ public:
   ControlCallAndFilters my_controls;
   EnsembleEvalTuningParameters my_eval_control;
   ProgramControlSettings program_flow;
-  TagTrimmerParameters         tag_trimmer_parameters;
 
   //Input files
   string outputDir;
@@ -300,9 +295,9 @@ bool CheckParameterLowerUpperBound(string identifier ,T &parameter, T lower_limi
 
   //cout << setw(35) << long_name_hyphens << " = " << setw(10) << value << " (integer, " << source << ")" << endl;
   cout << "Limit check parameter " << identifier << ": lim. "
-	   << lower_limit << " <= " << parameter << " <= lim. " << upper_limit << "? ";
+     << lower_limit << " <= " << parameter << " <= lim. " << upper_limit << "? ";
   if (parameter < lower_limit) {
-	cout << "Using " << identifier << "=" << lower_limit << " instead!";
+  cout << "Using " << identifier << "=" << lower_limit << " instead!";
     parameter = lower_limit;
   }
   else if (parameter > upper_limit) {
@@ -321,9 +316,9 @@ template <class T>
 bool CheckParameterLowerBound(string identifier ,T &parameter, T lower_limit) {
   bool is_ok = false;
   cout << "Limit check parameter " << identifier << ": lim. "
-	   << lower_limit << " <= " << parameter << "? ";
+     << lower_limit << " <= " << parameter << "? ";
   if (parameter < lower_limit) {
-	cout << "Using " << identifier << "=" << lower_limit << " instead!";
+  cout << "Using " << identifier << "=" << lower_limit << " instead!";
     parameter = lower_limit;
   }
     else {
@@ -338,7 +333,7 @@ template <class T>
 bool CheckParameterUpperBound(string identifier ,T &parameter, T upper_limit) {
   bool is_ok = false;
   cout << "Limit check parameter " << identifier << ": "
-	   << parameter << " <= lim. " << upper_limit << "? ";
+     << parameter << " <= lim. " << upper_limit << "? ";
   if (parameter > upper_limit) {
     cout << "Using " << identifier << "=" << upper_limit << " instead!";
     parameter = upper_limit;
