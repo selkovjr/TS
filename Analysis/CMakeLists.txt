@@ -10,6 +10,8 @@ check_c_compiler_flag( -malign-double HAS_ALIGN_DOUBLE )
 # This inconspicuous line holds the key to IR integration of tvc, tmap, and bamrealignment:
 #set(CMAKE_EXE_LINKER_FLAGS -static)
 
+set(CMAKE_CXX_FLAGS -g3)
+
 
 option(ION_DO_BACKGROUND "Build with background model" ON)
 mark_as_advanced(ION_DO_BACKGROUND)
@@ -138,18 +140,18 @@ include_directories("${PROJECT_SOURCE_DIR}/Wells")
 # CUDA Files
 if(ION_USE_CUDA)
 
-    CUDA_COMPILE(CUDA_TEMP_FILES 
+    CUDA_COMPILE(CUDA_TEMP_FILES
       BkgModel/CUDA/HosteDeviceDataCubes/MemoryManager.cu
       BkgModel/CUDA/HosteDeviceDataCubes/ResourcePool.cu
-      BkgModel/CUDA/HosteDeviceDataCubes/LayoutTranslator.cu  
+      BkgModel/CUDA/HosteDeviceDataCubes/LayoutTranslator.cu
       BkgModel/CUDA/HosteDeviceDataCubes/SampleHistory.cu
-      BkgModel/CUDA/HostDataWrapper/JobWrapper.cu 
+      BkgModel/CUDA/HostDataWrapper/JobWrapper.cu
       BkgModel/CUDA/BkgGpuPipeline.cu
       BkgModel/CUDA/SingleFitStream.cu
-      BkgModel/CUDA/StreamManager.cu 
+      BkgModel/CUDA/StreamManager.cu
       BkgModel/CUDA/MultiFitStream.cu
       BkgModel/CUDA/StreamingKernels.cu
-      BkgModel/CUDA/MasterKernel.cu      
+      BkgModel/CUDA/MasterKernel.cu
       SHARED
     )
 
@@ -193,7 +195,7 @@ add_library(ion-analysis
     Mask/PinnedInFlow.cpp
     Mask/Mask.cpp
     Mask/ComplexMask.cpp
-    
+
     Separator/DualGaussMixModel.cpp
     Separator/DifferentialSeparator.cpp
     Separator/NNAvg.cpp
@@ -233,10 +235,10 @@ add_library(ion-analysis
     AnalysisOrg/IO/CaptureImageState.cpp
     AnalysisOrg/IO/DebugMe.cpp
     AnalysisOrg/IO/OptBase.cpp
-    
+
     AnalysisOrg/justBeadFind/SeparatorInterface.cpp
     AnalysisOrg/justBeadFind/SetUpForProcessing.cpp
-    
+
     AnalysisOrg/SystemContext.cpp
     AnalysisOrg/SpatialContext.cpp
     AnalysisOrg/ImageSpecClass.cpp
@@ -254,21 +256,21 @@ add_library(ion-analysis
     AnalysisOrg/MaskFunctions.cpp
     AnalysisOrg/cudaWrapper.cpp
     AnalysisOrg/FlowSequence.cpp
-        
+
     Region.cpp
     LinuxCompat.cpp
     Stats.cpp
 
     LevMarFitterV2.cpp
-    
+
     mixed.cpp
     # T0CalcMt.cpp
-    
+
     BaseCaller/PIDloop.cpp
     BaseCaller/DPTreephaser.cpp
     Calibration/FlowAlignment.cpp
     Calibration/LinearCalibrationModel.cpp
-    
+
     BkgModel/MathModel/MathOptim.cpp
     BkgModel/MathModel/PoissonCdf.cpp
     BkgModel/MathModel/DNTPRiseModel.cpp
@@ -311,7 +313,7 @@ add_library(ion-analysis
     BkgModel/Fitters/Complex/BkgFitMatrixPacker.cpp
     BkgModel/Fitters/Complex/BkgFitStructures.cpp
     BkgModel/Fitters/Complex/BkgFitOptim.cpp
-    
+
     BkgModel/Fitters/SingleFlowFit.cpp
     BkgModel/Fitters/RefineFit.cpp
     BkgModel/Fitters/RefineTime.cpp
@@ -324,7 +326,7 @@ add_library(ion-analysis
 
     BkgModel/Writers/DebugWriter.cpp
     BkgModel/Writers/GlobalWriter.cpp
-    
+
     BkgModel/GlobalDefaultsForBkgModel.cpp
     BkgModel/SignalProcessingMasterFitter.cpp
     BkgModel/RegionalizedData.cpp
@@ -332,16 +334,16 @@ add_library(ion-analysis
     BkgModel/CUDA/GpuMultiFlowFitControl.cpp
     BkgModel/CUDA/GpuMultiFlowFitMatrixConfig.cpp
 	${CUDA_CPP_FILES}
-	
+
     BkgModel/Sampling/FitDensity.cpp
     BkgModel/Sampling/SampleClonality.cpp
 
 
     crop/Acq.cpp
     crop/DCT0Finder.cpp
-    crop/PreviousFrameSubtract.cpp 
+    crop/PreviousFrameSubtract.cpp
 
-    
+
     SamUtils/types/Cigar.cpp
     SamUtils/types/Qual.cpp
     SamUtils/types/Sequence.cpp
@@ -510,7 +512,7 @@ set(BaseCallerSRCS
     BaseCaller/WellsNormalization.cpp
     Calibration/HistogramCalibration.cpp
     Calibration/LinearCalibrationModel.cpp
-    
+
     ${PROJECT_BINARY_DIR}/IonVersion.cpp)
 if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
     list(APPEND BaseCallerSRCS
@@ -551,7 +553,7 @@ set(tvcSRCS
   VariantCaller/MetricsManager.cpp
 
   VariantCaller/Bookkeeping/MiscUtil.cpp
-  VariantCaller/Bookkeeping/ExtendParameters.cpp 
+  VariantCaller/Bookkeeping/ExtendParameters.cpp
   VariantCaller/Bookkeeping/InputStructures.cpp
   VariantCaller/Bookkeeping/VcfFormat.cpp
 
@@ -565,10 +567,6 @@ set(tvcSRCS
 
   VariantCaller/Filter/DecisionTreeData.cpp
   VariantCaller/Filter/VariantAssist.cpp
-
-  VariantCaller/HypothesisEvaluator.cpp
-  
-  VariantCaller/MolecularTag.cpp
 
   VariantCaller/EnsembleEval/DiagnosticJSON.cpp
   VariantCaller/EnsembleEval/BiasGenerator.cpp
@@ -716,7 +714,7 @@ add_dependencies(tvcutils IONVERSION bamtools)
 install(TARGETS tvcutils DESTINATION bin)
 
 
-add_executable(ionstats 
+add_executable(ionstats
     ionstats/ionstats.cpp
     ionstats/ionstats_data.cpp
     ionstats/ionstats_basecaller.cpp
@@ -729,8 +727,8 @@ target_link_libraries(ionstats ion-analysis ${ION_BAMTOOLS_LIBS} pthread dl)
 install(TARGETS ionstats DESTINATION bin)
 
 ## Calibration - flowspace recalibration training in c++
-add_executable(Calibration 
-    Calibration/Calibration.cpp 
+add_executable(Calibration
+    Calibration/Calibration.cpp
     Calibration/CalibrationHelper.cpp
     Calibration/FlowAlignment.cpp
     Calibration/HistogramCalibration.cpp
@@ -873,7 +871,7 @@ install(TARGETS seqCoverage DESTINATION bin)
 enable_testing()
 find_package(GTest QUIET)
 if(GTEST_FOUND)
-  
+
 # Copy over test data...
    configure_file (
      "utest/reference.txt"

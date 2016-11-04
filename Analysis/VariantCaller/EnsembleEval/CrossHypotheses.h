@@ -15,8 +15,6 @@
 #include <armadillo>
 
 #include "ExtendedReadInfo.h"
-#include "HypothesisEvaluator.h"
-#include "MolecularTag.h"
 
 // use both strands for evaluating likelihood
 #define ALL_STRAND_KEY -1
@@ -87,7 +85,7 @@ public:
 
   vector<vector<float> > sigma_estimate; // estimate of variability per test flow per hypothesis for this read
   vector<vector<float> > basic_likelihoods; // likelihood given residuals at each test flow of the observation at that flow != likelihood of read
-  
+
   float skew_estimate;
 
   vector<int > test_flow;  //  vector of flows to examine for this read and the hypotheses for efficiency
@@ -170,28 +168,5 @@ public:
 
 };
 
-
-// Deal with the inference for a single family
-class EvalFamily : public MolecularFamily<unsigned int>{
-public:
-	vector<float> family_responsibility;
-	EvalFamily(const string &barcode, int strand): MolecularFamily(barcode, strand) {};
-	void InitializeEvalFamily(unsigned int num_hyp);
-	void CleanAllocate(unsigned int num_hyp);
-	void InitializeFamilyResponsibility();
-	void ComputeFamilyLogLikelihoods(const vector<CrossHypotheses> &my_hypotheses);
-	void UpdateFamilyResponsibility(const vector<float > &hyp_prob, float typical_prob);
-	float ComputeFamilyPosteriorLikelihood(const vector<float> &hyp_prob, float typical_prob);
-	int MostResponsible();
-	vector<float> GetFamilyLogLikelihood() const{ return my_family_cross_.log_likelihood; };
-	vector<float> GetFamilyScaledLikelihood() const{ return my_family_cross_.scaled_likelihood; };
-
-private:
-	// The calculation of log-likelihood etc. of a family is pretty much the same as a single read.
-	// my_family_cross_ is used for calculating the "likelihoods" and "responsibility" only.
-	// must be use my_family_cross_ carefully since it has a lot of uninitialized members.
-	// Keep my_family_cross_ private in case someone tries to access those uninitialized members.
-	CrossHypotheses my_family_cross_;
-};
 
 #endif // CROSSHYPOTHESES_H

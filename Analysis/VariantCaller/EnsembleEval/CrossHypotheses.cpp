@@ -114,37 +114,35 @@ void CrossHypotheses::CleanAllocate(int num_hyp, int num_flow) {
   predictions.resize(num_hyp);
   predictions_all_flows.resize(num_hyp);
   mod_predictions.resize(num_hyp);
-  normalized_all_flows.assign(num_flow, 0.0f);
   residuals.resize(num_hyp);
   sigma_estimate.resize(num_hyp);
   basic_likelihoods.resize(num_hyp);
-
-
-  for (int i_hyp=0; i_hyp<num_hyp; i_hyp++) {
-	  predictions_all_flows[i_hyp].assign(num_flow, 0.0f);
-	  normalized_all_flows.assign(num_flow, 0.0f);
-  }
 }
 
 void CrossHypotheses::SetModPredictions() {
   // modified predictions reset from predictions
   for (unsigned int i_hyp=0; i_hyp<predictions.size(); i_hyp++) {
-	mod_predictions[i_hyp].assign(test_flow.size(), 0.0f);
-	for(unsigned int t_flow = 0; t_flow < test_flow.size(); ++t_flow){
+  mod_predictions[i_hyp].assign(test_flow.size(), 0.0f);
+  for(unsigned int t_flow = 0; t_flow < test_flow.size(); ++t_flow){
       mod_predictions[i_hyp][t_flow] = predictions[i_hyp][t_flow];
-	}
+  }
   }
 }
 
 
 void CrossHypotheses::FillInPrediction(PersistingThreadObjects &thread_objects, const Alignment& my_read, const InputStructures &global_context) {
   // allocate everything here
-  CleanAllocate(instance_of_read_by_state.size(), global_context.flow_order_vector.at(my_read.flow_order_index).num_flows());
+  // CleanAllocate(instance_of_read_by_state.size(), global_context.flow_order_vector.at(my_read.flow_order_index).num_flows());
+  CleanAllocate(instance_of_read_by_state.size(), my_read.alignment.QueryBases.length());
   // We search for test flows in the flow interval [(splice_start_flow-3*max_flows_to_test), (splice_end_flow+4*max_flows_to_test)]
   // We need to simulate further than the end of the search interval to get good predicted values within
-  int flow_upper_bound = splice_end_flow + 4*max_flows_to_test + 20;
-  max_last_flow = CalculateHypPredictions(thread_objects, my_read, global_context, instance_of_read_by_state,
-                                          same_as_null_hypothesis, predictions_all_flows, normalized_all_flows, flow_upper_bound);
+  // max_last_flow = CalculateHypPredictions(
+  //   thread_objects,
+  //   my_read,
+  //   global_context,
+  //   instance_of_read_by_state,
+  //   same_as_null_hypothesis
+  // );
   SetModPredictions();
   if (my_read.is_reverse_strand)
     strand_key = 1;
@@ -165,31 +163,21 @@ void CrossHypotheses::InitializeTestFlows() {
 
 // keep the information at test flows only
 void CrossHypotheses::InitializeRelevantToTestFlows(){
-	unsigned int num_hyp = predictions_all_flows.size();
-	unsigned int test_flow_num = test_flow.size();
+  unsigned int num_hyp = predictions_all_flows.size();
+  unsigned int test_flow_num = test_flow.size();
 
-    for(unsigned int i_hyp = 0; i_hyp < num_hyp; ++i_hyp){
-        predictions[i_hyp].assign(test_flow_num, 0.0f);
-        mod_predictions[i_hyp].assign(test_flow_num, 0.0f);
-        residuals[i_hyp].assign(test_flow_num, 0.0f);
-        sigma_estimate[i_hyp].assign(test_flow_num, 0.0f);
-        basic_likelihoods[i_hyp].assign(test_flow_num, 0.0f);
-    }
-	normalized.assign(test_flow_num, 0.0f);
-	for(unsigned int t_flow = 0; t_flow < test_flow_num; ++t_flow){
-		int j_flow = test_flow[t_flow];
-		normalized[t_flow] = normalized_all_flows[j_flow];
-		for(unsigned int i_hyp = 0; i_hyp < predictions.size(); ++i_hyp){
-			predictions[i_hyp][t_flow] = predictions_all_flows[i_hyp][j_flow];
-		}
-	}
-    delta_state.Allocate(num_hyp, test_flow_num);
-
-    // clear the data of all flows if we don't want to preserve it
-    if(not preserve_full_data){
-    	normalized_all_flows.clear();
-    	predictions_all_flows.clear();
-    }
+  for(unsigned int i_hyp = 0; i_hyp < num_hyp; ++i_hyp){
+    predictions[i_hyp].assign(test_flow_num, 0.0f);
+    mod_predictions[i_hyp].assign(test_flow_num, 0.0f);
+    residuals[i_hyp].assign(test_flow_num, 0.0f);
+    sigma_estimate[i_hyp].assign(test_flow_num, 0.0f);
+    basic_likelihoods[i_hyp].assign(test_flow_num, 0.0f);
+  }
+  normalized.assign(test_flow_num, 0.0f);
+  for(unsigned int t_flow = 0; t_flow < test_flow_num; ++t_flow){
+    int j_flow = test_flow[t_flow];
+  }
+  delta_state.Allocate(num_hyp, test_flow_num);
 }
 
 
@@ -222,27 +210,33 @@ void CrossHypotheses::InitializeResponsibility() {
 // divide the variant probabilities into each hypothesis (summing to 1)
 // treat the 2 hypothesis case to start with
 void CrossHypotheses::UpdateResponsibility(const vector<float > &hyp_prob, float typical_prob) {
+  cerr << "UpdateResponsibility()\n";
+  exit(0);
 
   if (!success){
-    //cout << "alert: fail to splice still called" << endl;
+    cout << "alert: fail to splice still called" << endl;
     InitializeResponsibility();
-  } else {
-  //  vector<double> tmp_prob(3);
-  tmp_prob_d[0] = (1.0f-typical_prob)*scaled_likelihood[0];   // i'm an outlier
-  for (unsigned int i_hyp=1; i_hyp<scaled_likelihood.size(); i_hyp++)
-    tmp_prob_d[i_hyp] = typical_prob * hyp_prob[i_hyp-1] * scaled_likelihood[i_hyp];
-
-  double ll_denom = 0.0;
-  for (unsigned int i_hyp=0; i_hyp<scaled_likelihood.size(); i_hyp++){
-    ll_denom += tmp_prob_d[i_hyp];
   }
+  else {
+    //  vector<double> tmp_prob(3);
+    tmp_prob_d[0] = (1.0f - typical_prob) * scaled_likelihood[0];   // i'm an outlier
+    for (unsigned int i_hyp = 1; i_hyp < scaled_likelihood.size(); i_hyp++)
+      tmp_prob_d[i_hyp] = typical_prob * hyp_prob[i_hyp - 1] * scaled_likelihood[i_hyp];
 
-  for (unsigned int i_hyp=0; i_hyp<responsibility.size(); i_hyp++)
-    responsibility[i_hyp] = tmp_prob_d[i_hyp]/ll_denom;
+    double ll_denom = 0.0;
+    for (unsigned int i_hyp = 0; i_hyp<scaled_likelihood.size(); i_hyp++){
+      ll_denom += tmp_prob_d[i_hyp];
+    }
+
+    for (unsigned int i_hyp=0; i_hyp<responsibility.size(); i_hyp++) {
+      responsibility[i_hyp] = tmp_prob_d[i_hyp]/ll_denom;
+      cerr << "UpdateResponsibility(): responsibility[" << i_hyp << "] = " << responsibility[i_hyp] << endl;
+    }
   }
 }
 
 float CrossHypotheses::ComputePosteriorLikelihood(const vector<float > &hyp_prob, float typical_prob) {
+  cerr << "ComputePosteriorLikelihood()\n";
   //  vector<float> tmp_prob(3);
   tmp_prob_f[0] = (1.0f-typical_prob)*scaled_likelihood[0];   // i'm an outlier
   for (unsigned int i_hyp=1; i_hyp<scaled_likelihood.size(); i_hyp++){
@@ -259,12 +253,12 @@ float CrossHypotheses::ComputePosteriorLikelihood(const vector<float > &hyp_prob
 void HiddenBasis::ComputeDelta(const vector<vector <float> > &predictions){
     unsigned int num_alt = predictions.size() - 2;
     int ref_hyp = 1;
-	for (unsigned int i_alt=0; i_alt<num_alt; i_alt++){
-		int alt_hyp = i_alt+2;
-		for (unsigned int t_flow = 0; t_flow < delta[i_alt].size(); t_flow++) {
-			delta[i_alt][t_flow] = predictions[alt_hyp][t_flow] - predictions[ref_hyp][t_flow];
-		}
-	}
+  for (unsigned int i_alt=0; i_alt<num_alt; i_alt++){
+    int alt_hyp = i_alt+2;
+    for (unsigned int t_flow = 0; t_flow < delta[i_alt].size(); t_flow++) {
+      delta[i_alt][t_flow] = predictions[alt_hyp][t_flow] - predictions[ref_hyp][t_flow];
+    }
+  }
 }
 
 // Notice that now delta is the difference at test_flows!
@@ -460,7 +454,7 @@ void CrossHypotheses::JointLogLikelihood() {
         float sigma_component = delta.at(j_flow) *sigma_estimate.at(i_hyp).at(j_flow) *sigma_estimate.at(i_hyp).at(k_flow) * delta.at(k_flow) / (delta_scale * delta_scale);
         sigma_projection += sigma_component;
       }*/
-      
+
       // only diagonal term to account for this estimate
       float sigma_component = d_val * sigma_estimate[i_hyp][t_flow] * sigma_estimate[i_hyp][t_flow] * d_val/(delta_scale * delta_scale);
       sigma_projection += sigma_component;
@@ -622,92 +616,34 @@ int CrossHypotheses::MostResponsible(){
 // With the default value of magic sigma, if outlier_probability < 3.1E-7 then we claim that it is not an outlier.
 // => We need outlier_probability < 3.1E-7 to tolerate 1-mer, 1-mer errors at two flows.
 bool CrossHypotheses::LocalOutlierClassifier(float typical_prob){
-	//Use CheckParameterLowerUpperBound(...) to prevent extremely low ol_prob instead
-	//if(ol_prob < MINIMUM_RELATIVE_OUTLIER_PROBABILITY){
-	//    ol_prob = MINIMUM_RELATIVE_OUTLIER_PROBABILITY;
-	//    typical_prob = 1.0f - MINIMUM_RELATIVE_OUTLIER_PROBABILITY;
-	//}
-	bool is_outlier = true;
+  //Use CheckParameterLowerUpperBound(...) to prevent extremely low ol_prob instead
+  //if(ol_prob < MINIMUM_RELATIVE_OUTLIER_PROBABILITY){
+  //    ol_prob = MINIMUM_RELATIVE_OUTLIER_PROBABILITY;
+  //    typical_prob = 1.0f - MINIMUM_RELATIVE_OUTLIER_PROBABILITY;
+  //}
+  bool is_outlier = true;
 
-	// First check same_as_null_hypothesis
-	// The read is not an outlier if any hypothesis not null is the same as the null hypothesis
-	// This can prevent the case where we classify a hypothesis the same as null to be an outlier if typical_prob < 0.5.
-	for(unsigned int i_hyp = 1; i_hyp < same_as_null_hypothesis.size(); ++i_hyp){
-		if(same_as_null_hypothesis[i_hyp]){
-			is_outlier = false;
-			return is_outlier;
-		}
-	}
+  // First check same_as_null_hypothesis
+  // The read is not an outlier if any hypothesis not null is the same as the null hypothesis
+  // This can prevent the case where we classify a hypothesis the same as null to be an outlier if typical_prob < 0.5.
+  for(unsigned int i_hyp = 1; i_hyp < same_as_null_hypothesis.size(); ++i_hyp){
+    if(same_as_null_hypothesis[i_hyp]){
+      is_outlier = false;
+      return is_outlier;
+    }
+  }
 
-	float log_priori_not_ol = log(typical_prob);
-	float log_posterior_likelihood_ol = log(1.0f - typical_prob) + log_likelihood[0];
+  float log_priori_not_ol = log(typical_prob);
+  float log_posterior_likelihood_ol = log(1.0f - typical_prob) + log_likelihood[0];
 
-	for(unsigned int i_hyp = 1; i_hyp < log_likelihood.size(); ++i_hyp){
-		float log_posterior_likelihood_not_ol = log_priori_not_ol + log_likelihood[i_hyp];
-		// If any hypothesis says "I am not an outlier", then the read is not an outlier read.
-		if(log_posterior_likelihood_ol < log_posterior_likelihood_not_ol){
-			is_outlier = false;
-			return is_outlier;
-		}
-	}
-	return is_outlier;
+  for(unsigned int i_hyp = 1; i_hyp < log_likelihood.size(); ++i_hyp){
+    float log_posterior_likelihood_not_ol = log_priori_not_ol + log_likelihood[i_hyp];
+    // If any hypothesis says "I am not an outlier", then the read is not an outlier read.
+    if(log_posterior_likelihood_ol < log_posterior_likelihood_not_ol){
+      is_outlier = false;
+      return is_outlier;
+    }
+  }
+  return is_outlier;
 }
 
-
-
-void EvalFamily::InitializeEvalFamily(unsigned int num_hyp){
-	ResetFamily();
-	CleanAllocate(num_hyp);
-	InitializeFamilyResponsibility();
-}
-
-void EvalFamily::CleanAllocate(unsigned int num_hyp){
-	// I only clean and allocate the ones that I need.
-	my_family_cross_.responsibility.assign(num_hyp, 0.0f);
-	family_responsibility.assign(num_hyp, 0.0f);
-	my_family_cross_.log_likelihood.assign(num_hyp, 0.0f);
-	my_family_cross_.scaled_likelihood.assign(num_hyp, 0.0f);
-	my_family_cross_.tmp_prob_f.assign(num_hyp, 0.0f);
-	my_family_cross_.tmp_prob_d.assign(num_hyp, 0.0f);
-}
-
-void EvalFamily::InitializeFamilyResponsibility(){
-	my_family_cross_.responsibility[0] = 1.0f;
-	family_responsibility[0] = 1.0f;
-	for(unsigned int i_hyp = 1; i_hyp < family_responsibility.size(); ++i_hyp){
-		my_family_cross_.responsibility[i_hyp] = 0.0f;
-		family_responsibility[i_hyp] = 0.0f;
-	}
-}
-
-// Currently, I don't handle the case of "outlier family".
-// I force the log-likelihood of the outlier hypothesis of each family to be extremely low.
-// So no family will be treated as an outlier.
-// Do ShortStack::OutlierFiltering() before barcode classification to make sure that all families consist of no outlier read.
-// @TODO: Perhaps need a better way to deal with outlier families?
-void EvalFamily::ComputeFamilyLogLikelihoods(const vector<CrossHypotheses> &my_hypotheses){
-	my_family_cross_.log_likelihood[0] = -9999.9f; // no other hypothesis would have log-likelihood less than this value
-	// accumulate the log-likelihood from the reads of the family for not null hypotheses
-	for (unsigned int i_hyp=1; i_hyp < my_family_cross_.log_likelihood.size(); i_hyp++) {
-		my_family_cross_.log_likelihood[i_hyp] = 0.0f;
-		for (unsigned int i_member = 0; i_member < family_members.size(); ++i_member){
-			unsigned int i_read = family_members[i_member];
-			my_family_cross_.log_likelihood[i_hyp] += my_hypotheses[i_read].log_likelihood[i_hyp];
-		}
-	}
-	my_family_cross_.ComputeScaledLikelihood();
-}
-
-// ComputeFamilyLogLikelihoods(...) must be done first!
-void EvalFamily::UpdateFamilyResponsibility(const vector<float > &hyp_prob, float typical_prob){
-	my_family_cross_.UpdateResponsibility(hyp_prob, typical_prob);
-	family_responsibility = my_family_cross_.responsibility;
-}
-
-float EvalFamily::ComputeFamilyPosteriorLikelihood(const vector<float> &hyp_prob, float typical_prob){
-	return my_family_cross_.ComputePosteriorLikelihood(hyp_prob, typical_prob);
-}
-
-int EvalFamily::MostResponsible(){
-	return my_family_cross_.MostResponsible();
-}

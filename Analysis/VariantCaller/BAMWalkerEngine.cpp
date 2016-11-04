@@ -50,16 +50,18 @@ BAMWalkerEngine::~BAMWalkerEngine()
 }
 
 
-void BAMWalkerEngine::Initialize(const ReferenceReader& ref_reader, TargetsManager& targets_manager,
-    const vector<string>& bam_filenames, const string& postprocessed_bam, int px)
-{
+void BAMWalkerEngine::Initialize(
+  const ReferenceReader& ref_reader,
+  TargetsManager& targets_manager,
+  const vector<string>& bam_filenames,
+  const string& postprocessed_bam
+) {
 
   InitializeBAMs(ref_reader, bam_filenames);
 
   targets_manager_ = &targets_manager;
   next_target_ = &targets_manager_->merged.front();
   next_position_ = next_target_->begin;
-  prefix_exclude = px;
 
   // BAM writing init
   if (not postprocessed_bam.empty()) {
@@ -120,25 +122,25 @@ void BAMWalkerEngine::InitializeBAMs(const ReferenceReader& ref_reader, const ve
       BamReader reader;
       if (not reader.Open(bam_filenames.at(bam_idx))) {
         cerr << "TVC ERROR: Failed to open input BAM file " << reader.GetErrorString() << endl;
-    	 exit(1);
+        exit(1);
       }
       SamHeader header = reader.GetHeader();
 
       for (unsigned int i_co = 0; i_co < header.Comments.size(); i_co++) {
 
         // Step 1: Check if this comment is already part of the merged header
-    	unsigned int m_co = 0;
-    	while (m_co < bam_header_.Comments.size() and bam_header_.Comments.at(m_co) != header.Comments.at(i_co))
-    	  m_co++;
+        unsigned int m_co = 0;
+        while (m_co < bam_header_.Comments.size() and bam_header_.Comments.at(m_co) != header.Comments.at(i_co))
+          m_co++;
 
-    	if (m_co < bam_header_.Comments.size()){
+        if (m_co < bam_header_.Comments.size()){
           num_duplicates++;
           continue;
-    	}
+        }
 
-    	// Add comment line to merged header if it is a new one
-    	num_merged++;
-    	bam_header_.Comments.push_back(header.Comments.at(i_co));
+        // Add comment line to merged header if it is a new one
+        num_merged++;
+        bam_header_.Comments.push_back(header.Comments.at(i_co));
       }
     }
     // Verbose what we did
@@ -153,23 +155,23 @@ void BAMWalkerEngine::InitializeBAMs(const ReferenceReader& ref_reader, const ve
 
   if ((int)referenceSequences.size() != ref_reader.chr_count()) {
     cerr << "ERROR: Reference in BAM file does not match fasta file" << endl
-         << "       BAM has " << referenceSequences.size()
-         << " chromosomes while fasta has " << ref_reader.chr_count() << endl;
+      << "       BAM has " << referenceSequences.size()
+      << " chromosomes while fasta has " << ref_reader.chr_count() << endl;
     exit(1);
   }
 
   for (int chr_idx = 0; chr_idx < ref_reader.chr_count(); ++chr_idx) {
     if (referenceSequences[chr_idx].RefName != ref_reader.chr_str(chr_idx)) {
       cerr << "ERROR: Reference in BAM file does not match fasta file" << endl
-           << "       Chromosome #" << (chr_idx+1) << "in BAM is " << referenceSequences[chr_idx].RefName
-           << " while fasta has " << ref_reader.chr_str(chr_idx) << endl;
+        << "       Chromosome #" << (chr_idx+1) << "in BAM is " << referenceSequences[chr_idx].RefName
+        << " while fasta has " << ref_reader.chr_str(chr_idx) << endl;
       exit(1);
     }
     if (referenceSequences[chr_idx].RefLength != ref_reader.chr_size(chr_idx)) {
       cerr << "ERROR: Reference in BAM file does not match fasta file" << endl
-           << "       Chromosome " << referenceSequences[chr_idx].RefName
-           << "in BAM has length " << referenceSequences[chr_idx].RefLength
-           << " while fasta has " << ref_reader.chr_size(chr_idx) << endl;
+        << "       Chromosome " << referenceSequences[chr_idx].RefName
+        << "in BAM has length " << referenceSequences[chr_idx].RefLength
+        << " while fasta has " << ref_reader.chr_size(chr_idx) << endl;
       exit(1);
     }
   }
@@ -227,8 +229,8 @@ void BAMWalkerEngine::RequestReadRemovalTask(Alignment*& removal_list)
 }
 
 void BAMWalkerEngine::openDepth(const string& depth_file) {
-	pthread_mutex_init(&mutexdepth, NULL);
-	depth_out.open(depth_file.c_str(), ofstream::out); prevRefID = -1; prevEndPos = -1;
+  pthread_mutex_init(&mutexdepth, NULL);
+  depth_out.open(depth_file.c_str(), ofstream::out); prevRefID = -1; prevEndPos = -1;
 }
 
 void BAMWalkerEngine::writeDepth(ReferenceReader* reference_reader, std::map<long int, int>::size_type offset) {
@@ -238,20 +240,20 @@ void BAMWalkerEngine::writeDepth(ReferenceReader* reference_reader, std::map<lon
   std::map<long int, int>::size_type count = 0;
   std::map<long int, int>::size_type size = depth_map.size();
   while ((iter != depth_map.end()) and (count < size - offset)) {
-	  if (prevRefID >= 0) {
-		  depth_out << reference_reader->chr(prevRefID) << "\t" << iter->first << "\t" << iter->second << endl;
-  	  }
-	  depth_map.erase(iter++);
-	  count++;
+    if (prevRefID >= 0) {
+      depth_out << reference_reader->chr(prevRefID) << "\t" << iter->first << "\t" << iter->second << endl;
+    }
+    depth_map.erase(iter++);
+    count++;
   }
   pthread_mutex_unlock (&mutexdepth);
 
 }
 
 void BAMWalkerEngine::closeDepth(ReferenceReader* reference_reader) {
-	writeDepth(reference_reader);
-	depth_out.close();
-	pthread_mutex_destroy(&mutexdepth);
+  writeDepth(reference_reader);
+  depth_out.close();
+  pthread_mutex_destroy(&mutexdepth);
 }
 
 void BAMWalkerEngine::processDepth(BamAlignment& alignment, TargetsManager* targets_manager, vector<MergedTarget>::iterator& curr_target) {
@@ -263,54 +265,59 @@ void BAMWalkerEngine::processDepth(BamAlignment& alignment, TargetsManager* targ
   std::map<long int, bool> skip_positions;
   long int curr_pos = alignment.Position;
   for (vector<CigarOp>::iterator iter = alignment.CigarData.begin(); (iter != alignment.CigarData.end()); ++iter) {
-      if (iter->Type == 'M') {curr_pos += iter->Length;}
-      if (iter->Type == 'D') {
-          for (unsigned int i = 0; (i < iter->Length); ++i) {
-              curr_pos++;
-              deletion_count++;
-              skip_positions[curr_pos] = true;
-          }
+    if (iter->Type == 'M') {curr_pos += iter->Length;}
+    if (iter->Type == 'D') {
+      for (unsigned int i = 0; (i < iter->Length); ++i) {
+        curr_pos++;
+        deletion_count++;
+        skip_positions[curr_pos] = true;
       }
+    }
   }
   // back up a couple of targets because reads can span multiple targets.
   if (curr_target > targets_manager->merged.begin()) {--curr_target;}
   if (curr_target > targets_manager->merged.begin()) {--curr_target;}
   for (long int pos = alignment.Position + 1; (pos <= alignment.GetEndPosition()); ++pos) {
-      while (curr_target != targets_manager->merged.end() && (alignment.RefID > curr_target->chr || (alignment.RefID == curr_target->chr && pos - 1 >= curr_target->end))) {
-          ++curr_target;
-      }
-      if (curr_target == targets_manager->merged.end()) {break;}
-      if ((pos > curr_target->begin) and (pos <= curr_target->end)) {
+    while (curr_target != targets_manager->merged.end() && (alignment.RefID > curr_target->chr || (alignment.RefID == curr_target->chr && pos - 1 >= curr_target->end))) {
+      ++curr_target;
+    }
+    if (curr_target == targets_manager->merged.end()) {break;}
+    if ((pos > curr_target->begin) and (pos <= curr_target->end)) {
 
-          pthread_mutex_lock (&mutexdepth);
-          std::map<long int, int> ::iterator depth_iter = depth_map.find(pos);
-          if (depth_iter == depth_map.end()) {
-              depth_map[pos] = 0;
-              if (skip_positions.find(pos) == skip_positions.end()) {depth_map[pos]++;}
-          }
-          else {
-              if (skip_positions.find(pos) == skip_positions.end()) {
-                  depth_iter->second++;
-              }
-          }
-          pthread_mutex_unlock (&mutexdepth);  	
+      pthread_mutex_lock (&mutexdepth);
+      std::map<long int, int> ::iterator depth_iter = depth_map.find(pos);
+      if (depth_iter == depth_map.end()) {
+        depth_map[pos] = 0;
+        if (skip_positions.find(pos) == skip_positions.end()) {depth_map[pos]++;}
       }
+      else {
+        if (skip_positions.find(pos) == skip_positions.end()) {
+          depth_iter->second++;
+        }
+      }
+      pthread_mutex_unlock (&mutexdepth);
+    }
   }
 }
 
-static int prefix_exclude_ = 6;
 static bool warn = true;
 
 static bool myorder(BamAlignment *A, BamAlignment *B)
 {
-  int i = A->Name.substr(prefix_exclude_).compare(B->Name.substr(prefix_exclude_));
+  int i = A->Name.compare(B->Name);
   if (i == 0) {
-    i = A->Name.substr(0, prefix_exclude_).compare(B->Name.substr(0, prefix_exclude_));
+    i = A->Name.compare(B->Name);
     if (i == 0) {
-      cerr << "ERROR: two reads having the same run_id and X/Y: " << A->Name << " and " << B->Name << endl;  
-      cerr << "Maybe multiple runs with the same run id, please fix that" << endl;
-      exit(1);
-    } else {
+      if (A->IsPaired() and B->IsPaired()) {
+        return A->IsFirstMate();
+      }
+      else {
+        cerr << "ERROR: two reads having the same run_id and X/Y: " << A->Name << " and " << B->Name << endl;
+        cerr << "Maybe multiple runs with the same run id, please fix that" << endl;
+        exit(1);
+      }
+    }
+    else {
       if (warn) {
         cerr << "Warning, two reads with different run_id share the same X_Y: " << A->Name << " and " << B->Name << endl;
         cerr << "Deterministic may not be conserved if the run id is different when re-analyzed" << endl;
@@ -333,7 +340,7 @@ bool compare_alignments(Alignment* const A, Alignment* const B) {
 void BAMWalkerEngine::SaveAlignments(Alignment*& removal_list, VariantCallerContext& vc, vector<MergedTarget>::iterator& depth_target)
 {
   if (removal_list == NULL) {return;}
-//  if (!removal_list) removal_list = alignments_first_;
+  //  if (!removal_list) removal_list = alignments_first_;
   std::map<long int, int>::size_type offset = 100000;
   // Sort alignments
   vector<Alignment*> alignments;
@@ -358,16 +365,16 @@ void BAMWalkerEngine::SaveAlignments(Alignment*& removal_list, VariantCallerCont
     if (prevRefID == -1) {prevRefID = current_read->alignment.RefID;}
     if (current_read->alignment.RefID > prevRefID) {writeDepth(vc.ref_reader);}
     else {
-        if ((depth_map.size() > (offset * 2))) {writeDepth(vc.ref_reader, offset);}
+      if ((depth_map.size() > (offset * 2))) {writeDepth(vc.ref_reader, offset);}
     }
     processDepth(current_read->alignment, vc.targets_manager, depth_target);
     prevRefID = current_read->alignment.RefID;
     prevEndPos = current_read->alignment.GetEndPosition();
     if (bam_writing_enabled_) {
-        current_read->alignment.RemoveTag("ZM");
-        current_read->alignment.RemoveTag("ZP");
-        current_read->alignment.RemoveTag("PG");
-        bam_writer_.SaveAlignment(current_read->alignment);
+      current_read->alignment.RemoveTag("ZM");
+      current_read->alignment.RemoveTag("ZP");
+      current_read->alignment.RemoveTag("PG");
+      bam_writer_.SaveAlignment(current_read->alignment);
     }
   }
 }
@@ -457,7 +464,7 @@ void BAMWalkerEngine::RequestReadProcessingTask(Alignment* & new_read)
     catch(std::bad_alloc& exc)
     {
       cerr << "ERROR: failed to allocate memory in reading BAM in BAMWalkerEngine::RequestReadProcessingTask" << endl;
-      exit(1);	
+      exit(1);
     }
   }
   new_read->read_number = read_counter_++;
@@ -481,26 +488,26 @@ void BAMWalkerEngine::RequestReadProcessingTask(Alignment* & new_read)
 }
 int getSoftEnd(BamAlignment& alignment) {
 
-int position = alignment.Position + 1;
-bool left_clip_skipped = false;
-char cgo = 0;
-int cgl = 0;
+  int position = alignment.Position + 1;
+  bool left_clip_skipped = false;
+  char cgo = 0;
+  int cgl = 0;
 
-for(int j = 0; j < (int)alignment.CigarData.size(); ++j) {
-  cgo = alignment.CigarData[j].Type;
-  cgl = alignment.CigarData[j].Length;
+  for(int j = 0; j < (int)alignment.CigarData.size(); ++j) {
+    cgo = alignment.CigarData[j].Type;
+    cgl = alignment.CigarData[j].Length;
 
-  if ((cgo == 'H' || cgo == 'S') && !left_clip_skipped)
-    continue;
-  left_clip_skipped = true;
+    if ((cgo == 'H' || cgo == 'S') && !left_clip_skipped)
+      continue;
+    left_clip_skipped = true;
 
-  if (cgo == 'H')
-    break;
-  if (cgo == 'S' || cgo == 'M' || cgo == 'D' || cgo == 'N')
-    position += cgl;
-}
+    if (cgo == 'H')
+      break;
+    if (cgo == 'S' || cgo == 'M' || cgo == 'D' || cgo == 'N')
+      position += cgl;
+  }
 
-return position;
+  return position;
 }
 
 bool BAMWalkerEngine::GetNextAlignmentCore(Alignment* new_read, VariantCallerContext& vc, vector<MergedTarget>::iterator& indel_target)
@@ -516,30 +523,29 @@ bool BAMWalkerEngine::GetNextAlignmentCore(Alignment* new_read, VariantCallerCon
     }
     temp_heap.clear();
     do {
-	if (!bam_reader_.GetNextAlignmentCore(temp_reads[i])) break;
-	temp_reads[i].BuildCharData();
-	// Do indel assembly only if no molecular tag detected.
-	if(vc.parameters->program_flow.do_indel_assembly){
+      if (!bam_reader_.GetNextAlignmentCore(temp_reads[i])) break;
+      temp_reads[i].BuildCharData();
+      // Do indel assembly only if no molecular tag detected.
+      if(vc.parameters->program_flow.do_indel_assembly){
         vc.indel_assembly->processRead(temp_reads[i], indel_target);
-	}
-	if (temp_reads[i].RefID < 0) break;
-	if (temp_reads[i].Position != temp_reads[0].Position or temp_reads[i].RefID != temp_reads[0].RefID) {
-	    next_temp_read = &temp_reads[i];
-	    break;
-	} 
-	i++;
-	if (i >= temp_read_size) {
-	    temp_read_size *= 2;
-	    temp_reads.resize(temp_read_size);
-	}
+      }
+      if (temp_reads[i].RefID < 0) break;
+      if (temp_reads[i].Position != temp_reads[0].Position or temp_reads[i].RefID != temp_reads[0].RefID) {
+        next_temp_read = &temp_reads[i];
+        break;
+      }
+      i++;
+      if (i >= temp_read_size) {
+        temp_read_size *= 2;
+        temp_reads.resize(temp_read_size);
+      }
     } while (1);
     if (i == 0) return has_more_alignments_ = false;
     for (int j = 0; j < i; j++) {
-	temp_heap.push_back(&temp_reads[j]);
+      temp_heap.push_back(&temp_reads[j]);
     }
     if (temp_heap.size() > 1) {
-	prefix_exclude_ = prefix_exclude;
-        std::sort(temp_heap.begin(), temp_heap.end(), myorder); // sort into descending order by read Name
+      std::sort(temp_heap.begin(), temp_heap.end(), myorder); // sort into descending order by read Name
     }
   }
   new_read->alignment = *(temp_heap.back()); // output read by ascending order of read Name using popback.
@@ -557,11 +563,11 @@ void BAMWalkerEngine::FinishReadProcessingTask(Alignment* new_read, bool success
 
     // Special case. If no positions are being processed and this read ends before the next position, trigger a cleanup
     if (positions_in_progress_.empty() and (new_read->alignment.RefID < next_target_->chr
-        or (new_read->alignment.RefID == next_target_->chr and new_read->end <= next_position_))) {
+          or (new_read->alignment.RefID == next_target_->chr and new_read->end <= next_position_))) {
 
       Alignment *useful_read = alignments_first_;
       while (useful_read != new_read and (useful_read->alignment.RefID < next_target_->chr
-          or (useful_read->alignment.RefID == next_target_->chr and useful_read->end <= next_position_))) {
+            or (useful_read->alignment.RefID == next_target_->chr and useful_read->end <= next_position_))) {
         useful_read = useful_read->next;
       }
       first_useful_read_ = max(first_useful_read_,useful_read->read_number);
@@ -593,16 +599,16 @@ void BAMWalkerEngine::SetupPositionTicket(list<PositionInProgress>::iterator& po
   Alignment* tmp_begin_ = position_ticket->begin;
 
   while (tmp_begin_ and (
-      (tmp_begin_->alignment.RefID == next_target_->chr and tmp_begin_->end <= next_position_)
-      or tmp_begin_->alignment.RefID < next_target_->chr)
+        (tmp_begin_->alignment.RefID == next_target_->chr and tmp_begin_->end <= next_position_)
+        or tmp_begin_->alignment.RefID < next_target_->chr)
       and tmp_begin_->processed)
     tmp_begin_ = tmp_begin_->next;
 
   Alignment* tmp_end_ = tmp_begin_;
 
   while (tmp_end_ and (
-      (tmp_end_->alignment.RefID == next_target_->chr and tmp_end_->original_position <= next_position_)
-      or tmp_end_->alignment.RefID < next_target_->chr)
+        (tmp_end_->alignment.RefID == next_target_->chr and tmp_end_->original_position <= next_position_)
+        or tmp_end_->alignment.RefID < next_target_->chr)
       and tmp_end_->processed)
     tmp_end_ = tmp_end_->next;
   //positions_in_progress_.push_back(PositionInProgress());
@@ -623,8 +629,8 @@ void BAMWalkerEngine::BeginPositionProcessingTask(list<PositionInProgress>::iter
     tmp_begin_ = alignments_first_;
 
   while (tmp_begin_ and (
-      (tmp_begin_->alignment.RefID == next_target_->chr and tmp_begin_->end <= next_position_)
-      or tmp_begin_->alignment.RefID < next_target_->chr)
+        (tmp_begin_->alignment.RefID == next_target_->chr and tmp_begin_->end <= next_position_)
+        or tmp_begin_->alignment.RefID < next_target_->chr)
       and tmp_begin_->processed)
     tmp_begin_ = tmp_begin_->next;
 
@@ -632,8 +638,8 @@ void BAMWalkerEngine::BeginPositionProcessingTask(list<PositionInProgress>::iter
     tmp_end_ = tmp_begin_;
 
   while (tmp_end_ and (
-      (tmp_end_->alignment.RefID == next_target_->chr and tmp_end_->original_position <= next_position_)
-      or tmp_end_->alignment.RefID < next_target_->chr)
+        (tmp_end_->alignment.RefID == next_target_->chr and tmp_end_->original_position <= next_position_)
+        or tmp_end_->alignment.RefID < next_target_->chr)
       and tmp_end_->processed)
     tmp_end_ = tmp_end_->next;
 
@@ -691,7 +697,7 @@ void BAMWalkerEngine::FinishPositionProcessingTask(list<PositionInProgress>::ite
   time_t delta = time(NULL) - position_ticket->start_time;
   if (delta > 60) {
     cerr<< "WARNING: Variant " << bam_reader_.GetReferenceData()[position_ticket->chr].RefName << ":" << (position_ticket->pos+1)
-        <<" has unexpected processing time of " << delta << " seconds." << endl;
+      <<" has unexpected processing time of " << delta << " seconds." << endl;
   }
   if (position_ticket == positions_in_progress_.begin()) {
     first_useful_read_ = max(first_useful_read_,position_ticket->begin->read_number);
@@ -735,11 +741,11 @@ bool BAMWalkerEngine::IsEarlierstPositionProcessingTask(list<PositionInProgress>
 void BAMWalkerEngine::PrintStatus()
 {
   cerr<< "BAMWalkerEngine:"
-      << " start=" << alignments_first_->read_number
-      << " in_memory="   << read_counter_ - alignments_first_->read_number
-      << " deleteable=" << first_useful_read_ - alignments_first_->read_number
-      << " read_ahead=" << read_counter_ - first_excess_read_
-      << " recycle=" << recycle_size_ << endl;
+    << " start=" << alignments_first_->read_number
+    << " in_memory="   << read_counter_ - alignments_first_->read_number
+    << " deleteable=" << first_useful_read_ - alignments_first_->read_number
+    << " read_ahead=" << read_counter_ - first_excess_read_
+    << " recycle=" << recycle_size_ << endl;
 }
 
 

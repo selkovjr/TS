@@ -5,8 +5,8 @@
 //! @brief    HP Indel detection
 
 
-#ifndef HANDLEVARIANT_H
-#define HANDLEVARIANT_H
+#ifndef HANDLEVRAIANTGEN_H
+#define HANDLEVRAIANTGEN_H
 
 #include <iostream>
 #include <fstream>
@@ -56,8 +56,12 @@ using namespace ion;
 // ----------------------------------------------------------------------
 
 
-bool EnsembleProcessOneVariant(PersistingThreadObjects &thread_objects, VariantCallerContext& vc,
-    VariantCandidate &current_variant, const PositionInProgress& bam_position,
-	vector< vector< MolecularFamily<Alignment*> > > &molecular_families_one_strand, int sample_index = -1);
+bool EnsembleProcessOneVariant (
+  PersistingThreadObjects &thread_objects,
+  VariantCallerContext& vc,
+  VariantCandidate &current_variant,
+  const PositionInProgress& bam_position,
+  int sample_index = -1
+);
 
-#endif //HANDLEVARIANT_H
+#endif //HANDLEVRAIANTGEN_H

@@ -5,6 +5,7 @@
 //! @brief    HP Indel detection
 
 #include "HandleVariant.h"
+#include "SpliceVariantHypotheses.h"
 #include "DecisionTreeData.h"
 
 
@@ -49,9 +50,9 @@ void EnsembleEval::SpliceAllelesIntoReads(PersistingThreadObjects &thread_object
   std::ostringstream my_info;
   my_info.precision(4);
   if (doRealignment and num_valid_reads>0){
-	float frac_realigned = (float)num_realigned / (float)num_valid_reads;
-	// And re-do splicing without realignment if we exceed the threshold
-	if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold){
+  float frac_realigned = (float)num_realigned / (float)num_valid_reads;
+  // And re-do splicing without realignment if we exceed the threshold
+  if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold){
       my_info << "SKIPREALIGNx" << frac_realigned;
       doRealignment = false;
       for (unsigned int i_read = 0; i_read < allele_eval.total_theory.my_hypotheses.size(); i_read++) {
@@ -68,10 +69,10 @@ void EnsembleEval::SpliceAllelesIntoReads(PersistingThreadObjects &thread_object
                                       global_context,
                                       ref_reader, chr_idx);
       }
-	}
-	else {
+  }
+  else {
       my_info << "REALIGNEDx" << frac_realigned;
-	}
+  }
     info_fields.push_back(my_info.str());
   }
 
@@ -131,17 +132,17 @@ void MultiMinAlleleFreq(EnsembleEval &my_ensemble, VariantCandidate &candidate_v
 
     // info tags needed for multi-min-allele-freq
     vector<string> tags_for_multi_min_allele_freq = {"MUAF", "MUQUAL", "MUGQ", "MUGT",
-    		               "SMAF", "SMQUAL", "SMGQ", "SMGT",
-						   "MMAF", "MMQUAL", "MMGQ", "MMGT",
-						   "IMAF", "IMQUAL", "IMGQ", "IMGT",
-						   "HMAF", "HMQUAL", "HMGQ", "HMGT"};
+                       "SMAF", "SMQUAL", "SMGQ", "SMGT",
+               "MMAF", "MMQUAL", "MMGQ", "MMGT",
+               "IMAF", "IMQUAL", "IMGQ", "IMGT",
+               "HMAF", "HMQUAL", "HMGQ", "HMGT"};
     // Add the info tags for multi-min-allele-freq if we have not added yet.
     for(unsigned int i_tag = 0; i_tag < tags_for_multi_min_allele_freq.size(); ++i_tag){
-    	vector<string>::iterator it_format = find(candidate_variant.variant.format.begin(),
-    			                                  candidate_variant.variant.format.end(),
-    			                                  tags_for_multi_min_allele_freq[i_tag]);
+      vector<string>::iterator it_format = find(candidate_variant.variant.format.begin(),
+                                            candidate_variant.variant.format.end(),
+                                            tags_for_multi_min_allele_freq[i_tag]);
         if(it_format == candidate_variant.variant.format.end()){
-        	candidate_variant.variant.format.push_back(tags_for_multi_min_allele_freq[i_tag]);
+          candidate_variant.variant.format.push_back(tags_for_multi_min_allele_freq[i_tag]);
         }
     }
 
@@ -154,50 +155,50 @@ void MultiMinAlleleFreq(EnsembleEval &my_ensemble, VariantCandidate &candidate_v
 
     for(unsigned int alt_allele_index = 0; alt_allele_index < my_ensemble.allele_identity_vector.size(); ++alt_allele_index){
         // ptr_maf_vec = the pointer to the multi_min_allele_freq vector of which type of variant for this allele
-    	vector<float> *ptr_maf_vec = &(program_flow.snp_multi_min_allele_freq);
+      vector<float> *ptr_maf_vec = &(program_flow.snp_multi_min_allele_freq);
         string type_prefix = "S";
 
         // Note that no override here!
         if(my_ensemble.allele_identity_vector[alt_allele_index].status.isHotSpot){
-        	if(is_hotspot_done){
-        		continue;
-        	}
-        	ptr_maf_vec = &(program_flow.hotspot_multi_min_allele_freq);
-        	type_prefix = "H";
+          if(is_hotspot_done){
+            continue;
+          }
+          ptr_maf_vec = &(program_flow.hotspot_multi_min_allele_freq);
+          type_prefix = "H";
         }
         else if(my_ensemble.allele_identity_vector[alt_allele_index].ActAsSNP()){
-        	if(is_snp_done){
-        		continue;
-        	}
-        	ptr_maf_vec = &(program_flow.snp_multi_min_allele_freq);
-        	type_prefix = "S";
+          if(is_snp_done){
+            continue;
+          }
+          ptr_maf_vec = &(program_flow.snp_multi_min_allele_freq);
+          type_prefix = "S";
         }
         else if(my_ensemble.allele_identity_vector[alt_allele_index].ActAsMNP()){
-        	if(is_mnp_done){
-        		continue;
-        	}
-        	ptr_maf_vec = &(program_flow.mnp_multi_min_allele_freq);
-        	type_prefix = "M";
+          if(is_mnp_done){
+            continue;
+          }
+          ptr_maf_vec = &(program_flow.mnp_multi_min_allele_freq);
+          type_prefix = "M";
         }
         else if(my_ensemble.allele_identity_vector[alt_allele_index].ActAsHPIndel()){
-        	if(is_indel_done){
-        		continue;
-        	}
-        	ptr_maf_vec = &(program_flow.indel_multi_min_allele_freq);
-        	type_prefix = "I";
+          if(is_indel_done){
+            continue;
+          }
+          ptr_maf_vec = &(program_flow.indel_multi_min_allele_freq);
+          type_prefix = "I";
         }else{
-        	if(is_snp_done){
-        		continue;
-        	}
-        	ptr_maf_vec = &(program_flow.snp_multi_min_allele_freq);
-        	string type_prefix = "S";
+          if(is_snp_done){
+            continue;
+          }
+          ptr_maf_vec = &(program_flow.snp_multi_min_allele_freq);
+          string type_prefix = "S";
         }
 
         for(unsigned int i_freq = 0; i_freq < ptr_maf_vec->size(); ++i_freq){
             float loc_min_allele_freq = ptr_maf_vec->at(i_freq);
-        	vector<InferenceResult>::iterator it = find(inference_results_union.begin(), inference_results_union.end(), loc_min_allele_freq);
+          vector<InferenceResult>::iterator it = find(inference_results_union.begin(), inference_results_union.end(), loc_min_allele_freq);
             float loc_qual;
-        	int loc_gq;
+          int loc_gq;
             string loc_gt;
 
             if(it == inference_results_union.end()){ // This the first time we get loc_min_allele_freq
@@ -221,9 +222,9 @@ void MultiMinAlleleFreq(EnsembleEval &my_ensemble, VariantCandidate &candidate_v
                 inference_results_union.push_back({loc_min_allele_freq, loc_qual, loc_gt, loc_gq});
             }
             else{ // We've seen loc_min_allele_freq before. Don't need to call CallGermline(...) again.
-            	loc_qual = it->qual;
-            	loc_gq = it->gq;
-            	loc_gt = it->gt;
+              loc_qual = it->qual;
+              loc_gq = it->gq;
+              loc_gt = it->gt;
             }
 
             // write the info tag for the corresponding var type
@@ -234,17 +235,17 @@ void MultiMinAlleleFreq(EnsembleEval &my_ensemble, VariantCandidate &candidate_v
 
             switch(type_prefix[0]){
                 case 'S':
-            	    is_snp_done = true;
-            	    break;
+                  is_snp_done = true;
+                  break;
                 case 'M':
-            	    is_mnp_done = true;
-            	    break;
+                  is_mnp_done = true;
+                  break;
                 case 'I':
-            	    is_indel_done = true;
-            	    break;
+                  is_indel_done = true;
+                  break;
                 case 'H':
-            	    is_hotspot_done = true;
-            	    break;
+                  is_hotspot_done = true;
+                  break;
             }
         }
     }
@@ -276,20 +277,7 @@ void GlueOutputVariant(EnsembleEval &my_ensemble, VariantCandidate &candidate_va
         my_ensemble.ApproximateHardClassifierForReads();
     }
 
-    if(my_ensemble.allele_eval.total_theory.GetIsMolecularTag()){
-    	if(not my_ensemble.is_hard_classification_for_families_done_){
-            my_ensemble.ApproximateHardClassifierForFamilies();
-    	}
-  	    // I count the strand coverage by families, not reads.
-    	// Note that family_id_ is the hard classification results for functional and non-functional families.
-    	// And we classify non-functional families as outliers.
-    	// This gives FXX = 1.0 - (# of functional families) / (# of families).
-  	    my_decision.all_summary_stats.AssignStrandToHardClassifiedReads(my_ensemble.family_strand_id_, my_ensemble.family_id_);
-    }
-    else{
-    	// non-mol-tag
-        my_decision.all_summary_stats.AssignStrandToHardClassifiedReads(my_ensemble.strand_id_, my_ensemble.read_id_);
-    }
+    my_decision.all_summary_stats.AssignStrandToHardClassifiedReads(my_ensemble.strand_id_, my_ensemble.read_id_);
 
     my_decision.all_summary_stats.AssignPositionFromEndToHardClassifiedReads(my_ensemble.read_id_, my_ensemble.dist_to_left_, my_ensemble.dist_to_right_);
 
@@ -371,8 +359,8 @@ void EnsembleEval::StackUpOneVariant(const ExtendParameters &parameters, const P
       continue;
 
     if (parameters.multisample) {
-	  if (rai->sample_index != sample_index) {
-		  continue;
+    if (rai->sample_index != sample_index) {
+      continue;
       }
     }
 
@@ -390,268 +378,28 @@ void EnsembleEval::StackUpOneVariant(const ExtendParameters &parameters, const P
   }
 }
 
-// The class is simply used for random_shuffle
-class MyRandSchrange : private RandSchrange{
-public:
-    MyRandSchrange(int seed = 1){SetSeed(seed);} ;
-    int operator()(int upper_lim){return Rand() % upper_lim;}; // return a random number between 0 and upper_lim-1
-};
-
-// We do down sampling based on the following rules when we have molecular tag.
-// Rule 1: Try to get as many functional families as possible after down sampling
-// Rule 2: Try to equalize the sizes of functional families after down sampling.
-// Rule 3: If we need to drop a functional family, drop the functional family with smaller family size.
-void EnsembleEval::DoDownSamplingMolTag(const ExtendParameters &parameters, vector< vector< MolecularFamily<Alignment*> > > &my_molecular_families,
-			                            unsigned int num_reads_available, unsigned int num_func_fam, int strand_key)
-{
-	MyRandSchrange my_rand_schrange(parameters.my_controls.RandSeed); 	// The random number generator that we use to guarantee reproducibility.
-    unsigned int read_counter = 0;
-    unsigned int min_fam_size = (unsigned int) parameters.tag_trimmer_parameters.min_family_size;
-    unsigned int downSampleCoverage = (unsigned int) parameters.my_controls.downSampleCoverage;
-    unsigned int num_hyp = allele_identity_vector.size() + 2;
-	read_stack.clear();  // reset the stack
-	read_stack.reserve(downSampleCoverage);
-	allele_eval.total_theory.my_eval_families.clear();
-
-	// We can keep all the reads in all functional families :D
-	if(num_reads_available <= downSampleCoverage){
-		allele_eval.total_theory.my_eval_families.reserve(num_reads_available);
-		for(vector< MolecularFamily<Alignment*> >::iterator family_it = my_molecular_families[strand_key].begin();
-				family_it != my_molecular_families[strand_key].end(); ++family_it){
-			if(family_it->is_func_family_temp){
-				allele_eval.total_theory.my_eval_families.push_back(EvalFamily(family_it->family_barcode, family_it->strand_key));
-				allele_eval.total_theory.my_eval_families.back().InitializeEvalFamily(num_hyp);
-				for(unsigned int i_read = 0; i_read < family_it->family_members_temp.size(); ++i_read){
-					read_stack.push_back(family_it->family_members_temp[i_read]);
-					allele_eval.total_theory.my_eval_families.back().AddNewMember(read_counter);
-					++read_counter;
-				}
-			}
-		}
-		return;
-	}
-
-    unsigned int num_of_func_fam_after_down_sampling = 0;
-    unsigned int min_fam_size_after_down_sampling = 0;
-    // The size of this vector is < 3, i.e., we only need to do random shuffle for the at most two different sizes of families.
-    // There are two cases that we need to randomly pick families.
-    // (random_shuffle case 1): We can not preserve the functional families of size = min_fam_size_after_down_sampling.
-    // (random_shuffle case 2): Some families of the same size have one more read than others.
-    vector<unsigned int> size_of_fam_need_random_shuffle(0);
-
-	// sort the families by the family size in the ascending order
-	sort(my_molecular_families[strand_key].begin(), my_molecular_families[strand_key].end());
-
-	// We need to give up some reads but we can keep all functional families :)
-	if(downSampleCoverage >= min_fam_size * num_func_fam){
-		num_of_func_fam_after_down_sampling = num_func_fam;
-		unsigned int i_fam = my_molecular_families[strand_key].size() - num_of_func_fam_after_down_sampling;
-		min_fam_size_after_down_sampling = my_molecular_families[strand_key][i_fam].family_members_temp.size();
-	}
-	// We need to give up some functional families... :(
-	else{
-		num_of_func_fam_after_down_sampling = downSampleCoverage / min_fam_size;
-		unsigned int i_fam = my_molecular_families[strand_key].size() - num_of_func_fam_after_down_sampling;
-		min_fam_size_after_down_sampling = my_molecular_families[strand_key][i_fam].family_members_temp.size();
-		if(i_fam < my_molecular_families[strand_key].size() - 1){
-			if(min_fam_size_after_down_sampling == my_molecular_families[strand_key][i_fam + 1].family_members_temp.size()){
-				// (random_shuffle case 1):
-				// We can't preserve all the families of size my_molecular_families[strand_key][i_fam].family_members_temp.size().
-				// For fairness, we will to randomly pick some of families with this size.
-				size_of_fam_need_random_shuffle.push_back(my_molecular_families[strand_key][i_fam].family_members_temp.size());
-			}
-		}
-	}
-	allele_eval.total_theory.my_eval_families.reserve(num_of_func_fam_after_down_sampling);
-
-	// Count how many reads we want to pick in each family.
-	unsigned int reads_remaining = downSampleCoverage;
-	vector<unsigned int> num_reads_picked_in_fam;
-	// num_reads_picked_in_fam[i] is the number of reads we picked for the family my_molecular_families[strand_key][i_fam]
-	// where i_fam = my_molecular_families[strand_key].size() - i - 1
-	num_reads_picked_in_fam.assign(num_of_func_fam_after_down_sampling, 0);
-
-	unsigned int break_at_i_fam = 0;
-	while(reads_remaining > 0){
-		for(unsigned int i = 0; i < num_of_func_fam_after_down_sampling; ++i){
-			unsigned int i_fam = my_molecular_families[strand_key].size() - i - 1;
-			// Note that my_molecular_families[strand_key][i_fam] should be functional since we sort my_molecular_families[strand_key]
-			// All the reads in the family are picked up, and of course for the next family since we sort my_molecular_families[strand_key]
-			// So let's break the for loop and starts with the family with the largest size.
-			if(num_reads_picked_in_fam[i] >= my_molecular_families[strand_key][i_fam].family_members_temp.size()){
-				break;
-			}
-
-			// We take one more read from the family
-		    ++num_reads_picked_in_fam[i];
-    		--reads_remaining;
-
-			// Sorry, we can't pick up more reads. We have reached the down sampling limit.
-			if(reads_remaining <= 0){
-				break_at_i_fam = i_fam;
-				break;
-			}
-		}
-	}
-
-	if(break_at_i_fam < my_molecular_families[strand_key].size() - 1){
-		if(my_molecular_families[strand_key][break_at_i_fam].family_members_temp.size() == my_molecular_families[strand_key][break_at_i_fam + 1].family_members_temp.size()){
-			// (random_shuffle case 2):
-			// Some of the families of size my_molecular_families[strand_key][break_at_i_fam].family_members_temp.size() get one more read after down sampling.
-			// For fairness, we will do random shuffle for the families of this size.
-			size_of_fam_need_random_shuffle.push_back(my_molecular_families[strand_key][break_at_i_fam].family_members_temp.size());
-		}
-	}
-
-	// sort size_of_fam_need_random_shuffle in increasing order and remove repeats
-	if(size_of_fam_need_random_shuffle.size() == 2){
-		if(size_of_fam_need_random_shuffle[0] > size_of_fam_need_random_shuffle[1]){
-			swap(size_of_fam_need_random_shuffle[0], size_of_fam_need_random_shuffle[1]);
-		}
-		else if(size_of_fam_need_random_shuffle[0] == size_of_fam_need_random_shuffle[1]){
-			size_of_fam_need_random_shuffle.resize(1);
-		}
-	}
-
-	if(size_of_fam_need_random_shuffle.size() > 0){
-		// Now we random shuffle the orders of the families of the same size to give more randomness if we can't pick all among them.
-		// Note that my_molecular_families[strand_key] will remain sorted after random_shuffle.
-		vector< MolecularFamily<Alignment*> >::iterator current_fam_size_begin_it = my_molecular_families[strand_key].begin();
-		for(vector< MolecularFamily<Alignment*> >::iterator family_it = my_molecular_families[strand_key].begin();
-				family_it != my_molecular_families[strand_key].end(); ++family_it){
-			if(family_it->family_members_temp.size() != current_fam_size_begin_it->family_members_temp.size()){
-				// we've got all families of size family_it->family_members_temp.size()
-				if(current_fam_size_begin_it->family_members_temp.size() == size_of_fam_need_random_shuffle[0]){
-					// random shuffle the families of the size size_of_fam_need_random_shuffle[0]
-			    	random_shuffle(current_fam_size_begin_it, family_it, my_rand_schrange);
-			    	if(size_of_fam_need_random_shuffle.size() == 1){
-			    		// We've done random shuffle for all families of the sizes needed
-			    		size_of_fam_need_random_shuffle.clear();
-			    		break;
-			    	}
-			    	else{
-			    		// size_of_fam_need_random_shuffle[0] is done. Will do random_shuffle for size_of_fam_need_random_shuffle[1]
-			    		// Let's do it like a sliding window. Note that size_of_fam_need_random_shuffle must be sorted as well!!!
-			    		size_of_fam_need_random_shuffle.assign(1, size_of_fam_need_random_shuffle[1]);
-			    	}
-			    }
-			    current_fam_size_begin_it = family_it;
-			}
-		}
-		// Don't forget to random shuffle the families if size_of_fam_need_random_shuffle[0] equals the maximum family size
-		if(size_of_fam_need_random_shuffle.size() > 0){
-		    random_shuffle(current_fam_size_begin_it, my_molecular_families[strand_key].end(), my_rand_schrange);
-		}
-	}
-
-	for(unsigned int i = 0; i < num_of_func_fam_after_down_sampling; ++i){
-		unsigned int i_fam = my_molecular_families[strand_key].size() - i - 1;
-		MolecularFamily<Alignment*> *ptr_fam = &(my_molecular_families[strand_key][i_fam]);
-		// Add one more family
-		allele_eval.total_theory.my_eval_families.push_back(EvalFamily(ptr_fam->family_barcode, ptr_fam->strand_key));
-		allele_eval.total_theory.my_eval_families.back().InitializeEvalFamily(num_hyp);
-		allele_eval.total_theory.my_eval_families.back().family_members.reserve(num_reads_picked_in_fam[i]);
-		random_shuffle(ptr_fam->family_members_temp.begin(), ptr_fam->family_members_temp.end(), my_rand_schrange);
-		// Pick up num_reads_picked_in_fam[i] reads from family i_fam.
-		for(unsigned int i_read = 0; i_read < num_reads_picked_in_fam[i]; ++i_read){
-			// Add the read into read_stack
-			read_stack.push_back(ptr_fam->family_members_temp[i_read]);
-			// Add the read in to the family
-			allele_eval.total_theory.my_eval_families.back().AddNewMember(read_counter);
-			++read_counter;
-		}
-	}
-}
-
-// Currently only take the reads on one strand
-void EnsembleEval::StackUpOneVariantMolTag(const ExtendParameters &parameters, vector< vector< MolecularFamily<Alignment*> > > &my_molecular_families, int sample_index)
-{
-	int strand_key = -1;
-	unsigned int min_fam_size = (unsigned int) parameters.tag_trimmer_parameters.min_family_size;
-	vector<unsigned int> num_func_fam_by_strand = {0, 0};
-	vector<unsigned int> num_reads_available_by_strand = {0, 0};
-
-	for(unsigned int i_strand = 0; i_strand < my_molecular_families.size(); ++i_strand){
-		for(vector< MolecularFamily<Alignment*> >::iterator family_it = my_molecular_families[i_strand].begin();
-				family_it != my_molecular_families[i_strand].end(); ++family_it){
-			if(not family_it->SetFunctionality(min_fam_size)){
-				continue;
-			}
-			family_it->family_members_temp.reserve(family_it->family_members.size());
-			for(vector<Alignment*>::iterator member_it = family_it->family_members.begin(); member_it != family_it->family_members.end(); ++member_it){
-
-				// Although we have done this in the function GenerateMyMolecularFamilies, do it again to make sure everything is right.
-				if ((*member_it)->filtered)
-					continue;
-				// Although we have done this in the function GenerateMyMolecularFamilies, do it again to make sure everything is right.
-				if(parameters.multisample) {
-				    if ((*member_it)->sample_index != sample_index) {
-					    continue;
-				    }
-			    }
-
-			    // Check global conditions to stop reading in more alignments
-				if ((*member_it)->original_position > multiallele_window_start
-						or (*member_it)->alignment.Position > multiallele_window_start
-						or (*member_it)->alignment.GetEndPosition() < multiallele_window_end)
-					continue;
-
-
-				// family_members_temp stores the reads which are not filtered out here
-				family_it->family_members_temp.push_back((*member_it));
-			}
-
-			// We may change the family size since some reads may be filtered out.
-			// Need to determine the functionality again!
-			if(family_it->family_members_temp.size() >= min_fam_size){
-				family_it->is_func_family_temp = true;
-				// Count how many reads and functional families available for down sampling
-				num_reads_available_by_strand[i_strand] += family_it->family_members_temp.size();
-				++num_func_fam_by_strand[i_strand];
-			}
-			else{
-				family_it->is_func_family_temp = false;
-			}
-		}
-	}
-
-	// For the current molecular barcoding scheme (bcprimer), the reads in each amplicom should be on on strand only.
-	// However, we sometimes get families on both strands, primarily due to false priming.
-	// Here I pick the strand that has more functional families
-	strand_key = num_func_fam_by_strand[0] > num_func_fam_by_strand[1] ? 0 : 1;
-
-	// Do down-sampling
-	DoDownSamplingMolTag(parameters, my_molecular_families, num_reads_available_by_strand[strand_key], num_func_fam_by_strand[strand_key], strand_key);
-}
-
-bool EnsembleProcessOneVariant(PersistingThreadObjects &thread_objects, VariantCallerContext& vc,
-    VariantCandidate &candidate_variant, const PositionInProgress& bam_position,
-	vector< vector< MolecularFamily<Alignment*> > > &molecular_families, int sample_index)
-{
+bool EnsembleProcessOneVariant (
+  PersistingThreadObjects &thread_objects,
+  VariantCallerContext& vc,
+  VariantCandidate &candidate_variant,
+  const PositionInProgress& bam_position,
+  int sample_index
+) {
   string sample_name = "";
-  bool use_molecular_tag = vc.tag_trimmer->HaveTags();
   if (sample_index >= 0) {sample_name = candidate_variant.variant.sampleNames[sample_index];}
 
   int chr_idx = vc.ref_reader->chr_idx(candidate_variant.variant.sequenceName.c_str());
 
   EnsembleEval my_ensemble(candidate_variant.variant);
-  my_ensemble.allele_eval.total_theory.SetIsMolecularTag(use_molecular_tag);
   my_ensemble.SetupAllAlleles(*vc.parameters, *vc.global_context, *vc.ref_reader, chr_idx);
   my_ensemble.FilterAllAlleles(vc.parameters->my_controls.filter_variant, candidate_variant.variant_specific_params); // put filtering here in case we want to skip below entries
 
   // We read in one stack per multi-allele variant
-  if(use_molecular_tag){
-	my_ensemble.StackUpOneVariantMolTag(*vc.parameters, molecular_families, sample_index);
-  }
-  else{
-    my_ensemble.StackUpOneVariant(*vc.parameters, bam_position, sample_index);
-  }
+  my_ensemble.StackUpOneVariant(*vc.parameters, bam_position, sample_index);
+
   if (my_ensemble.read_stack.empty()) {
     //cerr << "Nonfatal: No reads found for " << candidate_variant.variant.sequenceName << "\t" << my_ensemble.multiallele_window_start << endl;
     NullFilterReason(candidate_variant.variant, sample_name);
-    if (not use_molecular_tag) {
-  	  RemoveVcfInfo(candidate_variant.variant, vector<string>({"MDP", "MRO", "MAO", "MAF"}), sample_name, sample_index);
-    }
     string my_reason = "NODATA";
     AddFilterReason(candidate_variant.variant, my_reason, sample_name);
     SetFilteredStatus(candidate_variant.variant, true);
@@ -671,14 +419,8 @@ bool EnsembleProcessOneVariant(PersistingThreadObjects &thread_objects, VariantC
   my_ensemble.allele_eval.my_params = vc.parameters->my_eval_control;
 
   // fill in quantities derived from predictions
-  int num_hyp_no_null = my_ensemble.allele_identity_vector.size()+1; // num alleles +1 for ref
+  int num_hyp_no_null = my_ensemble.allele_identity_vector.size() + 1; // num alleles +1 for ref
   my_ensemble.allele_eval.InitForInference(thread_objects, my_ensemble.read_stack, *vc.global_context, num_hyp_no_null, my_ensemble.allele_identity_vector);
-
-  if(use_molecular_tag){
-	 // Filter out outlier reads to make sure there is no outlier family!
-	 my_ensemble.allele_eval.total_theory.OutlierFiltering(vc.parameters->my_eval_control.DataReliability(), false);
-	 my_ensemble.allele_eval.total_theory.SetFuncionalityForFamilies(vc.parameters->tag_trimmer_parameters.min_family_size);
-  }
 
   // do inference
   my_ensemble.allele_eval.ExecuteInference();
@@ -688,17 +430,15 @@ bool EnsembleProcessOneVariant(PersistingThreadObjects &thread_objects, VariantC
   // output to variant
   GlueOutputVariant(my_ensemble, candidate_variant, *vc.parameters, best_allele, sample_index);
 
-  if (not use_molecular_tag) {
-	  RemoveVcfInfo(candidate_variant.variant, vector<string>({"MDP", "MRO", "MAO", "MAF"}), sample_name, sample_index);
-  }
-
   // output the inference results (MUQUAL, MUGT, MUGQ, etc.) if I turn on multi_min_allele_freq
-  if(vc.parameters->program_flow.is_multi_min_allele_freq){
-	  MultiMinAlleleFreq(my_ensemble, candidate_variant, sample_index, vc.parameters->program_flow, vc.parameters->my_eval_control.max_detail_level);
+  if (true or vc.parameters->program_flow.is_multi_min_allele_freq) {
+    MultiMinAlleleFreq(my_ensemble, candidate_variant, sample_index, vc.parameters->program_flow, vc.parameters->my_eval_control.max_detail_level);
   }
 
+  cerr << "diagnostic: " << vc.parameters->program_flow.rich_json_diagnostic << endl;
   // test diagnostic output for this ensemble
-  if (vc.parameters->program_flow.rich_json_diagnostic & (!(my_ensemble.variant->isFiltered) | my_ensemble.variant->isHotSpot)) // look at everything that came through
+  // if (vc.parameters->program_flow.rich_json_diagnostic & (!(my_ensemble.variant->isFiltered) | my_ensemble.variant->isHotSpot)) // look at everything that came through
+  if (vc.parameters->program_flow.rich_json_diagnostic) // look at everything
     JustOneDiagnosis(my_ensemble, *vc.global_context, vc.parameters->program_flow.json_plot_dir, true);
   if (vc.parameters->program_flow.minimal_diagnostic & (!(my_ensemble.variant->isFiltered) | my_ensemble.variant->isHotSpot)) // look at everything that came through
     JustOneDiagnosis(my_ensemble, *vc.global_context, vc.parameters->program_flow.json_plot_dir, false);

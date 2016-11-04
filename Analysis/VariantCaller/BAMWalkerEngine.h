@@ -15,7 +15,6 @@
 #include "api/BamMultiReader.h"
 #include "api/BamWriter.h"
 #include "TargetsManager.h"
-#include "MolecularTagTrimmer.h"
 
 using namespace std;
 using namespace BamTools;
@@ -68,10 +67,6 @@ struct Alignment {
     refmap_has_allele.clear();
     refmap_allele.clear();
     is_reverse_strand = false;
-    measurements.clear();
-    measurements_length = 0;
-    phase_params.clear();
-    runid.clear();
     well_rowcol.clear();
     read_bases.clear();
     pretty_aln.clear();
@@ -81,13 +76,10 @@ struct Alignment {
     align_start = 0;
     align_end = 0;
     start_flow = 0;
-    prefix_flow = -1;
     flow_index.clear();
     flow_order_index = -1;
     read_group.clear();
-    prefix_bases.clear();
-    tag_info.Clear();
-	read_count = 1;
+    read_count = 1;
   }
 
   BamAlignment          alignment;          //! Raw BamTools alignment
@@ -99,9 +91,6 @@ struct Alignment {
   bool                  processed;          //! Is candidate generator's pre-processing finished?
   Alignment*            processing_prev;    //! Previous in a list of alignments being processed
   Alignment*            processing_next;    //! Next in a list of alignments being processed
-
-  // Read Tag information
-  MolTag                tag_info;           //! Structure to store tag information for this read
 
   // Candidate generation information
   bool                  filtered;           //! Is unusable for candidate generator?
@@ -117,10 +106,6 @@ struct Alignment {
 
   // Candidate evaluator information
   bool                  is_reverse_strand;  //! Indicates whether read is from the forward or reverse strand
-  vector<float>         measurements;       //! The measurement values for this read blown up to the length of the flow order
-  int                   measurements_length;//! Original trimmed length of the ZM measurements vector
-  vector<float>         phase_params;       //! cf, ie, droop parameters of this read
-  string                runid;              //! Identify the run from which this read came: used to find run-specific parameters
   vector<int>           well_rowcol;        //! 2 element int vector 0-based row, col in that order mapping to row,col in chip
   string                read_bases;         //! Read sequence as base called (minus hard but including soft clips)
   string                pretty_aln;         //! pretty alignment string displaying matches, insertions, deletions
@@ -130,11 +115,9 @@ struct Alignment {
   int                   align_start;        //! genomic 0-based end position of soft clipped untrimmed read
   int                   align_end;          //! genomic 0-based end position of soft clipped untrimmed read
   int                   start_flow;         //! Flow corresponding to the first base in read_bases
-  int                   prefix_flow;        //! Flow corresponding to to the last base of the 5' hard clipped prefix
   vector<int>           flow_index;         //! Main incorporating flow for each base in read_bases
   short                 flow_order_index;   //! Index of the flow order belonging to this read
   string                read_group;         //! Read group of this read
-  string                prefix_bases;       //! hard clipped start of the read
 
   // Post-processing information
   vector<CigarOp>       old_cigar;          //! Cigar information before primer trimming
@@ -163,8 +146,12 @@ public:
   // Initialization
   BAMWalkerEngine();
   ~BAMWalkerEngine();
-  void Initialize(const ReferenceReader& ref_reader, TargetsManager& targets_manager,
-      const vector<string>& bam_filenames, const string& postprocessed_bami, int px);
+  void Initialize(
+    const ReferenceReader& ref_reader,
+    TargetsManager& targets_manager,
+    const vector<string>& bam_filenames,
+    const string& postprocessed_bam
+  );
   void Close();
   const SamHeader& GetBamHeader() { return bam_header_; }
 
@@ -246,8 +233,6 @@ private:
 
   bool                      bam_writing_enabled_;
   BamWriter                 bam_writer_;
-
-  int                       prefix_exclude;
 
   int                       temp_read_size;
   vector<BamAlignment>      temp_reads;

@@ -6,13 +6,14 @@
 #include "StackEngine.h"
 
 bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &my_ensemble,
-                        const LocalReferenceContext &local_context, PersistingThreadObjects &thread_objects,
-                        int &splice_start_flow, int &splice_end_flow, vector<string> &my_hypotheses,
-                        vector<bool> & same_as_null_hypothesis, bool & changed_alignment, const InputStructures &global_context,
-                        const ReferenceReader &ref_reader, int chr_idx)
+    const LocalReferenceContext &local_context, PersistingThreadObjects &thread_objects,
+    int &splice_start_flow, int &splice_end_flow, vector<string> &my_hypotheses,
+    vector<bool> & same_as_null_hypothesis, bool & changed_alignment, const InputStructures &global_context,
+    const ReferenceReader &ref_reader, int chr_idx)
 {
 
   // Hypotheses: 1) Null; read as called 2) Reference Hypothesis 3-?) Variant Hypotheses
+
   my_hypotheses.resize(my_ensemble.allele_identity_vector.size()+2);
   same_as_null_hypothesis.assign(my_hypotheses.size(), false);
 
@@ -51,7 +52,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
   // do realignment of a small region around variant if desired
   if (my_ensemble.doRealignment) {
     pretty_alignment = SpliceDoRealignement(thread_objects, current_read, local_context.position0,
-                                            changed_alignment, global_context.DEBUG, ref_reader, chr_idx);
+        changed_alignment, global_context.DEBUG, ref_reader, chr_idx);
     if (pretty_alignment.empty() and global_context.DEBUG > 0)
       cerr << "Realignment returned an empty string in read " << current_read.alignment.Name << endl;
   }
@@ -80,13 +81,13 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
     if (ref_idx == local_context.position0 and !did_splicing and !outside_of_window) {
       // Add insertions before variant window
       while (pretty_idx < pretty_alignment.length() and pretty_alignment[pretty_idx] == '+') {
-    	for (unsigned int i_hyp = 1; i_hyp < my_hypotheses.size(); i_hyp++)
+        for (unsigned int i_hyp = 1; i_hyp < my_hypotheses.size(); i_hyp++)
           my_hypotheses[i_hyp].push_back(current_read.alignment.QueryBases[read_idx]);
         read_idx++;
         pretty_idx++;
       }
       did_splicing = SpliceAddVariantAlleles(current_read, pretty_alignment, my_ensemble,
-    		                    local_context, my_hypotheses, pretty_idx, global_context.DEBUG);
+          local_context, my_hypotheses, pretty_idx, global_context.DEBUG);
       just_did_splicing = did_splicing;
     } // --- ---
 
@@ -106,10 +107,10 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
         splice_start_idx = read_idx - current_read.left_sc;
       }
       else if (just_did_splicing) { // Log length of hypothesis after splicing
-    	splice_end_idx[0] = read_idx  - current_read.left_sc;
-    	int clipped_bases = 0;
-    	if (!global_context.resolve_clipped_bases)
-    	  clipped_bases = current_read.left_sc;
+        splice_end_idx[0] = read_idx  - current_read.left_sc;
+        int clipped_bases = 0;
+        if (!global_context.resolve_clipped_bases)
+          clipped_bases = current_read.left_sc;
         for (unsigned int i_hyp=1; i_hyp<my_hypotheses.size(); i_hyp++)
           splice_end_idx[i_hyp] = my_hypotheses[i_hyp].length()-1 - clipped_bases; // Hyp length depends on whether there is resolving!
         just_did_splicing = false;
@@ -137,44 +138,45 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
 
       if (current_read.is_reverse_strand)
         RevComplementInPlace(my_hypotheses[i_hyp]);
+
+      cerr << "hypothesis[" << i_hyp << "]: " << my_hypotheses[i_hyp] << endl;
     }
 
     // Get the main flows before and after splicing
-    splice_end_flow = GetSpliceFlows(current_read, global_context, my_hypotheses, same_as_null_hypothesis,
-                                     splice_start_idx, splice_end_idx, splice_start_flow);
+    splice_end_flow = GetSpliceFlows(current_read, global_context, my_hypotheses, same_as_null_hypothesis, splice_start_idx, splice_end_idx, splice_start_flow);
     if (splice_start_flow < 0 or splice_end_flow <= splice_start_flow) {
       did_splicing = false;
       cout << "Warning in Splicing: Splice flows are not valid in read " << current_read.alignment.Name
-           << ". splice start flow: "<< splice_start_flow << " splice end flow " << splice_end_flow << endl;
+        << ". splice start flow: "<< splice_start_flow << " splice end flow " << splice_end_flow << endl;
     }
   }
 
   // Check for non-ACGT bases in hypotheses
   bool valid_bases = true;
   for (unsigned int i_hyp=0; i_hyp<my_hypotheses.size(); i_hyp++) {
-	unsigned int iBase = 0;
-	while (iBase<my_hypotheses[i_hyp].length() and valid_bases){
+    unsigned int iBase = 0;
+    while (iBase<my_hypotheses[i_hyp].length() and valid_bases){
       if (my_hypotheses[i_hyp].at(iBase) == 'A' or my_hypotheses[i_hyp].at(iBase) == 'C' or
           my_hypotheses[i_hyp].at(iBase) == 'G' or my_hypotheses[i_hyp].at(iBase) == 'T')
-      iBase++;
+        iBase++;
       else
         valid_bases = false;
-	}
+    }
   }
   if (not valid_bases){
     cerr << "Non-Fatal ERROR in Splicing for " << local_context.contigName << ":" << local_context.position0+1
-         << ": Read Hypotheses for " << current_read.alignment.Name << " contain non-ACGT characters." << endl;
+      << ": Read Hypotheses for " << current_read.alignment.Name << " contain non-ACGT characters." << endl;
     did_splicing = false;
   }
 
   // --- Fail safe for hypotheses and verbose
   if (!did_splicing) {
-	for (unsigned int i_hyp=1; i_hyp<my_hypotheses.size(); i_hyp++)
+    for (unsigned int i_hyp=1; i_hyp<my_hypotheses.size(); i_hyp++)
       my_hypotheses[i_hyp] = my_hypotheses[0];
     if (global_context.DEBUG > 1) {
       cout << "Failed to splice " << local_context.reference_allele << "->";
       for (unsigned int i_alt = 0; i_alt<my_ensemble.allele_identity_vector.size(); i_alt++) {
-    	cout << my_ensemble.allele_identity_vector[i_alt].altAllele;
+        cout << my_ensemble.allele_identity_vector[i_alt].altAllele;
         if (i_alt < my_ensemble.allele_identity_vector.size()-1)
           cout << ",";
       }
@@ -182,7 +184,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
     }
   }
   else if (global_context.DEBUG > 1) {
-	cout << "Spliced " << local_context.reference_allele << "->";
+    cout << "Spliced " << local_context.reference_allele << "->";
     for (unsigned int i_alt = 0; i_alt<my_ensemble.allele_identity_vector.size(); i_alt++) {
       cout << my_ensemble.allele_identity_vector[i_alt].altAllele;
       if (i_alt < my_ensemble.allele_identity_vector.size()-1)
@@ -191,7 +193,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
     cout << " into ";
     if (current_read.is_reverse_strand) cout << "reverse ";
     else cout << "forward ";
-    cout <<	"strand read read " << current_read.alignment.Name << endl;
+    cout << "strand read read " << current_read.alignment.Name << endl;
     cout << "- Read as called: " << my_hypotheses[0] << endl;
     cout << "- Reference Hyp.: " << my_hypotheses[1] << endl;
     for (unsigned int i_hyp = 2; i_hyp<my_hypotheses.size(); i_hyp++)
@@ -209,7 +211,7 @@ void IncrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_id
   switch (aln_symbol) {
     case ('-'):
       ref_idx++;
-    break;
+      break;
     case ('+'):
     case (' '):
     case ('|'):
@@ -225,7 +227,7 @@ void DecrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_id
   switch (aln_symbol) {
     case ('-'):
       ref_idx--;
-    break;
+      break;
     case ('+'):
     case (' '):
     case ('|'):
@@ -237,23 +239,17 @@ void DecrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_id
 }
 
 void IncrementFlow(const ion::FlowOrder &flow_order, const char &nuc, int &flow) {
-  while (flow < flow_order.num_flows() and flow_order.nuc_at(flow) != nuc)
+  // while (flow < flow_order.num_flows() and flow_order.nuc_at(flow) != nuc)
     flow++;
-}
-
-void IncrementFlows(const ion::FlowOrder &flow_order, const char &nuc, vector<int> &flows) {
-  for (unsigned int idx = 1; idx < flows.size(); idx++)
-    while (flows[idx] < flow_order.num_flows() and flow_order.nuc_at(flows[idx]) != nuc)
-      flows[idx]++;
 }
 
 // -------------------------------------------------------------------
 
 // This function is useful in the case that insertion count towards reference index before them.
 bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty_alignment,
-                             const EnsembleEval &my_ensemble,
-                             const LocalReferenceContext &local_context, vector<string> &my_hypotheses,
-                             unsigned int pretty_idx_orig, int DEBUG)
+    const EnsembleEval &my_ensemble,
+    const LocalReferenceContext &local_context, vector<string> &my_hypotheses,
+    unsigned int pretty_idx_orig, int DEBUG)
 {
 
   // Splice reference Hypothesis
@@ -262,7 +258,7 @@ bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty
   for (unsigned int i_hyp = 2; i_hyp < my_hypotheses.size(); ++i_hyp) {
     int my_allele_idx = i_hyp-2;
 
-	// Special SNP splicing to not accidentally split HPs in the presence of insertions at start of HP
+    // Special SNP splicing to not accidentally split HPs in the presence of insertions at start of HP
     if (my_ensemble.allele_identity_vector[my_allele_idx].status.isSNP) {
       int shifted_position = 0;
       unsigned int splice_idx = my_hypotheses[i_hyp].length();
@@ -270,7 +266,7 @@ bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty
       my_hypotheses[i_hyp] += local_context.reference_allele;
       // move left if there are insertions of the same base as the reference hypothesis base
       while (pretty_idx > 0 and pretty_alignment[pretty_idx-1]=='+' and splice_idx > 0
-            and current_read.alignment.QueryBases[splice_idx-1]==local_context.reference_allele[0]) {
+          and current_read.alignment.QueryBases[splice_idx-1]==local_context.reference_allele[0]) {
         pretty_idx--;
         splice_idx--;
         shifted_position++;
@@ -278,8 +274,8 @@ bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty
       if (DEBUG > 1 and shifted_position > 0) {
         // printouts
         cout << "Shifted splice position by " << shifted_position << " in " << current_read.alignment.Name
-             << " " << local_context.position0 << local_context.reference_allele
-             << "->" << my_ensemble.allele_identity_vector[my_allele_idx].altAllele << endl;
+          << " " << local_context.position0 << local_context.reference_allele
+          << "->" << my_ensemble.allele_identity_vector[my_allele_idx].altAllele << endl;
         cout << my_hypotheses[i_hyp] << endl;
       }
       my_hypotheses[i_hyp][splice_idx] = my_ensemble.allele_identity_vector[my_allele_idx].altAllele[0];
@@ -295,8 +291,8 @@ bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty
 
 
 int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_context,
-                   vector<string> &my_hypotheses, vector<bool> & same_as_null_hypothesis,
-                   int splice_start_idx, vector<int> splice_end_idx, int &splice_start_flow)
+    vector<string> &my_hypotheses, vector<bool> & same_as_null_hypothesis,
+    int splice_start_idx, vector<int> splice_end_idx, int &splice_start_flow)
 {
 
   int splice_end_flow = -1;
@@ -309,7 +305,7 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
   // Set relevant indices
   int added_SC_bases = 0;
   if (!global_context.resolve_clipped_bases) {
-	// We added the soft clipped bases to our hypotheses to be simulated
+    // We added the soft clipped bases to our hypotheses to be simulated
     added_SC_bases = current_read.left_sc + current_read.right_sc;
   }
   for (unsigned int i_hyp = 0; i_hyp < my_hypotheses.size(); i_hyp++) {
@@ -322,10 +318,10 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
 
   if (current_read.is_reverse_strand) { // The same number of bases have been added beyond the window
     my_start_idx = my_hypotheses[0].length() - added_SC_bases -1 - splice_end_idx[0];
-    if (global_context.DEBUG>2)
+    if (global_context.DEBUG > 2)
       cout << "--> reverse strand splicing:" << endl;
   }
-  else if (global_context.DEBUG>2) {
+  else if (global_context.DEBUG > 2) {
     cout << "--> forward strand splicing:" << endl;
   }
 
@@ -334,7 +330,7 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
     if (current_read.start_sc > 0) { // We have trimmed bases that can act as an anchor to get the flows right
       splice_start_flow = current_read.flow_index[current_read.start_sc-1];
       // splice_start_idx remains at -1;
-	}
+    }
     else { // Test if all allele windows start with the same base
       bool have_anchor = true;
       for (unsigned int i_hyp=1; i_hyp<my_hypotheses.size(); i_hyp++)
@@ -348,8 +344,8 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
         }
       }
       else { // In this case, the splice_start_flow depends on the prefix (key+barcode) of the read, which we solve later
-             // Prediction generation is doing the right thing, even though we botch things up a bit here.
-             // And we are giving a bit of leeway in the test flow window to compensate for our botching.
+        // Prediction generation is doing the right thing, even though we botch things up a bit here.
+        // And we are giving a bit of leeway in the test flow window to compensate for our botching.
         splice_start_flow = current_read.start_flow-1;
         // splice_start_idx remains at -1;
       }
@@ -361,6 +357,7 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
 
   if (!global_context.resolve_clipped_bases)
     my_start_idx += current_read.start_sc; // Add soft clipped start to index
+
   my_start_idx++; // my_start_idx is now pointing at the first spliced base
 
   // Computing splice_end_flow
@@ -372,7 +369,9 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
         error_occurred = true;
         break;
       }
-      IncrementFlow(global_context.flow_order_vector.at(current_read.flow_order_index), my_hypotheses[i_hyp][i_base], my_flow);
+      cerr << "global_context.flow_order_vector.at(" << current_read.flow_order_index << "), " << my_hypotheses[i_hyp][i_base] << ", " << my_flow << endl;
+      // IncrementFlow(global_context.flow_order_vector.at(current_read.flow_order_index), my_hypotheses[i_hyp][i_base], my_flow);
+      my_flow++;
     }
     if (my_flow > splice_end_flow)
       splice_end_flow = my_flow;
@@ -384,9 +383,9 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
     // reverse verbose
     if (global_context.DEBUG>2)
       cout << "Hypothesis " << i_hyp << " splice_end_idx " << splice_end_idx[i_hyp] << " splice_length " << splice_length[i_hyp]
-           << " my_start_idx " << my_start_idx << " my_end_idx " << my_end_idx
-           << " splice_start_flow " << splice_start_flow << " my_end_flow " << my_flow
-           << " Spliced Bases: " << my_hypotheses[i_hyp].substr(my_start_idx, splice_length[i_hyp]) << endl;
+        << " my_start_idx " << my_start_idx << " my_end_idx " << my_end_idx
+        << " splice_start_flow " << splice_start_flow << " my_end_flow " << my_flow
+        << " Spliced Bases: " << my_hypotheses[i_hyp].substr(my_start_idx, splice_length[i_hyp]) << endl;
   }
 
   if (error_occurred)
@@ -402,7 +401,7 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
 
 
 string SpliceDoRealignement (PersistingThreadObjects &thread_objects, const Alignment &current_read, long variant_position,
-		                     bool &changed_alignment, int DEBUG, const ReferenceReader &ref_reader, int chr_idx) {
+    bool &changed_alignment, int DEBUG, const ReferenceReader &ref_reader, int chr_idx) {
 
   // We do not allow any clipping since we align a short substring
   thread_objects.realigner.SetClipping(0, true);
@@ -422,8 +421,8 @@ string SpliceDoRealignement (PersistingThreadObjects &thread_objects, const Alig
     cout << "Computed variant position as (red, ref, pretty) " << read_idx << " " << ref_idx << " " << pretty_idx << endl;
 
   if (pretty_idx >= current_read.pretty_aln.length()
-       or ref_idx  >= ref_reader.chr_size(chr_idx)
-       or read_idx >= (int)current_read.alignment.QueryBases.length() - current_read.right_sc)
+      or ref_idx  >= ref_reader.chr_size(chr_idx)
+      or read_idx >= (int)current_read.alignment.QueryBases.length() - current_read.right_sc)
     return new_alignment;
 
   // --- Get small sequence context for very local realignment ------------------------
@@ -437,23 +436,23 @@ string SpliceDoRealignement (PersistingThreadObjects &thread_objects, const Alig
 
   while (continue_looking) {
     pretty_left--;
-	DecrementAlignmentIndices(current_read.pretty_aln[pretty_left], ref_left, read_left);
+    DecrementAlignmentIndices(current_read.pretty_aln[pretty_left], ref_left, read_left);
 
-	// Stopping criterion
-	if (pretty_left < 1) {
+    // Stopping criterion
+    if (pretty_left < 1) {
       continue_looking = false;
       break;
-	}
-	if (ref_idx - ref_left < min_bases)
+    }
+    if (ref_idx - ref_left < min_bases)
       continue_looking = true;
-	else {
-	  // make sure to start with a matching base and don't split large HPs
-	  if (current_read.pretty_aln[pretty_left] != '|'
+    else {
+      // make sure to start with a matching base and don't split large HPs
+      if (current_read.pretty_aln[pretty_left] != '|'
           or (ref_reader.base(chr_idx,ref_left+1) == ref_reader.base(chr_idx,ref_left)))
-	    continue_looking = true;
-	  else
-	    continue_looking = false;
-	}
+        continue_looking = true;
+      else
+        continue_looking = false;
+    }
   }
   if (DEBUG > 1)
     cout << "Computed left realignment window as (red, ref, pretty) " << read_left << " " << ref_left << " " << pretty_left << endl;
@@ -466,24 +465,24 @@ string SpliceDoRealignement (PersistingThreadObjects &thread_objects, const Alig
   continue_looking = pretty_idx < current_read.pretty_aln.length()-1;
 
   while (continue_looking) {
-  	IncrementAlignmentIndices(current_read.pretty_aln[pretty_right], ref_right, read_right);
+    IncrementAlignmentIndices(current_read.pretty_aln[pretty_right], ref_right, read_right);
     pretty_right++;
-  	// Stopping criterion (half open interval)
-  	if (pretty_right >= current_read.pretty_aln.length()
+    // Stopping criterion (half open interval)
+    if (pretty_right >= current_read.pretty_aln.length()
         or ref_right >= ref_reader.chr_size(chr_idx)) {
       continue_looking = false;
       break;
-  	}
-  	if (ref_right - ref_idx < min_bases)
-        continue_looking = true;
-  	else {
-  	  // make sure to stop with a matching base and don't split large HPs
-  	  if (current_read.pretty_aln[pretty_right-1] != '|'
+    }
+    if (ref_right - ref_idx < min_bases)
+      continue_looking = true;
+    else {
+      // make sure to stop with a matching base and don't split large HPs
+      if (current_read.pretty_aln[pretty_right-1] != '|'
           or (ref_reader.base(chr_idx,ref_right-1) == ref_reader.base(chr_idx,ref_right)))
-  	    continue_looking = true;
-  	  else
-  	    continue_looking = false;
-  	}
+        continue_looking = true;
+      else
+        continue_looking = false;
+    }
   }
   if (DEBUG > 1)
     cout << "Computed right realignment window as (red, ref, pretty) " << read_right << " " << ref_right << " " << pretty_right << endl;
@@ -508,7 +507,7 @@ string SpliceDoRealignement (PersistingThreadObjects &thread_objects, const Alig
 
   string old_alignment = current_read.pretty_aln.substr(pretty_left, pretty_right-pretty_left);
   thread_objects.realigner.SetSequences(current_read.alignment.QueryBases.substr(read_left, read_right-read_left),
-                         ref_reader.substr(chr_idx, ref_left, ref_right-ref_left), old_alignment, true);
+      ref_reader.substr(chr_idx, ref_left, ref_right-ref_left), old_alignment, true);
 
   if (!thread_objects.realigner.computeSWalignment(new_cigar_data, new_md_data, start_position_shift)) {
     if (DEBUG > 1)

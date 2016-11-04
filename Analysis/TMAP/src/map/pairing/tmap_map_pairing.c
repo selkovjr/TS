@@ -48,7 +48,7 @@ tmap_map_pairing_get_position_diff(tmap_map_sam_t *one, tmap_map_sam_t *two, int
   pos_one_right = tmap_map_pairing_get_right(one, one_len);
   pos_two_right = tmap_map_pairing_get_right(two, two_len);
 
-  switch(strandedness) { 
+  switch(strandedness) {
     case TMAP_MAP_PAIRING_SAME_STRAND:
       switch(positioning) {
         case TMAP_MAP_PAIRING_POSITIONING_AB:
@@ -70,13 +70,13 @@ tmap_map_pairing_get_position_diff(tmap_map_sam_t *one, tmap_map_sam_t *two, int
   fprintf(stderr, "pos_two_left=%u pos_two_right=%u\n", pos_two_left, pos_two_right);
   fprintf(stderr, "diff=%d\n", diff);
   */
-  
+
   return diff;
 }
 
 double
-tmap_map_pairing_get_num_std(tmap_map_sam_t *one, tmap_map_sam_t *two, int32_t one_len, int32_t two_len, 
-                             double ins_size_mean, double ins_size_std, double ins_size_std_max_num, 
+tmap_map_pairing_get_num_std(tmap_map_sam_t *one, tmap_map_sam_t *two, int32_t one_len, int32_t two_len,
+                             double ins_size_mean, double ins_size_std, double ins_size_std_max_num,
                             int32_t pen_mm, int32_t strandedness, int32_t positioning)
 {
   int32_t strand_diff, position_diff;
@@ -104,17 +104,17 @@ tmap_map_pairing_get_num_std(tmap_map_sam_t *one, tmap_map_sam_t *two, int32_t o
 
 int32_t
 tmap_map_pairing_score(tmap_map_sam_t *one, tmap_map_sam_t *two, int32_t one_len, int32_t two_len,
-                       double ins_size_mean, double ins_size_std, double ins_size_std_max_num, 
+                       double ins_size_mean, double ins_size_std, double ins_size_std_max_num,
                        int32_t pen_mm, int32_t strandedness, int32_t positioning, uint8_t *proper_pair, double *num_std)
 {
   // NB: use the target ends
   (*num_std) = tmap_map_pairing_get_num_std(one, two, one_len, two_len, ins_size_mean, ins_size_std, ins_size_std_max_num, pen_mm, strandedness, positioning);
-  (*proper_pair) = ((*num_std) < ins_size_std_max_num) ? 1 : 0; 
+  (*proper_pair) = ((*num_std) < ins_size_std_max_num) ? 1 : 0;
   return one->score + two->score - (int)(pen_mm * -1.0 * log10( erfc(M_SQRT1_2 * (*num_std))) + 0.499);
 }
 
 void
-tmap_map_pairing_pick_pairs(tmap_map_sams_t *one, tmap_map_sams_t *two, tmap_seq_t *one_seq, tmap_seq_t *two_seq, 
+tmap_map_pairing_pick_pairs(tmap_map_sams_t *one, tmap_map_sams_t *two, tmap_seq_t *one_seq, tmap_seq_t *two_seq,
                             tmap_rand_t *rand, tmap_map_opt_t *opt)
 {
   int32_t i, j, n_i, n_j;
@@ -128,9 +128,9 @@ tmap_map_pairing_pick_pairs(tmap_map_sams_t *one, tmap_map_sams_t *two, tmap_seq
 
   n_i = one->n;
   n_j = two->n;
-  scores = tmap_malloc(sizeof(int32_t*) * n_i, "scores"); 
-  proper_pairs = tmap_malloc(sizeof(uint8_t*) * n_i, "proper_pairs"); 
-  num_stds = tmap_malloc(sizeof(double*) * n_i, "num_stds"); 
+  scores = tmap_malloc(sizeof(int32_t*) * n_i, "scores");
+  proper_pairs = tmap_malloc(sizeof(uint8_t*) * n_i, "proper_pairs");
+  num_stds = tmap_malloc(sizeof(double*) * n_i, "num_stds");
   for(i=0;i<n_i;i++) {
       scores[i] = tmap_malloc(sizeof(int32_t) * n_j, "scores[i]");
       proper_pairs[i] = tmap_malloc(sizeof(uint8_t) * n_j, "proper_pairs[i]");
@@ -152,15 +152,15 @@ tmap_map_pairing_pick_pairs(tmap_map_sams_t *one, tmap_map_sams_t *two, tmap_seq
   for(i=0;i<n_i;i++) {
       for(j=0;j<n_j;j++) {
           // score
-          scores[i][j] = tmap_map_pairing_score(&one->sams[i], &two->sams[j], 
+          scores[i][j] = tmap_map_pairing_score(&one->sams[i], &two->sams[j],
                                                 tmap_seq_get_bases_length(one_seq), tmap_seq_get_bases_length(two_seq),
                                                 opt->ins_size_mean, opt->ins_size_std, opt->ins_size_std_max_num,
-                                                opt->pen_mm, opt->strandedness, opt->positioning, 
+                                                opt->pen_mm, opt->strandedness, opt->positioning,
                                                 &proper_pairs[i][j], &num_stds[i][j]);
           /*
           fprintf(stderr, "one->pos=%d two->pos=%d one->score=%d two->score=%d scores[i][j]=%d proper_pairs[i][j]=%d num_stds[i][j]=%lf\n",
-                  one->sams[i].pos, two->sams[j].pos, 
-                  one->sams[i].score, two->sams[j].score, 
+                  one->sams[i].pos, two->sams[j].pos,
+                  one->sams[i].score, two->sams[j].score,
                   scores[i][j], proper_pairs[i][j], num_stds[i][j]);
                   */
           // update best and next-best
@@ -203,11 +203,11 @@ tmap_map_pairing_pick_pairs(tmap_map_sams_t *one, tmap_map_sams_t *two, tmap_seq
   else {
       mapq = 0;
   }
-  
+
   //fprintf(stderr, "best_score=%d best_subo_score=%d mapq=%d\n", best_score, best_subo_score, mapq);
 
   // TODO: adjust suboptimal?
-      
+
   // filter
   if(TMAP_MAP_OPT_ALN_MODE_ALL == opt->aln_output_mode || TMAP_MAP_OPT_ALN_MODE_ALL_BEST == opt->aln_output_mode) {
       tmap_error("bug encountered", Exit, OutOfRange);
@@ -229,7 +229,7 @@ tmap_map_pairing_pick_pairs(tmap_map_sams_t *one, tmap_map_sams_t *two, tmap_seq
               }
           }
       }
-      
+
       // copy to the front
       if(best_score_i != 0) {
           tmap_map_sam_copy_and_nullify(&one->sams[0], &one->sams[best_score_i]);
@@ -253,8 +253,8 @@ tmap_map_pairing_pick_pairs(tmap_map_sams_t *one, tmap_map_sams_t *two, tmap_seq
       fprintf(stderr, "best_score_j=%d\n", best_score_j);
       fprintf(stderr, "num_stds[best_score_i][best_score_j]=%lf\n", num_stds[best_score_i][best_score_j]);
       */
-      one->sams[0].num_stds = num_stds[best_score_i][best_score_j]; 
-      two->sams[0].num_stds = num_stds[best_score_i][best_score_j]; 
+      one->sams[0].num_stds = num_stds[best_score_i][best_score_j];
+      two->sams[0].num_stds = num_stds[best_score_i][best_score_j];
       // update the mapping quality
       //fprintf(stderr, "mapq=%d n_best=%d proper_pairs[best_score_i][best_score_j]=%d\n", mapq, n_best, proper_pairs[best_score_i][best_score_j]);
       if(1 == n_best) {
@@ -269,11 +269,11 @@ tmap_map_pairing_pick_pairs(tmap_map_sams_t *one, tmap_map_sams_t *two, tmap_seq
                   */
                   // upweight
                   /*
-                  one->sams[0].mapq = (250 < mapq + one->sams[0].mapq) ? 250 : one->sams[0].mapq + mapq; 
-                  two->sams[0].mapq = (250 < mapq + two->sams[0].mapq) ? 250 : two->sams[0].mapq + mapq; 
+                  one->sams[0].mapq = (250 < mapq + one->sams[0].mapq) ? 250 : one->sams[0].mapq + mapq;
+                  two->sams[0].mapq = (250 < mapq + two->sams[0].mapq) ? 250 : two->sams[0].mapq + mapq;
                   */
-                  if(one->sams[0].mapq < mapq) one->sams[0].mapq = mapq; 
-                  if(two->sams[0].mapq < mapq) two->sams[0].mapq = mapq; 
+                  if(one->sams[0].mapq < mapq) one->sams[0].mapq = mapq;
+                  if(two->sams[0].mapq < mapq) two->sams[0].mapq = mapq;
               }
               else { // one of the two had zero SE mapq
                   if(0 < mapq && 0 == one->sams[0].mapq) one->sams[0].mapq = (mapq + 7 < two->sams[0].mapq) ? (mapq + 7) : two->sams[0].mapq;
@@ -327,8 +327,8 @@ tmap_map_pairing_pick_pairs(tmap_map_sams_t *one, tmap_map_sams_t *two, tmap_seq
 static tmap_map_sams_t*
 tmap_map_pairing_read_rescue_helper(tmap_refseq_t *refseq,
                                     tmap_seq_t *one_orig, tmap_seq_t *two_orig,
-                                    tmap_map_sams_t *one, tmap_map_sams_t *two, 
-                                    tmap_seq_t *one_seq[2], tmap_seq_t *two_seq[2], 
+                                    tmap_map_sams_t *one, tmap_map_sams_t *two,
+                                    tmap_seq_t *one_seq[2], tmap_seq_t *two_seq[2],
                                     double ins_size_mean, double ins_size_std,
                                     int32_t strandedness, int32_t positioning, // positioning should be relateive to one/two
                                     int32_t read_rescue_std_num,
@@ -373,7 +373,7 @@ tmap_map_pairing_read_rescue_helper(tmap_refseq_t *refseq,
           int32_t one_left = tmap_map_pairing_get_left(&one->sams[i], one_len);
           int32_t one_right = tmap_map_pairing_get_right(&one->sams[i], one_len);
           int32_t add, sub;
-          
+
           // found a best
           n_best--;
 
@@ -393,7 +393,7 @@ tmap_map_pairing_read_rescue_helper(tmap_refseq_t *refseq,
               }
               else {
                   if(0 == one->sams[i].strand) {
-                      add = one_right; sub = ins_size_mean; 
+                      add = one_right; sub = ins_size_mean;
                   }
                   else {
                       add = one_left + ins_size_mean + 1; sub = two_len; // genomic forward left-most
@@ -425,7 +425,7 @@ tmap_map_pairing_read_rescue_helper(tmap_refseq_t *refseq,
           sams->sams[j].pos = add - sub;
 
           // this is important for tmap_map_util_sw_gen_score
-          sams->sams[j].target_len = two_len; 
+          sams->sams[j].target_len = two_len;
 
           /*
           fprintf(stderr, "RR seqid:%u pos:%u strand:%d\n",
@@ -454,20 +454,20 @@ tmap_map_pairing_read_rescue_helper(tmap_refseq_t *refseq,
   return sams;
 }
 
-int32_t 
-tmap_map_pairing_read_rescue(tmap_refseq_t *refseq, 
+int32_t
+tmap_map_pairing_read_rescue(tmap_refseq_t *refseq,
                              tmap_seq_t *one_seq_orig, tmap_seq_t *two_seq_orig,
-                             tmap_map_sams_t *one, tmap_map_sams_t *two, 
-                             tmap_seq_t *one_seq[2], tmap_seq_t *two_seq[2], 
+                             tmap_map_sams_t *one, tmap_map_sams_t *two,
+                             tmap_seq_t *one_seq[2], tmap_seq_t *two_seq[2],
                              tmap_rand_t *rand, tmap_map_opt_t *opt)
 {
   tmap_map_sams_t *one_rr = NULL, *two_rr = NULL;
   int32_t i, flag = 0;
-  
+
   // Rescue #1 from #2
   one_rr = tmap_map_pairing_read_rescue_helper(refseq, two_seq_orig, one_seq_orig, two, one, two_seq, one_seq,
                                                opt->ins_size_mean, opt->ins_size_std,
-                                               opt->strandedness, 1-opt->positioning, // NB: update positioning 
+                                               opt->strandedness, 1-opt->positioning, // NB: update positioning
                                                opt->read_rescue_std_num,
                                                rand, opt);
   //fprintf(stderr, "RR #1: %d\n", one_rr->n);
@@ -483,13 +483,13 @@ tmap_map_pairing_read_rescue(tmap_refseq_t *refseq,
       i = one->n;
       tmap_map_sams_merge(one, one_rr);
       tmap_map_util_remove_duplicates(one, opt->dup_window, rand);
-      if(i < one->n) flag |= 0x1; 
+      if(i < one->n) flag |= 0x1;
   }
-  
+
   // Rescue #2 from #1
   two_rr = tmap_map_pairing_read_rescue_helper(refseq, one_seq_orig, two_seq_orig, one, two, one_seq, two_seq,
                                                opt->ins_size_mean, opt->ins_size_std,
-                                               opt->strandedness, opt->positioning, 
+                                               opt->strandedness, opt->positioning,
                                                opt->read_rescue_std_num,
                                                rand, opt);
   //fprintf(stderr, "RR #2: %d\n", one_rr->n);
@@ -505,7 +505,7 @@ tmap_map_pairing_read_rescue(tmap_refseq_t *refseq,
       i = two->n;
       tmap_map_sams_merge(two, two_rr);
       tmap_map_util_remove_duplicates(two, opt->dup_window, rand);
-      if(i < two->n) flag |= 0x2; 
+      if(i < two->n) flag |= 0x2;
   }
 
   // free memory

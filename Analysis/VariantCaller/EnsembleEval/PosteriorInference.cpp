@@ -54,9 +54,9 @@ PosteriorInference::PosteriorInference() {
 }
 
 void FreqMaster::SetHypFreq(const vector<float> &local_freq){
-    max_hyp_freq = local_freq;
- // max_hyp_freq.at(0) = local_freq;
- // max_hyp_freq.at(1) = 1.0f-max_hyp_freq.at(0);
+  max_hyp_freq = local_freq;
+  // max_hyp_freq.at(0) = local_freq;
+  // max_hyp_freq.at(1) = 1.0f-max_hyp_freq.at(0);
 }
 
 // needs to match multialleles
@@ -122,7 +122,7 @@ void FreqMaster::UpdateFrequencyAgainstOne(vector<float> &tmp_freq, float local_
   // make sure we're normalized
   float freq_all_weight = 0.0f;
   for (unsigned int i_eval=0; i_eval<max_hyp_freq.size(); i_eval++)
-      freq_all_weight += max_hyp_freq[i_eval];
+    freq_all_weight += max_hyp_freq[i_eval];
   // source-state at local_freq
   tmp_freq[source_state] = freq_all_weight * local_freq;
   // divide up remaining 1.0f-local-freq into the other modes
@@ -131,7 +131,7 @@ void FreqMaster::UpdateFrequencyAgainstOne(vector<float> &tmp_freq, float local_
   float safety_zero = 0.000001f;  // if we have truly 0 frequency in all other nodes, balance out, otherwise be happy
   float remaining_weight = (freq_all_weight-max_hyp_freq[source_state]) + (max_hyp_freq.size()-1.0f)*safety_zero;
   // everything else balanced from the remainder.
-   for (unsigned int i_eval=0; i_eval<max_hyp_freq.size(); i_eval++)
+  for (unsigned int i_eval=0; i_eval<max_hyp_freq.size(); i_eval++)
     if(i_eval!=(unsigned int)source_state){
       // X vs Y,Z => (1-f)*(X+Y+Z)*(Y/(Y+Z)), *(Z/(Y+Z)), with safety factor
       float fraction_remaining = (max_hyp_freq[i_eval]+safety_zero)/remaining_weight;
@@ -251,14 +251,14 @@ void FibInterval(vector<unsigned int> &samples, int eval_start, int detail_level
 }
 
 unsigned int ScanSpace::ResizeToMatch(ShortStack &total_theory, unsigned max_detail_level ){
-    unsigned int detail_level = total_theory.DetailLevel();
-    if(max_detail_level>0) detail_level = (detail_level < max_detail_level) ? (detail_level+1) : (max_detail_level+1);
-      float fdetail_level = (float) detail_level;
+  unsigned int detail_level = total_theory.DetailLevel();
+  if(max_detail_level>0) detail_level = (detail_level < max_detail_level) ? (detail_level+1) : (max_detail_level+1);
+  float fdetail_level = (float) detail_level;
   log_posterior_by_frequency.resize(detail_level + 1);
   eval_at_frequency.resize(detail_level + 1);
   for (unsigned int i_eval = 0; i_eval < eval_at_frequency.size(); i_eval++) {
     eval_at_frequency[i_eval] = (float)i_eval / fdetail_level;
-    } 
+  }
   return(detail_level);
 }
 
@@ -268,104 +268,104 @@ unsigned int ScanSpace::ResizeToMatch(ShortStack &total_theory, unsigned max_det
 // approximately unimodal under most pictures of the world
 // scan at maximum and build up a picture of the likelihood using log(n)*constant measurements, interpolate to linearize
 /*
-void PosteriorInference::InterpolateFrequencyScan(ShortStack &total_theory, bool update_frequency, int strand_key) {
-  
-  unsigned int detail_level = ResizeToMatch(total_theory);
-  
-  float fdetail_level = (float) detail_level;
+   void PosteriorInference::InterpolateFrequencyScan(ShortStack &total_theory, bool update_frequency, int strand_key) {
 
-  UpdateMaxFreqFromResponsibility(total_theory, strand_key);
+   unsigned int detail_level = ResizeToMatch(total_theory);
 
-  float start_ratio = max_hyp_freq.at(freq_pair.at(0))/(max_hyp_freq.at(freq_pair.at(1))+max_hyp_freq.at(freq_pair.at(0))+0.001f); // catch divide by zero if crazy
-  int eval_start = (int)(start_ratio * detail_level); // balancing the frequencies of 0 vs 1
-  vector<unsigned int> samples;
-  FibInterval(samples, eval_start, detail_level);
+   float fdetail_level = (float) detail_level;
 
-  vector<float> hyp_freq = max_hyp_freq;
+   UpdateMaxFreqFromResponsibility(total_theory, strand_key);
 
-  unsigned int i_last = 0;
-  eval_at_frequency.at(i_last) = (float)i_last / fdetail_level;
-  UpdatePairedFrequency(hyp_freq, eval_at_frequency.at(i_last));
-  log_posterior_by_frequency.at(i_last) = total_theory.PosteriorFrequencyLogLikelihood(hyp_freq, prior_frequency_weight, germline_log_prior_normalization, data_reliability, strand_key);
-  int bottom = log_posterior_by_frequency.at(i_last);
-  int top = bottom;
-  for (unsigned int i_dx = 1; i_dx < samples.size(); i_dx++) {
-    unsigned int i_eval = samples.at(i_dx);
-    eval_at_frequency.at(i_eval) = (float)i_eval / fdetail_level;
-    UpdatePairedFrequency(hyp_freq, eval_at_frequency.at(i_eval));
-    log_posterior_by_frequency.at(i_eval) = total_theory.PosteriorFrequencyLogLikelihood(hyp_freq,prior_frequency_weight, germline_log_prior_normalization, data_reliability, strand_key);
-    top = log_posterior_by_frequency.at(i_eval);
-    for (unsigned int i_mid = i_last + 1; i_mid < i_eval; i_mid++) {
-      int delta_low = i_mid - i_last;
-      int delta_hi = i_eval - i_last;
-      eval_at_frequency.at(i_mid) = (float)i_mid / fdetail_level;
-      log_posterior_by_frequency.at(i_mid) = (top * delta_low + bottom * delta_hi) / (delta_low + delta_hi);
-    }
-    bottom = top;
-    i_last = i_eval;
+   float start_ratio = max_hyp_freq.at(freq_pair.at(0))/(max_hyp_freq.at(freq_pair.at(1))+max_hyp_freq.at(freq_pair.at(0))+0.001f); // catch divide by zero if crazy
+   int eval_start = (int)(start_ratio * detail_level); // balancing the frequencies of 0 vs 1
+   vector<unsigned int> samples;
+   FibInterval(samples, eval_start, detail_level);
 
-  }
-  FindMaxFrequency(update_frequency);
-  scan_done = true;
-}*/
+   vector<float> hyp_freq = max_hyp_freq;
+
+   unsigned int i_last = 0;
+   eval_at_frequency.at(i_last) = (float)i_last / fdetail_level;
+   UpdatePairedFrequency(hyp_freq, eval_at_frequency.at(i_last));
+   log_posterior_by_frequency.at(i_last) = total_theory.PosteriorFrequencyLogLikelihood(hyp_freq, prior_frequency_weight, germline_log_prior_normalization, data_reliability, strand_key);
+   int bottom = log_posterior_by_frequency.at(i_last);
+   int top = bottom;
+   for (unsigned int i_dx = 1; i_dx < samples.size(); i_dx++) {
+   unsigned int i_eval = samples.at(i_dx);
+   eval_at_frequency.at(i_eval) = (float)i_eval / fdetail_level;
+   UpdatePairedFrequency(hyp_freq, eval_at_frequency.at(i_eval));
+   log_posterior_by_frequency.at(i_eval) = total_theory.PosteriorFrequencyLogLikelihood(hyp_freq,prior_frequency_weight, germline_log_prior_normalization, data_reliability, strand_key);
+   top = log_posterior_by_frequency.at(i_eval);
+   for (unsigned int i_mid = i_last + 1; i_mid < i_eval; i_mid++) {
+   int delta_low = i_mid - i_last;
+   int delta_hi = i_eval - i_last;
+   eval_at_frequency.at(i_mid) = (float)i_mid / fdetail_level;
+   log_posterior_by_frequency.at(i_mid) = (top * delta_low + bottom * delta_hi) / (delta_low + delta_hi);
+   }
+   bottom = top;
+   i_last = i_eval;
+
+   }
+   FindMaxFrequency(update_frequency);
+   scan_done = true;
+   }*/
 
 void ScanSpace::DoPosteriorFrequencyScan(ShortStack &total_theory, FreqMaster &base_clustering, bool update_frequency, int strand_key, bool scan_ref, int max_detail_level) {
-//    cout << "ScanningFrequency" << endl;
-//    posterior frequency inference given current data/likelihood pairing
-    unsigned int detail_level = ResizeToMatch(total_theory, (unsigned) max_detail_level);  // now fills in frequency
+  //    cout << "ScanningFrequency" << endl;
+  //    posterior frequency inference given current data/likelihood pairing
+  unsigned int detail_level = ResizeToMatch(total_theory, (unsigned) max_detail_level);  // now fills in frequency
 
-    is_scanned_.clear(); // Very important step!
-    // Set the pointers for DoPosteriorFrequencyScanOneHypFreq_
-    ptr_total_theory_ = &total_theory;
-    ptr_base_clustering_ = &base_clustering;
-    ptr_strand_key_ = &strand_key;
-    ptr_scan_ref_ = &scan_ref;
+  is_scanned_.clear(); // Very important step!
+  // Set the pointers for DoPosteriorFrequencyScanOneHypFreq_
+  ptr_total_theory_ = &total_theory;
+  ptr_base_clustering_ = &base_clustering;
+  ptr_strand_key_ = &strand_key;
+  ptr_scan_ref_ = &scan_ref;
 
-    if(detail_level < min_detail_level_for_fast_scan or detail_level < (unsigned int)(1.0f / coarse_freq_resolution_)){
-    	// Do full scan
-        for (unsigned int i_eval = 0; i_eval < eval_at_frequency.size(); ++i_eval){
-	        DoPosteriorFrequencyScanOneHypFreq_(i_eval);
-        }
-        FindMaxFrequency();
+  if(detail_level < min_detail_level_for_fast_scan or detail_level < (unsigned int)(1.0f / coarse_freq_resolution_)){
+    // Do full scan
+    for (unsigned int i_eval = 0; i_eval < eval_at_frequency.size(); ++i_eval){
+      DoPosteriorFrequencyScanOneHypFreq_(i_eval);
     }
-    else{
-	    DoFastScan_();
-	    max_ll = max_log_posterior_scanned_;
-	    max_index = (int) argmax_log_posterior_scanned_;
-    }
+    FindMaxFrequency();
+  }
+  else{
+    DoFastScan_();
+    max_ll = max_log_posterior_scanned_;
+    max_index = (int) argmax_log_posterior_scanned_;
+  }
 
-    // if doing monomorphic eval, set frequency to begin with and don't update
-    //FindMaxFrequency(update_frequency);
-    //   log_posterior now contains all frequency information inferred from the data
-    scan_done = true;
+  // if doing monomorphic eval, set frequency to begin with and don't update
+  //FindMaxFrequency(update_frequency);
+  //   log_posterior now contains all frequency information inferred from the data
+  scan_done = true;
 
-    // clear the pointers for DoPosteriorFrequencyScanOneHypFreq_
-    ptr_total_theory_ = NULL;
-    ptr_base_clustering_ = NULL;
-    ptr_strand_key_ = NULL;
-    ptr_scan_ref_ = NULL;
+  // clear the pointers for DoPosteriorFrequencyScanOneHypFreq_
+  ptr_total_theory_ = NULL;
+  ptr_base_clustering_ = NULL;
+  ptr_strand_key_ = NULL;
+  ptr_scan_ref_ = NULL;
 }
 
 void ScanSpace::DoPosteriorFrequencyScanOneHypFreq_(unsigned int i_eval){
-	if(not is_scanned_.empty()){
-		if(is_scanned_[i_eval])
-			return; // scan has been done at i_eval
-	}
+  if(not is_scanned_.empty()){
+    if(is_scanned_[i_eval])
+      return; // scan has been done at i_eval
+  }
 
-    vector<float> hyp_freq = ptr_base_clustering_->max_hyp_freq;
-    // should scan genotypes only for dual
-    if (!*ptr_scan_ref_){
-	    UpdatePairedFrequency(hyp_freq, *ptr_base_clustering_, eval_at_frequency[i_eval]);
-    }
-	else{
-	    ptr_base_clustering_->UpdateFrequencyAgainstOne(hyp_freq, eval_at_frequency[i_eval], 0);
-	}
-    log_posterior_by_frequency[i_eval] = ptr_total_theory_->PosteriorFrequencyLogLikelihood(hyp_freq, ptr_base_clustering_->prior_frequency_weight, ptr_base_clustering_->germline_log_prior_normalization, ptr_base_clustering_->data_reliability, *ptr_strand_key_);
+  vector<float> hyp_freq = ptr_base_clustering_->max_hyp_freq;
+  // should scan genotypes only for dual
+  if (!*ptr_scan_ref_){
+    UpdatePairedFrequency(hyp_freq, *ptr_base_clustering_, eval_at_frequency[i_eval]);
+  }
+  else{
+    ptr_base_clustering_->UpdateFrequencyAgainstOne(hyp_freq, eval_at_frequency[i_eval], 0);
+  }
+  log_posterior_by_frequency[i_eval] = ptr_total_theory_->PosteriorFrequencyLogLikelihood(hyp_freq, ptr_base_clustering_->prior_frequency_weight, ptr_base_clustering_->germline_log_prior_normalization, ptr_base_clustering_->data_reliability, *ptr_strand_key_);
 
-	if(not is_scanned_.empty()){
-		// mark as scanned
-        is_scanned_[i_eval] = true;
-	}
+  if(not is_scanned_.empty()){
+    // mark as scanned
+    is_scanned_[i_eval] = true;
+  }
 }
 
 
@@ -380,10 +380,10 @@ void PosteriorInference::UpdateMaxFreqFromResponsibility(ShortStack &total_theor
 
 
 /*
-// initialize the ensemble 
+// initialize the ensemble
 void PosteriorInference::StartAtNull(ShortStack &total_theory, bool update_frequency) {
-  DoPosteriorFrequencyScan(total_theory, update_frequency, ALL_STRAND_KEY, false);
-  total_theory.UpdateResponsibility(max_hyp_freq, data_reliability);
+DoPosteriorFrequencyScan(total_theory, update_frequency, ALL_STRAND_KEY, false);
+total_theory.UpdateResponsibility(max_hyp_freq, data_reliability);
 }*/
 
 
@@ -391,147 +391,161 @@ void PosteriorInference::StartAtNull(ShortStack &total_theory, bool update_frequ
 // do a hard classification as though the reads were independent
 // i.e. look more like the data in the BAM file
 void PosteriorInference::StartAtHardClassify(ShortStack &total_theory, bool update_frequency, const vector<float> &start_frequency) {
+  cerr << "----------- StartAtHardClassify(" << update_frequency << ") -----------" << endl;
   // just to allocate
   ref_vs_all.ResizeToMatch(total_theory);
   if (update_frequency) {
     clustering.SetHypFreq(start_frequency);
     clustering.SetPriorStrength(start_frequency);
-    ref_vs_all.max_ll = total_theory.PosteriorFrequencyLogLikelihood(clustering.max_hyp_freq, clustering.prior_frequency_weight,clustering.germline_log_prior_normalization, clustering.data_reliability, ALL_STRAND_KEY);
-  } 
+    cerr << "  start frequency: " << start_frequency.at(0) << ", " << start_frequency.at(1) << endl;
+    cerr << "  clustering.max_hyp_freq: " << clustering.max_hyp_freq.at(0) << ", " << clustering.max_hyp_freq.at(1) << endl;
+    cerr << "  clustering.prior_frequency_weight: " << clustering.prior_frequency_weight.at(0) << ", " << clustering.prior_frequency_weight.at(1) << endl;
+    cerr << "  clustering.germline_log_prior_normalization: " << clustering.germline_log_prior_normalization << endl;
+    cerr << "  clustering.data_reliability: " << clustering.data_reliability << endl;
+    cerr << "  strand key: " << ALL_STRAND_KEY << endl;
+    ref_vs_all.max_ll = total_theory.PosteriorFrequencyLogLikelihood (
+      clustering.max_hyp_freq,
+      clustering.prior_frequency_weight,
+      clustering.germline_log_prior_normalization,
+      clustering.data_reliability,
+      ALL_STRAND_KEY
+    );
+  }
 
+  cerr << "  done; ref_vs_all.max_ll: " << ref_vs_all.max_ll << endl;
   total_theory.UpdateResponsibility(clustering.max_hyp_freq, clustering.data_reliability);
 }
 
 void PosteriorInference::QuickUpdateStep(ShortStack &total_theory){
-    UpdateMaxFreqFromResponsibility(total_theory, ALL_STRAND_KEY);
-    total_theory.UpdateResponsibility(clustering.max_hyp_freq, clustering.data_reliability); // update cluster responsibilities
+  UpdateMaxFreqFromResponsibility(total_theory, ALL_STRAND_KEY);
+  total_theory.UpdateResponsibility(clustering.max_hyp_freq, clustering.data_reliability); // update cluster responsibilities
 }
 /*
-void PosteriorInference::DetailedUpdateStep(ShortStack &total_theory, bool update_frequency){
-    DoPosteriorFrequencyScan(total_theory, update_frequency, ALL_STRAND_KEY, false); // update max frequency using new likelihoods -> estimate overall max likelihood
-    total_theory.UpdateResponsibility(max_hyp_freq, data_reliability); // update cluster responsibilities
-}*/
+   void PosteriorInference::DetailedUpdateStep(ShortStack &total_theory, bool update_frequency){
+   DoPosteriorFrequencyScan(total_theory, update_frequency, ALL_STRAND_KEY, false); // update max frequency using new likelihoods -> estimate overall max likelihood
+   total_theory.UpdateResponsibility(max_hyp_freq, data_reliability); // update cluster responsibilities
+   }*/
 
 
 // functions for fast scan
 
 // Note that i_1 can't equal i_2
 void ScanSpace::LinearInterpolation_(unsigned int i_1, unsigned int i_2, unsigned int i_intp){
-	if(i_intp == i_1){
-		log_posterior_by_frequency[i_intp] = log_posterior_by_frequency[i_1];
-	    return;
-	}
-	if(i_intp == i_2){
-		log_posterior_by_frequency[i_intp] = log_posterior_by_frequency[i_2];
-	    return;
-	}
-	log_posterior_by_frequency[i_intp] = log_posterior_by_frequency[i_1] + (log_posterior_by_frequency[i_2] - log_posterior_by_frequency[i_1]) * float(i_intp - i_1) / float(i_2 - i_1);
+  if(i_intp == i_1){
+    log_posterior_by_frequency[i_intp] = log_posterior_by_frequency[i_1];
+    return;
+  }
+  if(i_intp == i_2){
+    log_posterior_by_frequency[i_intp] = log_posterior_by_frequency[i_2];
+    return;
+  }
+  log_posterior_by_frequency[i_intp] = log_posterior_by_frequency[i_1] + (log_posterior_by_frequency[i_2] - log_posterior_by_frequency[i_1]) * float(i_intp - i_1) / float(i_2 - i_1);
 }
 
 void ScanSpace::DoInterpolation_(){
-    unsigned int scanned_idx_left = 0;
-    unsigned int scanned_idx_right = 0;
+  unsigned int scanned_idx_left = 0;
+  unsigned int scanned_idx_right = 0;
 
-    // make sure we scan the first and last
-    DoPosteriorFrequencyScanOneHypFreq_(0);
-    DoPosteriorFrequencyScanOneHypFreq_(eval_at_frequency.size() - 1);
+  // make sure we scan the first and last
+  DoPosteriorFrequencyScanOneHypFreq_(0);
+  DoPosteriorFrequencyScanOneHypFreq_(eval_at_frequency.size() - 1);
 
-    for(unsigned int i_eval = 0; i_eval < eval_at_frequency.size(); ++i_eval){
-    	if(is_scanned_[i_eval]){
-    		scanned_idx_left = i_eval;
-    		continue;
-    	}
-    	while(scanned_idx_right <= i_eval or (not is_scanned_[scanned_idx_right])){
-    		++scanned_idx_right;
-    	}
-    	LinearInterpolation_(scanned_idx_right, scanned_idx_left, i_eval);
+  for(unsigned int i_eval = 0; i_eval < eval_at_frequency.size(); ++i_eval){
+    if(is_scanned_[i_eval]){
+      scanned_idx_left = i_eval;
+      continue;
     }
+    while(scanned_idx_right <= i_eval or (not is_scanned_[scanned_idx_right])){
+      ++scanned_idx_right;
+    }
+    LinearInterpolation_(scanned_idx_right, scanned_idx_left, i_eval);
+  }
 }
 
 
 // Fibonacci search for finding the "local" maximum of log-posterior in the closed frequency interval [eval_at_frequency[i_left], eval_at_frequency[i_right]]
 unsigned int ScanSpace::FibonacciSearchMax_(unsigned int i_left, unsigned int i_right){
-    float golden_ratio_ = 1.6180339887498949f;
-	unsigned int i_middle = (unsigned int) (float((float)i_right + golden_ratio_ * (float)i_left) / (1.0f + golden_ratio_));
+  float golden_ratio_ = 1.6180339887498949f;
+  unsigned int i_middle = (unsigned int) (float((float)i_right + golden_ratio_ * (float)i_left) / (1.0f + golden_ratio_));
 
-    assert(i_left <= i_middle and i_middle <= i_right);
-    return FibonacciSearchMax_(i_left, i_right, i_middle);
+  assert(i_left <= i_middle and i_middle <= i_right);
+  return FibonacciSearchMax_(i_left, i_right, i_middle);
 }
 
 unsigned int ScanSpace::FibonacciSearchMax_(unsigned int i_left, unsigned int i_right, unsigned int i_middle){
-	// Always make sure we scan these points
-	DoPosteriorFrequencyScanOneHypFreq_(i_left);
-	DoPosteriorFrequencyScanOneHypFreq_(i_right);
-	DoPosteriorFrequencyScanOneHypFreq_(i_middle);
+  // Always make sure we scan these points
+  DoPosteriorFrequencyScanOneHypFreq_(i_left);
+  DoPosteriorFrequencyScanOneHypFreq_(i_right);
+  DoPosteriorFrequencyScanOneHypFreq_(i_middle);
 
-	// Stop criterion for the recursion
-	if(i_right - i_left < 3){
-		float local_max_app = max(log_posterior_by_frequency[i_left], max(log_posterior_by_frequency[i_middle], log_posterior_by_frequency[i_right]));
-		if(log_posterior_by_frequency[i_left] == local_max_app)
-			return i_left;
-		if(log_posterior_by_frequency[i_right] == local_max_app)
-			return i_right;
-		if(log_posterior_by_frequency[i_middle] == local_max_app)
-			return i_middle;
-	}
-	// Now we have i_left <= i_middle <= i_right since i_right - i_left >= 3.
-	// But we need to make sure i_middle != i_left and i_middle != i_right.
-	// Otherwise the recursion will never stop.
-    if(i_left == i_middle){
-        ++i_middle;
-        DoPosteriorFrequencyScanOneHypFreq_(i_middle);
-    }
-    else if(i_right == i_middle){
-        --i_middle;
-        DoPosteriorFrequencyScanOneHypFreq_(i_middle);
-    }
+  // Stop criterion for the recursion
+  if(i_right - i_left < 3){
+    float local_max_app = max(log_posterior_by_frequency[i_left], max(log_posterior_by_frequency[i_middle], log_posterior_by_frequency[i_right]));
+    if(log_posterior_by_frequency[i_left] == local_max_app)
+      return i_left;
+    if(log_posterior_by_frequency[i_right] == local_max_app)
+      return i_right;
+    if(log_posterior_by_frequency[i_middle] == local_max_app)
+      return i_middle;
+  }
+  // Now we have i_left <= i_middle <= i_right since i_right - i_left >= 3.
+  // But we need to make sure i_middle != i_left and i_middle != i_right.
+  // Otherwise the recursion will never stop.
+  if(i_left == i_middle){
+    ++i_middle;
+    DoPosteriorFrequencyScanOneHypFreq_(i_middle);
+  }
+  else if(i_right == i_middle){
+    --i_middle;
+    DoPosteriorFrequencyScanOneHypFreq_(i_middle);
+  }
 
-    // probe index
-	unsigned int i_probe = i_left + i_right - i_middle; // Here is where the name "Fibonacci" come from.
-	DoPosteriorFrequencyScanOneHypFreq_(i_probe);
+  // probe index
+  unsigned int i_probe = i_left + i_right - i_middle; // Here is where the name "Fibonacci" come from.
+  DoPosteriorFrequencyScanOneHypFreq_(i_probe);
 
-    if(i_probe >= i_middle){
-        if(log_posterior_by_frequency[i_probe] < log_posterior_by_frequency[i_middle])
-            return FibonacciSearchMax_(i_left, i_probe, i_middle);
-        else
-            return FibonacciSearchMax_(i_middle, i_right, i_probe);
-    }
-    else{
-        if(log_posterior_by_frequency[i_probe] > log_posterior_by_frequency[i_middle])
-            return FibonacciSearchMax_(i_left, i_middle, i_probe);
-        else
-            return FibonacciSearchMax_(i_probe, i_right, i_middle);
-    }
+  if(i_probe >= i_middle){
+    if(log_posterior_by_frequency[i_probe] < log_posterior_by_frequency[i_middle])
+      return FibonacciSearchMax_(i_left, i_probe, i_middle);
+    else
+      return FibonacciSearchMax_(i_middle, i_right, i_probe);
+  }
+  else{
+    if(log_posterior_by_frequency[i_probe] > log_posterior_by_frequency[i_middle])
+      return FibonacciSearchMax_(i_left, i_middle, i_probe);
+    else
+      return FibonacciSearchMax_(i_probe, i_right, i_middle);
+  }
 }
 
 void ScanSpace::DoFineScan_(unsigned int i_left, unsigned int i_right, unsigned int i_middle){
-	float penalty = 0.0f;
-	float left_max = 0.0f;
-	float right_max = 0.0f;
+  float penalty = 0.0f;
+  float left_max = 0.0f;
+  float right_max = 0.0f;
 
-	// Always make sure we scan these points
-	DoPosteriorFrequencyScanOneHypFreq_(i_left);
-	DoPosteriorFrequencyScanOneHypFreq_(i_right);
-	DoPosteriorFrequencyScanOneHypFreq_(i_middle);
+  // Always make sure we scan these points
+  DoPosteriorFrequencyScanOneHypFreq_(i_left);
+  DoPosteriorFrequencyScanOneHypFreq_(i_right);
+  DoPosteriorFrequencyScanOneHypFreq_(i_middle);
 
-	left_max = max(log_posterior_by_frequency[i_left], log_posterior_by_frequency[i_middle]);
-	right_max = max(log_posterior_by_frequency[i_right], log_posterior_by_frequency[i_middle]);
-	max_log_posterior_scanned_ = max(max_log_posterior_scanned_, max(left_max, right_max));
+  left_max = max(log_posterior_by_frequency[i_left], log_posterior_by_frequency[i_middle]);
+  right_max = max(log_posterior_by_frequency[i_right], log_posterior_by_frequency[i_middle]);
+  max_log_posterior_scanned_ = max(max_log_posterior_scanned_, max(left_max, right_max));
 
-	if(i_middle - i_left > 1){
-		// The penalty is used to obtain finer resolution around max_log_posterior_scanned_
-		penalty = exp(- fine_scan_penalty_order_ * (max_log_posterior_scanned_ - left_max)); // 0 < penalty <= 1
-		// if (the gap between the two points) * penalty > min_fine_log_posterior_gap_, we scan the middle of the two points
-		if (abs(log_posterior_by_frequency[i_middle] - log_posterior_by_frequency[i_left]) * penalty > min_fine_log_posterior_gap_)
-			DoFineScan_(i_left, i_middle,  (i_left + i_middle) / 2);
-	}
-	if(i_right - i_middle > 1){
-		penalty = exp(- fine_scan_penalty_order_ * (max_log_posterior_scanned_ - right_max));
-		if (abs(log_posterior_by_frequency[i_middle] - log_posterior_by_frequency[i_right]) * penalty > min_fine_log_posterior_gap_)
-			DoFineScan_(i_middle, i_right,  (i_right + i_middle) / 2);
-	}
+  if(i_middle - i_left > 1){
+    // The penalty is used to obtain finer resolution around max_log_posterior_scanned_
+    penalty = exp(- fine_scan_penalty_order_ * (max_log_posterior_scanned_ - left_max)); // 0 < penalty <= 1
+    // if (the gap between the two points) * penalty > min_fine_log_posterior_gap_, we scan the middle of the two points
+    if (abs(log_posterior_by_frequency[i_middle] - log_posterior_by_frequency[i_left]) * penalty > min_fine_log_posterior_gap_)
+      DoFineScan_(i_left, i_middle,  (i_left + i_middle) / 2);
+  }
+  if(i_right - i_middle > 1){
+    penalty = exp(- fine_scan_penalty_order_ * (max_log_posterior_scanned_ - right_max));
+    if (abs(log_posterior_by_frequency[i_middle] - log_posterior_by_frequency[i_right]) * penalty > min_fine_log_posterior_gap_)
+      DoFineScan_(i_middle, i_right,  (i_right + i_middle) / 2);
+  }
 
-    return;
+  return;
 }
 
 // The complexity of full scan is O(N^2) where N = detail_level = (# of reads)
@@ -547,159 +561,159 @@ void ScanSpace::DoFineScan_(unsigned int i_left, unsigned int i_right, unsigned 
 // (Note 2): DoFastScan_() is a "blind" scan algorithm that has no information about log_posterior_by_frequency priorly.
 // @TODO: Instead of the "blind" approach, the fast scan algorithm can be improved by taking max_hyp_freq into account.
 void ScanSpace::DoFastScan_(){
-	unsigned int num_scanned_freq = 0;
+  unsigned int num_scanned_freq = 0;
 
-	// Step 0): Initialization
-	unsigned int detail_level = eval_at_frequency.size() - 1;
-	is_scanned_.assign(detail_level + 1, false);
-	max_log_posterior_scanned_ = -999999999999.0f;  // anything is better than this
-	argmax_log_posterior_scanned_ = 0;
+  // Step 0): Initialization
+  unsigned int detail_level = eval_at_frequency.size() - 1;
+  is_scanned_.assign(detail_level + 1, false);
+  max_log_posterior_scanned_ = -999999999999.0f;  // anything is better than this
+  argmax_log_posterior_scanned_ = 0;
 
-	if(debug_){
-    	cout<<"<<Fast scan start>>"<< endl;
-    	cout<<"    detail_level = "<< detail_level<< endl;
-    	cout<<"    # of reads = "<<ptr_total_theory_->my_hypotheses.size()<<endl;
-	}
+  if(debug_){
+    cout<<"<<Fast scan start>>"<< endl;
+    cout<<"    detail_level = "<< detail_level<< endl;
+    cout<<"    # of reads = "<<ptr_total_theory_->my_hypotheses.size()<<endl;
+  }
 
 
-	// Step 1): Do coarse scan
-	float croase_max_log_posterior = 0.0f;
-	unsigned int croase_argmax_log_posterior = 0;
-	unsigned int num_coarse_scan = (unsigned int) (1.0f / coarse_freq_resolution_) + 1; // also scan the last index
-	unsigned int coarse_scan_spacing = detail_level / (num_coarse_scan - 1);
-	vector<unsigned int> coarse_scan_indices;
-	coarse_scan_indices.assign(num_coarse_scan, 0);
+  // Step 1): Do coarse scan
+  float croase_max_log_posterior = 0.0f;
+  unsigned int croase_argmax_log_posterior = 0;
+  unsigned int num_coarse_scan = (unsigned int) (1.0f / coarse_freq_resolution_) + 1; // also scan the last index
+  unsigned int coarse_scan_spacing = detail_level / (num_coarse_scan - 1);
+  vector<unsigned int> coarse_scan_indices;
+  coarse_scan_indices.assign(num_coarse_scan, 0);
 
-	// Scan the last index
-	coarse_scan_indices[coarse_scan_indices.size() - 1] = detail_level;
-	DoPosteriorFrequencyScanOneHypFreq_(detail_level);
-	croase_max_log_posterior = log_posterior_by_frequency[detail_level];
-	croase_argmax_log_posterior = coarse_scan_indices.size() - 1;
+  // Scan the last index
+  coarse_scan_indices[coarse_scan_indices.size() - 1] = detail_level;
+  DoPosteriorFrequencyScanOneHypFreq_(detail_level);
+  croase_max_log_posterior = log_posterior_by_frequency[detail_level];
+  croase_argmax_log_posterior = coarse_scan_indices.size() - 1;
 
-	for(unsigned int i = 0; i < num_coarse_scan - 1; ++i){
-		unsigned int i_eval =  i * coarse_scan_spacing;
-		coarse_scan_indices[i] = i_eval;
-	    DoPosteriorFrequencyScanOneHypFreq_(i_eval);
-	    if(log_posterior_by_frequency[i_eval] > croase_max_log_posterior){
-	    	croase_argmax_log_posterior = i;
-	    	croase_max_log_posterior = log_posterior_by_frequency[i_eval];
-	    }
-	}
-
-	if(debug_){
-    	unsigned int num_scanned_freq_tmp = 0;
-    	for(unsigned int i_eval = 0; i_eval < is_scanned_.size(); ++i_eval){
-    		num_scanned_freq_tmp += (unsigned int) is_scanned_[i_eval];
-    	}
-    	cout<<"    # of coarse freq scanned = "<< num_scanned_freq_tmp - num_scanned_freq<<"  (coarse_freq_resolution_= "<< coarse_freq_resolution_<< ")"<<endl;
-    	num_scanned_freq = num_scanned_freq_tmp;
-	}
-
-	// Step 2): Find the maximum of log_posterior_by_frequency
-	unsigned int block_size = (detail_level / num_of_fibonacci_blocks);
-	for(unsigned int i = 0; i < num_of_fibonacci_blocks; ++i){
-		unsigned int i_left = i * block_size;
-		unsigned int i_right = (i == num_of_fibonacci_blocks - 1)? detail_level : (i_left + block_size);
-		// Fibonacci search for the maximum in the block
-		unsigned int i_eval = FibonacciSearchMax_(i_left, i_right);
-		if(log_posterior_by_frequency[i_eval] > max_log_posterior_scanned_){
-			argmax_log_posterior_scanned_ = i_eval;
-			max_log_posterior_scanned_ = log_posterior_by_frequency[argmax_log_posterior_scanned_];
-		}
-	}
-	// In case Fibonacci search returns a local maximum which is less than croase_max_log_posterior
-	if(max_log_posterior_scanned_ < croase_max_log_posterior){
-		// Do Fibonacci search around coarse_scan_indices[croase_argmax_log_posterior]
-		unsigned int i_left = croase_argmax_log_posterior == 0? coarse_scan_indices[0] : coarse_scan_indices[croase_argmax_log_posterior - 1];
-		unsigned int i_right = croase_argmax_log_posterior == coarse_scan_indices.size() - 1? coarse_scan_indices[coarse_scan_indices.size() - 1] : coarse_scan_indices[croase_argmax_log_posterior + 1];
-		unsigned int i_eval = FibonacciSearchMax_(i_left, i_right);
-		if(log_posterior_by_frequency[i_eval] < croase_max_log_posterior){
-			// croase_max_log_posterior still beats the search results, although it shouldn't happen.
-			max_log_posterior_scanned_ = croase_max_log_posterior;
-			argmax_log_posterior_scanned_ = coarse_scan_indices[croase_argmax_log_posterior];
-		}
-		else{
-			argmax_log_posterior_scanned_ = i_eval;
-			max_log_posterior_scanned_ = log_posterior_by_frequency[argmax_log_posterior_scanned_];
-		}
-	}
-
-	// Step 3): Determine the interval for fine scan
-	// For (b. For PASS/NOCALL, QUAL, GT, GQ) The definite integral of posterior_by_frequency (i.e., convert log_posterior_by_frequency to linear scale and normalize it)),
-	// what I really care about is the main mass of the posterior probability function.
-	// The log-posterior(f) that is dominated by max_log_posterior_scanned_ is not important at all.
-	// By letting fine_log_posterior_cutoff_gap_ = -log(r), I say that posterior posterior(f) is neglectable if posterior(f) / posterior(f_max) < r.
-	// I start from the frequency at max_log_posterior_scanned_, and then increase/decrease by fine_freq_search_increment_ until I obtain
-	// log_posterior(f) - max_log_posterior_scanned_ > fine_log_posterior_cutoff_gap_.
-	// Then I do fine scan within the interval [fine_cutoff_i_left, fine_cutoff_i_right]
-	int index_increament = max((int)((float) detail_level * fine_freq_search_increment_), 1);
-	int fine_cutoff_i_left = (int) argmax_log_posterior_scanned_;
-    while(fine_cutoff_i_left >= 0){
-    	DoPosteriorFrequencyScanOneHypFreq_((unsigned int) fine_cutoff_i_left);
-    	if(log_posterior_by_frequency[fine_cutoff_i_left] > max_log_posterior_scanned_){
-    		argmax_log_posterior_scanned_ = (unsigned int) fine_cutoff_i_left;
-			max_log_posterior_scanned_ = log_posterior_by_frequency[argmax_log_posterior_scanned_];
-    	}
-        if(max_log_posterior_scanned_ - log_posterior_by_frequency[fine_cutoff_i_left] > fine_log_posterior_cutoff_gap_)
-            break;
-
-        fine_cutoff_i_left -= index_increament;
+  for(unsigned int i = 0; i < num_coarse_scan - 1; ++i){
+    unsigned int i_eval =  i * coarse_scan_spacing;
+    coarse_scan_indices[i] = i_eval;
+    DoPosteriorFrequencyScanOneHypFreq_(i_eval);
+    if(log_posterior_by_frequency[i_eval] > croase_max_log_posterior){
+      croase_argmax_log_posterior = i;
+      croase_max_log_posterior = log_posterior_by_frequency[i_eval];
     }
-    fine_cutoff_i_left = max(fine_cutoff_i_left, 0);
+  }
 
-	unsigned int fine_cutoff_i_right = argmax_log_posterior_scanned_;
-    while(fine_cutoff_i_right <= detail_level){
-    	DoPosteriorFrequencyScanOneHypFreq_(fine_cutoff_i_right);
-    	if(log_posterior_by_frequency[fine_cutoff_i_right] > max_log_posterior_scanned_){
-    		argmax_log_posterior_scanned_ = fine_cutoff_i_right;
-			max_log_posterior_scanned_ = log_posterior_by_frequency[argmax_log_posterior_scanned_];
-    	}
-        if(max_log_posterior_scanned_ - log_posterior_by_frequency[fine_cutoff_i_right] > fine_log_posterior_cutoff_gap_)
-            break;
-
-        fine_cutoff_i_right += index_increament;
+  if(debug_){
+    unsigned int num_scanned_freq_tmp = 0;
+    for(unsigned int i_eval = 0; i_eval < is_scanned_.size(); ++i_eval){
+      num_scanned_freq_tmp += (unsigned int) is_scanned_[i_eval];
     }
-    fine_cutoff_i_right = min(fine_cutoff_i_right, detail_level);
+    cout<<"    # of coarse freq scanned = "<< num_scanned_freq_tmp - num_scanned_freq<<"  (coarse_freq_resolution_= "<< coarse_freq_resolution_<< ")"<<endl;
+    num_scanned_freq = num_scanned_freq_tmp;
+  }
 
-	if(debug_){
-    	unsigned int num_scanned_freq_tmp = 0;
-    	for(unsigned int i_eval = 0; i_eval < is_scanned_.size(); ++i_eval){
-    		num_scanned_freq_tmp += (unsigned int) is_scanned_[i_eval];
-    	}
-    	cout<<"    # of freq scanned for peak finding = "<< num_scanned_freq_tmp - num_scanned_freq<<endl;
-    	num_scanned_freq = num_scanned_freq_tmp;
-	}
-
-
-    // Step 4):
-    // Do fine scan within the index interval [fine_cutoff_i_left, fine_cutoff_i_right]
-    // Basically, I scan until all the adjacent scanned indices i_1, i_2 such that (log_posterior_by_frequency[i_1] - log_posterior_by_frequency[i_2]) < min_fine_log_posterior_gap_
-    // There is a penalty that allows to scan less points if their log_posterior is much less than max_log_posterior_scanned_
-    DoFineScan_((unsigned int) fine_cutoff_i_left, fine_cutoff_i_right, argmax_log_posterior_scanned_);
-
-	if(debug_){
-    	unsigned int num_scanned_freq_tmp = 0;
-    	for(unsigned int i_eval = 0; i_eval < is_scanned_.size(); ++i_eval){
-    		num_scanned_freq_tmp += (unsigned int) is_scanned_[i_eval];
-    	}
-    	cout<<"    # of fine freq scanned = "<< num_scanned_freq_tmp - num_scanned_freq<<endl;
-    	num_scanned_freq = num_scanned_freq_tmp;
-	}
-
-    // Step 5):
-    DoInterpolation_();
-
-    // output debug message if needed
-    if(debug_){
-    	unsigned int num_scanned = 0;
-    	for(unsigned int i_eval = 0; i_eval < is_scanned_.size(); ++i_eval){
-    		num_scanned += (unsigned int) is_scanned_[i_eval];
-    	}
-    	cout<<"    Total # of freq scanned = "<< num_scanned<< endl;
-    	cout<<"    max(log_posterior_by_frequency) = "<<max_log_posterior_scanned_<<" at "<< "eval_at_frequency["<< argmax_log_posterior_scanned_ << "] = "<< eval_at_frequency[argmax_log_posterior_scanned_]<< endl;
-    	cout<<"    log_posterior_by_frequency[fine_cutoff_i_left] = "<< log_posterior_by_frequency[fine_cutoff_i_left] <<", fine_cutoff_i_left = "<< fine_cutoff_i_left<<", eval_at_frequency[fine_cutoff_i_left] = "<<  eval_at_frequency[fine_cutoff_i_left]<<endl;
-    	cout<<"    log_posterior_by_frequency[fine_cutoff_i_right] = "<< log_posterior_by_frequency[fine_cutoff_i_right] <<", fine_cutoff_i_right = "<< fine_cutoff_i_right<<", eval_at_frequency[fine_cutoff_i_right] = "<<  eval_at_frequency[fine_cutoff_i_right]<<endl;
-    	cout<<"<<Fast scan done>>"<< endl;
+  // Step 2): Find the maximum of log_posterior_by_frequency
+  unsigned int block_size = (detail_level / num_of_fibonacci_blocks);
+  for(unsigned int i = 0; i < num_of_fibonacci_blocks; ++i){
+    unsigned int i_left = i * block_size;
+    unsigned int i_right = (i == num_of_fibonacci_blocks - 1)? detail_level : (i_left + block_size);
+    // Fibonacci search for the maximum in the block
+    unsigned int i_eval = FibonacciSearchMax_(i_left, i_right);
+    if(log_posterior_by_frequency[i_eval] > max_log_posterior_scanned_){
+      argmax_log_posterior_scanned_ = i_eval;
+      max_log_posterior_scanned_ = log_posterior_by_frequency[argmax_log_posterior_scanned_];
     }
-    is_scanned_.clear();
+  }
+  // In case Fibonacci search returns a local maximum which is less than croase_max_log_posterior
+  if(max_log_posterior_scanned_ < croase_max_log_posterior){
+    // Do Fibonacci search around coarse_scan_indices[croase_argmax_log_posterior]
+    unsigned int i_left = croase_argmax_log_posterior == 0? coarse_scan_indices[0] : coarse_scan_indices[croase_argmax_log_posterior - 1];
+    unsigned int i_right = croase_argmax_log_posterior == coarse_scan_indices.size() - 1? coarse_scan_indices[coarse_scan_indices.size() - 1] : coarse_scan_indices[croase_argmax_log_posterior + 1];
+    unsigned int i_eval = FibonacciSearchMax_(i_left, i_right);
+    if(log_posterior_by_frequency[i_eval] < croase_max_log_posterior){
+      // croase_max_log_posterior still beats the search results, although it shouldn't happen.
+      max_log_posterior_scanned_ = croase_max_log_posterior;
+      argmax_log_posterior_scanned_ = coarse_scan_indices[croase_argmax_log_posterior];
+    }
+    else{
+      argmax_log_posterior_scanned_ = i_eval;
+      max_log_posterior_scanned_ = log_posterior_by_frequency[argmax_log_posterior_scanned_];
+    }
+  }
+
+  // Step 3): Determine the interval for fine scan
+  // For (b. For PASS/NOCALL, QUAL, GT, GQ) The definite integral of posterior_by_frequency (i.e., convert log_posterior_by_frequency to linear scale and normalize it)),
+  // what I really care about is the main mass of the posterior probability function.
+  // The log-posterior(f) that is dominated by max_log_posterior_scanned_ is not important at all.
+  // By letting fine_log_posterior_cutoff_gap_ = -log(r), I say that posterior posterior(f) is neglectable if posterior(f) / posterior(f_max) < r.
+  // I start from the frequency at max_log_posterior_scanned_, and then increase/decrease by fine_freq_search_increment_ until I obtain
+  // log_posterior(f) - max_log_posterior_scanned_ > fine_log_posterior_cutoff_gap_.
+  // Then I do fine scan within the interval [fine_cutoff_i_left, fine_cutoff_i_right]
+  int index_increament = max((int)((float) detail_level * fine_freq_search_increment_), 1);
+  int fine_cutoff_i_left = (int) argmax_log_posterior_scanned_;
+  while(fine_cutoff_i_left >= 0){
+    DoPosteriorFrequencyScanOneHypFreq_((unsigned int) fine_cutoff_i_left);
+    if(log_posterior_by_frequency[fine_cutoff_i_left] > max_log_posterior_scanned_){
+      argmax_log_posterior_scanned_ = (unsigned int) fine_cutoff_i_left;
+      max_log_posterior_scanned_ = log_posterior_by_frequency[argmax_log_posterior_scanned_];
+    }
+    if(max_log_posterior_scanned_ - log_posterior_by_frequency[fine_cutoff_i_left] > fine_log_posterior_cutoff_gap_)
+      break;
+
+    fine_cutoff_i_left -= index_increament;
+  }
+  fine_cutoff_i_left = max(fine_cutoff_i_left, 0);
+
+  unsigned int fine_cutoff_i_right = argmax_log_posterior_scanned_;
+  while(fine_cutoff_i_right <= detail_level){
+    DoPosteriorFrequencyScanOneHypFreq_(fine_cutoff_i_right);
+    if(log_posterior_by_frequency[fine_cutoff_i_right] > max_log_posterior_scanned_){
+      argmax_log_posterior_scanned_ = fine_cutoff_i_right;
+      max_log_posterior_scanned_ = log_posterior_by_frequency[argmax_log_posterior_scanned_];
+    }
+    if(max_log_posterior_scanned_ - log_posterior_by_frequency[fine_cutoff_i_right] > fine_log_posterior_cutoff_gap_)
+      break;
+
+    fine_cutoff_i_right += index_increament;
+  }
+  fine_cutoff_i_right = min(fine_cutoff_i_right, detail_level);
+
+  if(debug_){
+    unsigned int num_scanned_freq_tmp = 0;
+    for(unsigned int i_eval = 0; i_eval < is_scanned_.size(); ++i_eval){
+      num_scanned_freq_tmp += (unsigned int) is_scanned_[i_eval];
+    }
+    cout<<"    # of freq scanned for peak finding = "<< num_scanned_freq_tmp - num_scanned_freq<<endl;
+    num_scanned_freq = num_scanned_freq_tmp;
+  }
+
+
+  // Step 4):
+  // Do fine scan within the index interval [fine_cutoff_i_left, fine_cutoff_i_right]
+  // Basically, I scan until all the adjacent scanned indices i_1, i_2 such that (log_posterior_by_frequency[i_1] - log_posterior_by_frequency[i_2]) < min_fine_log_posterior_gap_
+  // There is a penalty that allows to scan less points if their log_posterior is much less than max_log_posterior_scanned_
+  DoFineScan_((unsigned int) fine_cutoff_i_left, fine_cutoff_i_right, argmax_log_posterior_scanned_);
+
+  if(debug_){
+    unsigned int num_scanned_freq_tmp = 0;
+    for(unsigned int i_eval = 0; i_eval < is_scanned_.size(); ++i_eval){
+      num_scanned_freq_tmp += (unsigned int) is_scanned_[i_eval];
+    }
+    cout<<"    # of fine freq scanned = "<< num_scanned_freq_tmp - num_scanned_freq<<endl;
+    num_scanned_freq = num_scanned_freq_tmp;
+  }
+
+  // Step 5):
+  DoInterpolation_();
+
+  // output debug message if needed
+  if(debug_){
+    unsigned int num_scanned = 0;
+    for(unsigned int i_eval = 0; i_eval < is_scanned_.size(); ++i_eval){
+      num_scanned += (unsigned int) is_scanned_[i_eval];
+    }
+    cout<<"    Total # of freq scanned = "<< num_scanned<< endl;
+    cout<<"    max(log_posterior_by_frequency) = "<<max_log_posterior_scanned_<<" at "<< "eval_at_frequency["<< argmax_log_posterior_scanned_ << "] = "<< eval_at_frequency[argmax_log_posterior_scanned_]<< endl;
+    cout<<"    log_posterior_by_frequency[fine_cutoff_i_left] = "<< log_posterior_by_frequency[fine_cutoff_i_left] <<", fine_cutoff_i_left = "<< fine_cutoff_i_left<<", eval_at_frequency[fine_cutoff_i_left] = "<<  eval_at_frequency[fine_cutoff_i_left]<<endl;
+    cout<<"    log_posterior_by_frequency[fine_cutoff_i_right] = "<< log_posterior_by_frequency[fine_cutoff_i_right] <<", fine_cutoff_i_right = "<< fine_cutoff_i_right<<", eval_at_frequency[fine_cutoff_i_right] = "<<  eval_at_frequency[fine_cutoff_i_right]<<endl;
+    cout<<"<<Fast scan done>>"<< endl;
+  }
+  is_scanned_.clear();
 }

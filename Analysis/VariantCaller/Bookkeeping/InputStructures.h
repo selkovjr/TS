@@ -136,30 +136,6 @@ struct VariantCandidate {
 
 
 // ==============================================================================
-
-
-class RecalibrationHandler{
-  public:
-    bool use_recal_model_only;
-    bool is_live;
-    LinearCalibrationModel recalModel;
-    
-    map<string, LinearCalibrationModel> bam_header_recalibration; // look up the proper recalibration handler by run id + block coordinates
-    multimap<string,pair<int,int> > block_hash;  // from run id, find appropriate block coordinates available
-    
- void ReadRecalibrationFromComments(const SamHeader &samHeader, const map<string, int> &max_flows_by_run_id);
- 
-//  vector<vector<vector<float> > > * getAs(string &found_key, int x, int y){return(recalModel.getAs(x,y));};
-//  vector<vector<vector<float> > > * getBs(string &found_key, int x, int y){return(recalModel.getBs(x,y));};
-  void getAB(MultiAB &multi_ab, const string &found_key, int x, int y) const;
-  
-  bool recal_is_live() const { return(is_live); };
-  string FindKey(const string &runid, int x, int y) const;
-  
-  RecalibrationHandler(){use_recal_model_only = false; is_live = false; };
-};
-
-// ==============================================================================
 //Input Structures
 
 class InputStructures {
@@ -179,7 +155,6 @@ public:
 
   // Reusable objects
   TIonMotifSet              ErrorMotifs;
-  RecalibrationHandler      do_recal;
 
 
   InputStructures();
@@ -201,7 +176,7 @@ public:
         for (vector<TreephaserSSE*>::iterator iter = treephaserSSE_vector.begin(); (iter != treephaserSSE_vector.end()); ++iter) {
             delete *iter;
             *iter = NULL;
-        } 
+        }
 #endif
     };
 

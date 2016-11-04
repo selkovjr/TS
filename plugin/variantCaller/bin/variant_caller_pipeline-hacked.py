@@ -69,9 +69,9 @@ def main():
         bin_dir = os.path.dirname(os.path.realpath(__file__))
     bin_dir = os.path.normpath(bin_dir)
 
-    path_to_tvc = os.path.join(bin_dir,'tvc')
+    path_to_tvc = os.path.join(bin_dir,'tvcgen')
     if not os.path.exists(path_to_tvc):
-        path_to_tvc = 'tvc'
+        path_to_tvc = 'tvcgen'
     path_to_tvcassembly = os.path.join(bin_dir,'tvcassembly')
     if not os.path.exists(path_to_tvcassembly):
         path_to_tvcassembly = 'tvcassembly'
@@ -141,12 +141,13 @@ def main():
 
 
     # TVC
-    printtime('Calling small INDELs and SNPs using tvc ...')
+    printtime('Calling small INDELs and SNPs using tvcgen ...')
 
     multisample = (options.bamfile.find(",") != -1)
     meta_tvc_args = parameters.get('meta',{}).get('tvcargs','tvc')
     if meta_tvc_args == 'tvc':
         tvc_command =   path_to_tvc
+        tvc_command +=      '   --debug 2'
     else:
         tvc_command =   meta_tvc_args
     tvc_command +=      '   --output-dir %s' % options.outdir
@@ -185,7 +186,6 @@ def main():
         RunCommand(tvc_command, 'Call Hotspots Only')
 
     else:
-        print(tvc_command)
         RunCommand(tvc_command,'Call small indels and SNPs')
         if not os.path.isfile(options.outdir + '/indel_assembly.vcf'):
             long_indel_command      =   path_to_tvcassembly

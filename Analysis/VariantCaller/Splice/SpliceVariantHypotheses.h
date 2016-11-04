@@ -40,8 +40,6 @@ void DecrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_id
 
 void IncrementFlow(const ion::FlowOrder &flow_order, const char &nuc, int &flow);
 
-void IncrementFlows(const ion::FlowOrder &flow_order, const char &nuc, vector<int> &flows);
-
 int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_context,
                    vector<string> &my_hypotheses, vector<bool> & same_as_null_hypothesis,
                    int splice_start_idx, vector<int> splice_end_idx, int &splice_start_flow);

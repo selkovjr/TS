@@ -51,7 +51,7 @@ class DecisionTreeData {
     vector<VariantOutputInfo> summary_info_vector;
 
     vector<int> filteredAllelesIndex;
-	
+
 	map<string, float> variant_quality;
 
 
@@ -132,7 +132,7 @@ void FilterByBasicThresholds(stringstream &s, int i_alt, MultiBook &m_summary_st
                              VariantOutputInfo &l_summary_info,
                              const BasicFilters &basic_filter, float tune_xbias, float tune_bias, bool is_reference_call);
 
-void AutoFailTheCandidate(vcf::Variant &candidate_variant, bool use_position_bias, const string &sample_name, bool use_molecular_tag);
+void AutoFailTheCandidate(vcf::Variant &candidate_variant, bool use_position_bias, const string &sample_name);
 float FreqThresholdByType(AlleleIdentity &variant_identity, const ControlCallAndFilters &my_controls, const VariantSpecificParams& variant_specific_params);
 void DetectSSEForNoCall(AlleleIdentity &var_identity, float sseProbThreshold, float minRatioReadsOnNonErrorStrand, float relative_safety_level, vcf::Variant &candidate_variant, unsigned _altAlleIndex);
 void SetQualityByDepth(vcf::Variant &candidate_variant, map<string, float>& variant_quality, const string &sample_name);

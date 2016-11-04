@@ -81,7 +81,7 @@ void DiagnosticJsonCrossHypotheses(Json::Value &json, const CrossHypotheses &my_
   CrossHypotheses my_cross_temp(my_cross);
   my_cross_temp.test_flow.assign(num_flows, 0);
   for(unsigned int j_flow = 0; j_flow < num_flows; ++j_flow){
-	  my_cross_temp.test_flow[j_flow] = j_flow;
+    my_cross_temp.test_flow[j_flow] = j_flow;
   }
   my_cross_temp.normalized_all_flows = my_cross.normalized_all_flows;
   my_cross_temp.predictions_all_flows = my_cross.predictions_all_flows;
@@ -93,9 +93,9 @@ void DiagnosticJsonCrossHypotheses(Json::Value &json, const CrossHypotheses &my_
 
   // fill the data at test flows
   for (unsigned int t_flow = 0; t_flow < my_cross.test_flow.size(); t_flow++) {
-	int j_flow = my_cross.test_flow[t_flow];
+  int j_flow = my_cross.test_flow[t_flow];
     my_cross_temp.normalized[j_flow] = my_cross.normalized[t_flow];
-	for (unsigned int i_hyp = 0; i_hyp < num_hyp; i_hyp++) {
+  for (unsigned int i_hyp = 0; i_hyp < num_hyp; i_hyp++) {
       my_cross_temp.predictions[i_hyp][j_flow] = my_cross.predictions[i_hyp][t_flow];
       my_cross_temp.mod_predictions[i_hyp][j_flow] = my_cross.mod_predictions[i_hyp][t_flow];
       my_cross_temp.residuals[i_hyp][j_flow] = my_cross.residuals[i_hyp][t_flow];
@@ -153,65 +153,15 @@ json["strand"] = my_cross.strand_key;
  }
 }
 
-// DiagnosticJson for mol tag
-// output relevant data from ReadFamily
-void DiagnosticJsonEvalFamily(Json::Value &json, const EvalFamily &my_family) {
-  json["family_barcaode"] = my_family.family_barcode;
-  json["strand_key"] = my_family.strand_key;
-  json["is_func_family"] = my_family.GetFunctionality() ? 1 : 0;
-
-  // members in the family
-  for (unsigned int i_ndx = 0; i_ndx < my_family.family_members.size(); i_ndx++) {
-	json["family_members"][i_ndx] = my_family.family_members[i_ndx];
-  }
-
-  if(my_family.GetFunctionality()){
-	  vector<float> family_log_likelihood(my_family.GetFamilyLogLikelihood());
-	  vector<float> family_scaled_likelihood(my_family.GetFamilyScaledLikelihood());
-	  // responsibility (after clustering), etc
-	  for (unsigned int i_hyp = 0; i_hyp < my_family.family_responsibility.size(); i_hyp++) {
-	    json["family_responsibility"][i_hyp] = my_family.family_responsibility[i_hyp];
-	    json["family_loglikelihood"][i_hyp] = family_log_likelihood[i_hyp];
-	    json["family_scaledlikelihood"][i_hyp] = family_scaled_likelihood[i_hyp];
-	  }
-  }
-}
-
-// DiagnosticJson for mol tags
-// output tiny relevant data from ReadFamily
-void TinyDiagnosticJsonEvalFamily(Json::Value &json, const EvalFamily &my_family) {
-	json["family_barcaode"] = my_family.family_barcode;
-	json["strand_key"] = my_family.strand_key;
-	json["is_func_family"] = my_family.GetFunctionality() ? 1 : 0;
-
-	// members in the family
-	for (unsigned int i_ndx = 0; i_ndx < my_family.family_members.size(); i_ndx++) {
-		json["family_members"][i_ndx] = my_family.family_members[i_ndx];
-	}
-}
-
 void DiagnosticJsonCrossStack(Json::Value &json, const HypothesisStack &hypothesis_stack) {
   for (unsigned int i_read = 0; i_read < hypothesis_stack.total_theory.my_hypotheses.size(); i_read++) {
     DiagnosticJsonCrossHypotheses(json["Cross"][i_read], hypothesis_stack.total_theory.my_hypotheses[i_read]);
-  }
-
-  // mol tag
-  if(hypothesis_stack.total_theory.GetIsMolecularTag()){
-	  for(unsigned int i_fam = 0; i_fam < hypothesis_stack.total_theory.my_eval_families.size(); ++i_fam){
-		  DiagnosticJsonEvalFamily(json["EvalFamily"][i_fam], hypothesis_stack.total_theory.my_eval_families[i_fam]);
-	  }
   }
 }
 
 void TinyDiagnosticJsonCrossStack(Json::Value &json, const HypothesisStack &hypothesis_stack) {
   for (unsigned int i_read = 0; i_read < hypothesis_stack.total_theory.my_hypotheses.size(); i_read++) {
     TinyDiagnosticJsonCrossHypotheses(json["Cross"][i_read], hypothesis_stack.total_theory.my_hypotheses[i_read]);
-  }
-  // mol tag
-  if(hypothesis_stack.total_theory.GetIsMolecularTag()){
-	  for(unsigned int i_fam = 0; i_fam < hypothesis_stack.total_theory.my_eval_families.size(); ++i_fam){
-		  TinyDiagnosticJsonEvalFamily(json["EvalFamily"][i_fam], hypothesis_stack.total_theory.my_eval_families[i_fam]);
-	  }
   }
 }
 
@@ -282,6 +232,8 @@ void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
             + convertToString(variant_position) + "."
             + ref_allele + "." + var_allele + ".diagnostic.json";
 
+  cerr << "RichDiagnosticOutput() -> " << outFile << endl;
+
   diagnostic_json["MagicNumber"] = 12;
   DiagnosticJsonFrequency(diagnostic_json["TopLevel"], hypothesis_stack.cur_state.cur_posterior);
 
@@ -303,6 +255,8 @@ void JustOneDiagnosis(const EnsembleEval &my_ensemble, const InputStructures &gl
   //diagnose one particular variant
   // check against a list?
   // only do this if using a small VCF for input of variants
+
+  cerr << "JustOneDiagnosis() rich = " << rich_diag << endl;
 
   // build a unique identifier to write out diagnostics
   int variant_position = my_ensemble.variant->position;

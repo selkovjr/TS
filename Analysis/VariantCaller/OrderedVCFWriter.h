@@ -111,10 +111,18 @@ public:
         break;
       for (deque<VariantCandidate>::iterator current_variant = slot_dropbox_[num_slots_written_].begin();
           current_variant != slot_dropbox_[num_slots_written_].end(); ++current_variant) {
-        if (current_variant->variant.isFiltered and !current_variant->variant.isHotSpot and suppress_no_calls_)
+        // cerr << "  isFiltered: " << current_variant->variant.isFiltered << endl;
+        // cerr << "  isHotSpot: " << !current_variant->variant.isHotSpot << endl;
+        // cerr << "  suppress_no_calls_: " << suppress_no_calls_ << endl;
+        // cerr << "    " << current_variant->variant << endl;
+        if (current_variant->variant.isFiltered and !current_variant->variant.isHotSpot and suppress_no_calls_) {
+          // cerr << "      writing to filtered\n";
           filtered_vcf_stream_ << current_variant->variant << endl;
-        else
+        }
+        else {
+          // cerr << "      writing to output\n";
           output_vcf_stream_ << current_variant->variant << endl;
+        }
       }
       slot_dropbox_[num_slots_written_].clear();
       num_slots_written_++;
