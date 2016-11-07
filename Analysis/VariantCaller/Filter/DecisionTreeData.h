@@ -118,8 +118,6 @@ class DecisionTreeData {
     string GenotypeStringFromAlleles(std::vector<int> &allowedGenotypes, bool refAlleleFound);
     bool AllowedGenotypesFromSummary(std::vector<int> &allowedGenotypes);
     string GenotypeFromStatus(vcf::Variant &candidate_variant, const ExtendParameters &parameters);
-    void SpecializedFilterFromLatentVariables(vcf::Variant &candidate_variant, const float bias_radius, int _allele, const string &sample_name);
-    void SpecializedFilterFromHypothesisBias(vcf::Variant &candidate_variant, AlleleIdentity allele_identity, const float deletion_bias, const float insertion_bias, int _allele, const string &sample_name);
     void FilterAlleleHypothesisBias(vcf::Variant &candidate_variant, float ref_bias, float var_bias, float threshold_bias, int _allele, const string &sample_name);
     void FilterOnSpecialTags(vcf::Variant &candidate_variant, const ExtendParameters &parameters, const vector<VariantSpecificParams>& variant_specific_params, const string &sample_name);
     void FilterOnStringency(vcf::Variant &candidate_variant, const float data_quality_stringency,  int _check_allele_index, const string &sample_name);

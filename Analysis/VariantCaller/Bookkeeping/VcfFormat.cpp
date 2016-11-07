@@ -116,13 +116,8 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
     //  << "##INFO=<ID=MFDT,Number=1,Type=Float,Description=\"Mean flows per read distinguishing variant above threshold.\">" << endl
 
     << "##INFO=<ID=MLLD,Number=A,Type=Float,Description=\"Mean log-likelihood delta per read.\">" << endl
-    << "##INFO=<ID=FWDB,Number=A,Type=Float,Description=\"Forward strand bias in prediction.\">" << endl
-    << "##INFO=<ID=REVB,Number=A,Type=Float,Description=\"Reverse strand bias in prediction.\">" << endl
-    << "##INFO=<ID=REFB,Number=A,Type=Float,Description=\"Reference Hypothesis bias in prediction.\">" << endl
-    << "##INFO=<ID=VARB,Number=A,Type=Float,Description=\"Variant Hypothesis bias in prediction.\">" << endl
     << "##INFO=<ID=STB,Number=A,Type=Float,Description=\"Strand bias in variant relative to reference.\">" << endl
     << "##INFO=<ID=STBP,Number=A,Type=Float,Description=\"Pval of Strand bias in variant relative to reference.\">" << endl
-    << "##INFO=<ID=RBI,Number=A,Type=Float,Description=\"Distance of bias parameters from zero.\">" << endl
     << "##INFO=<ID=QD,Number=1,Type=Float,Description=\"QualityByDepth as 4*QUAL/FDP (analogous to GATK)\">" << endl
     << "##INFO=<ID=FXX,Number=1,Type=Float,Description=\"Flow Evaluator failed read ratio\">" << endl
     << "##INFO=<ID=FR,Number=A,Type=String,Description=\"Reason why the variant was filtered.\">" << endl
@@ -256,10 +251,6 @@ void clearInfoTags(vcf::Variant &var) {
     var.info["DP"].clear();
 
 
-  it = var.info.find("RBI");
-  if (it != var.info.end())
-    var.info["RBI"].clear();
-
   it = var.info.find("HRUN");
   if (it != var.info.end())
     var.info["HRUN"].clear();
@@ -317,11 +308,6 @@ void NullInfoFields(vcf::Variant &var, bool use_position_bias){
     var.info["FSAF"].push_back(convertToString(0));
     var.info["FSAR"].push_back(convertToString(0));
     var.info["HRUN"].push_back(convertToString(0));
-    var.info["RBI"].push_back(convertToString(0));
-    var.info["FWDB"].push_back(convertToString(0));
-    var.info["REVB"].push_back(convertToString(0));
-    var.info["REFB"].push_back(convertToString(0));
-    var.info["VARB"].push_back(convertToString(0));
     var.info["SSSB"].push_back(convertToString(0));
     var.info["SSEN"].push_back(convertToString(0));
     var.info["SSEP"].push_back(convertToString(0));

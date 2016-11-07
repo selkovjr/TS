@@ -430,6 +430,7 @@ void * VariantCallerWorker(void *input)
             v->variant.isFiltered = false;
           }
           if (filter) {
+            cerr << "------------------- NOCALL: filtered candidate ----------------\n";
             v->variant.filter = "NOCALL";
             v->variant.isFiltered = true;
           }
@@ -439,8 +440,7 @@ void * VariantCallerWorker(void *input)
           }
           if (!pass) {
             for (int sample_index = 0; (sample_index < vc.sample_manager->num_samples_); ++sample_index) {
-              // from DecisionTree
-              // AutoFailTheCandidate(v->variant, vc.parameters->my_controls.use_position_bias, v->variant.sampleNames[sample_index]);
+              AutoFailTheCandidate(v->variant, vc.parameters->my_controls.use_position_bias, v->variant.sampleNames[sample_index]);
             }
           }
         } /* multisample */
@@ -448,7 +448,6 @@ void * VariantCallerWorker(void *input)
           if (!EnsembleProcessOneVariant(thread_objects, vc, *v, *position_ticket, 0)) {
             AutoFailTheCandidate(v->variant, vc.parameters->my_controls.use_position_bias, v->variant.sampleNames[0]);
           }
-          v->variant.isFiltered = false;
         }
       }
 

@@ -18,7 +18,7 @@ void AlleleIdentity::SubCategorizeSNP(const LocalReferenceContext &reference_con
   char altBase = altAllele[0];
   ref_hp_length = reference_context.my_hp_length[0];
   // Construct legacy variables from new structure of LocalReferenceContext
-  
+
   // SNP with bases different on both sides
   //  genome       44 45 46 47 48  49 (0 based)
   //  ref is        A  A  A  A  T  G
@@ -56,9 +56,9 @@ void AlleleIdentity::SubCategorizeSNP(const LocalReferenceContext &reference_con
   //         doesn't match position0 so refBaseRight = ref base = 'A'
   //   altBase T does not match refBaseLeft C or refBaseRight A so do not realign
   char refBaseLeft = (reference_context.position0 == reference_context.my_hp_start_pos[0]) ?
-		  reference_context.ref_left_hp_base : reference_context.reference_allele[0];
+      reference_context.ref_left_hp_base : reference_context.reference_allele[0];
   char refBaseRight = (reference_context.position0 == reference_context.my_hp_start_pos[0] + reference_context.my_hp_length[0] - 1) ?
-		  reference_context.ref_right_hp_base : reference_context.reference_allele[0];
+      reference_context.ref_right_hp_base : reference_context.reference_allele[0];
 
   if (altBase == refBaseLeft || altBase == refBaseRight) {
     // Flag possible misalignment for further investigation
@@ -74,9 +74,9 @@ inline bool isValidBase(char base) { return (base != invalidBase); }
 inline char getNextHPBase(string const& allele, int *ix, char currentBase, int direction){
   // side effect is to modify pos to be the index of the next HP base
   int newIx = *ix + direction;
- 
+
   while( newIx >= 0 &&  newIx < (int)allele.size() &&
-	 allele.at(newIx) == currentBase )
+   allele.at(newIx) == currentBase )
     newIx = newIx + direction;
 
   if (newIx >= 0 && newIx < (int)allele.size() ){
@@ -85,7 +85,7 @@ inline char getNextHPBase(string const& allele, int *ix, char currentBase, int d
   }
   return (invalidBase);
 }
-  
+
 void AlleleIdentity::SubCategorizeMNP(const LocalReferenceContext &reference_context) {
   // This function only works for the n Base -> n Base mnp representation
   // Possible misalign, align by right shift, example:
@@ -100,14 +100,14 @@ void AlleleIdentity::SubCategorizeMNP(const LocalReferenceContext &reference_con
   //       test if same base
   //   If all match, flag for realignment (possible on right)
   //   repeat for left side
-  // 
+  //
   // Variant may actually be part of an undercalled or overcalled HP
 
   if ( ! reference_context.context_detected )
     return;
 
   assert(altAllele.size()==reference_context.reference_allele.size());
-  
+
   //   possible misalign, align by left shift)
   //   Ref:   GGTTAC   (refBaseLeft = G = reference_context.ref_left_hp_base)
   //   Var:     GTAA
@@ -117,7 +117,7 @@ void AlleleIdentity::SubCategorizeMNP(const LocalReferenceContext &reference_con
   char altBaseLeft = altAllele.at(start_index);
   int altPos = start_index;
 
-  long ref_start_pos = reference_context.position0 + start_index;  
+  long ref_start_pos = reference_context.position0 + start_index;
   char refBaseLeft = (reference_context.my_hp_start_pos.at(start_index) == ref_start_pos)
     ? reference_context.ref_left_hp_base : reference_context.reference_allele.at(start_index);
   int refPos =  (reference_context.my_hp_start_pos.at(start_index) == ref_start_pos)
@@ -133,13 +133,13 @@ void AlleleIdentity::SubCategorizeMNP(const LocalReferenceContext &reference_con
       break;
     }
     refBase = getNextHPBase(reference_context.reference_allele, &refPos, refBase, 1);
-    altBase = getNextHPBase(altAllele, &altPos, altBase, 1);  
+    altBase = getNextHPBase(altAllele, &altPos, altBase, 1);
   }
-  
+
   if (leftAlign) {
     status.doRealignment = true;
   }
-   
+
   if (!leftAlign) {
     //   Ref:   AGTT
     //   Var:   GT   (possible misalign, align by right shift)
@@ -161,11 +161,11 @@ void AlleleIdentity::SubCategorizeMNP(const LocalReferenceContext &reference_con
     refBase =  refBaseRight;
     while ( isValidBase(altBase) && isValidBase(refBase) ) {
       if ( altBase != refBase ){
-	rightAlign = false;
-	break;
+  rightAlign = false;
+  break;
       }
       refBase = getNextHPBase(reference_context.reference_allele, &refPos, refBase, -1);
-      altBase = getNextHPBase(altAllele, &altPos, altBase, -1);  
+      altBase = getNextHPBase(altAllele, &altPos, altBase, -1);
     }
 
     if(rightAlign) {
@@ -182,18 +182,18 @@ void AlleleIdentity::SubCategorizeMNP(const LocalReferenceContext &reference_con
   // in the case in which we are deleting/inserting multiple different bases
   // there may be extra correlation in the measurements because of over/under normalization in homopolymers
   // we head off this case
-  
+
   // count transitions in reference
   // for now the only probable way I can see this happening is  XXXXXXYYYYY case, yielding XY as the variant
   // i.e. NXY -> N (deletion)
   // N -> NXY (insertion)
   // in theory, if the data is bad enough, could happen to 1-mers, but unlikely.
-  
+
   // note that SNPs are anticorrelated, so don't really have this problem
   if (reference_context.reference_allele.length()==3 && altAllele.length()==1 && status.isDeletion)
     if (reference_context.reference_allele[1]!=reference_context.reference_allele[2])
       status.isPotentiallyCorrelated = true;
-    
+
   if (altAllele.length()==3 && reference_context.reference_allele.length()==1 && status.isInsertion)
     if (altAllele[1]!=altAllele[2])
       status.isPotentiallyCorrelated = true;
@@ -222,7 +222,7 @@ void AlleleIdentity::IdentifyHPdeletion(const LocalReferenceContext& reference_c
   else {
     status.isHPIndel = reference_context.my_hp_length[left_anchor] > 1;
     for (int i_base=left_anchor+1; (status.isHPIndel and i_base<(int)reference_context.reference_allele.length()-right_anchor); i_base++){
-	    status.isHPIndel = status.isHPIndel and (reference_context.my_hp_length[left_anchor] > 1);
+      status.isHPIndel = status.isHPIndel and (reference_context.my_hp_length[left_anchor] > 1);
     }
   }
   inDelLength = reference_context.reference_allele.length() - altAllele.length();
@@ -287,7 +287,7 @@ bool AlleleIdentity::IdentifyDyslexicMotive(char base, int position,
     else if (ref_reader.base(chr_idx,test_position) == base) {
       my_hp_length++;
       if(my_hp_length >= 2) {  // trigger when a 3mer or more is found
-    	  status.isDyslexic = true;
+        status.isDyslexic = true;
       }
     }
     test_position--;
@@ -307,7 +307,7 @@ bool AlleleIdentity::IdentifyDyslexicMotive(char base, int position,
     else if (ref_reader.base(chr_idx,test_position) == base) {
       my_hp_length++;
       if(my_hp_length >= 2) {  // trigger when a 3mer or more is found
-    	  status.isDyslexic = true;
+        status.isDyslexic = true;
       }
     }
     test_position++;
@@ -325,8 +325,8 @@ bool AlleleIdentity::SubCategorizeInDel(const LocalReferenceContext& reference_c
   status.isInsertion = (reference_context.reference_allele.length() < altAllele.length());
 
   if (status.isDeletion) {
-	IdentifyHPdeletion(reference_context);
-	ref_hp_length = reference_context.my_hp_length[left_anchor];
+  IdentifyHPdeletion(reference_context);
+  ref_hp_length = reference_context.my_hp_length[left_anchor];
   }
   else { // Insertion
     IdentifyHPinsertion(reference_context, ref_reader, chr_idx);
@@ -558,7 +558,7 @@ void AlleleIdentity::CalculateWindowForVariant(const LocalReferenceContext &seq_
 
   // not an MNR. Moving on along to InDels.
   if (status.isIndel) {
-	// Default variant window
+  // Default variant window
     end_window = seq_context.right_hp_start +1; // Anchor base to the right of allele
     start_window = seq_context.position0;
 
@@ -671,11 +671,12 @@ void AlleleIdentity::DetectCasesToForceNoCall(const LocalReferenceContext &seq_c
 // ====================================================================
 
 
-void EnsembleEval::SetupAllAlleles(const ExtendParameters &parameters,
-                                                 const InputStructures  &global_context,
-                                                 const ReferenceReader &ref_reader,
-                                                 int chr_idx)
-{
+void EnsembleEval::SetupAllAlleles(
+  const ExtendParameters &parameters,
+  const InputStructures  &global_context,
+  const ReferenceReader &ref_reader,
+  int chr_idx
+) {
   seq_context.DetectContext(*variant, global_context.DEBUG, ref_reader, chr_idx);
   allele_identity_vector.resize(variant->alt.size());
 
@@ -731,7 +732,7 @@ void EnsembleEval::SetupAllAlleles(const ExtendParameters &parameters,
 
 
   if (global_context.DEBUG > 0) {
-	cout << "Realignment for this candidate is turned " << (doRealignment ? "on" : "off") << endl;
+  cout << "Realignment for this candidate is turned " << (doRealignment ? "on" : "off") << endl;
     cout << "Final window for multi-allele: " << ": (" << multiallele_window_start << ") ";
     for (int p_idx = multiallele_window_start; p_idx < multiallele_window_end; p_idx++)
       cout << ref_reader.base(chr_idx,p_idx);

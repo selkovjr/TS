@@ -61,7 +61,7 @@ float ShortStack::PosteriorFrequencyLogLikelihood(const vector<float> &hyp_freq,
   // add contribution from prior
   for (unsigned int i_hyp = 0; i_hyp < hyp_freq.size(); i_hyp++){
     // contribution is
-    float local_LL = log(hyp_freq[i_hyp]*my_reliability + (1.0f-my_reliability)); // hyp_freq might be exactly zero, whereupon my prior is an outlier
+    float local_LL = log(hyp_freq[i_hyp] * my_reliability + (1.0f - my_reliability)); // hyp_freq might be exactly zero, whereupon my prior is an outlier
     cerr << "  contribution is " << local_LL << " * " << prior_frequency_weight[i_hyp] << endl;
     my_LL += prior_frequency_weight[i_hyp]*local_LL; // my weight is my number of pseudo-observations with this LL
   }
@@ -137,24 +137,6 @@ void ShortStack::MultiFrequencyFromResponsibility(vector<float> &hyp_freq, vecto
     hyp_freq[i_hyp] = (hyp_freq[i_hyp]+safety_offset)/denom;
   }
 }
-
-void ShortStack::OutlierFiltering(float data_reliability, bool is_update_valid_index){
-  vector<float> zeros_vector;
-    for(unsigned int i_read = 0; i_read < my_hypotheses.size(); ++i_read){
-    if(my_hypotheses[i_read].success){
-      zeros_vector.assign(my_hypotheses[i_read].responsibility.size(), 0.0f);
-      // Not yet initialize my_hypotheses.
-      if(my_hypotheses[i_read].responsibility == zeros_vector){
-        my_hypotheses[i_read].InitializeDerivedQualities();
-      }
-      my_hypotheses[i_read].success = (!my_hypotheses[i_read].LocalOutlierClassifier(data_reliability));
-    }
-    }
-    if(is_update_valid_index){
-        FindValidIndexes();
-    }
-}
-
 
 unsigned int ShortStack::DetailLevel(void){
   return my_hypotheses.size();

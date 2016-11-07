@@ -18,6 +18,7 @@
 
 // use both strands for evaluating likelihood
 #define ALL_STRAND_KEY -1
+
 // no matter what, the read as called should be 1 in a million relative to the variant
 // prevent some awkward moments if we divide by zero
 #define MINIMUM_RELATIVE_OUTLIER_PROBABILITY 0.000001f

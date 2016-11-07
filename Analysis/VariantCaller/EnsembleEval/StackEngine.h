@@ -15,7 +15,6 @@
 
 #include "ExtendedReadInfo.h"
 #include "CrossHypotheses.h"
-#include "BiasGenerator.h"
 #include "SigmaGenerator.h"
 #include "SkewGenerator.h"
 #include "ExtendParameters.h"
@@ -33,10 +32,11 @@ class LatentSlate{
     //    PosteriorInference fwd_posterior;
     //    PosteriorInference rev_posterior;
 
-    // track important latent variables
-    BasicBiasGenerator bias_generator;
-    // track filter
-    BiasChecker bias_checker;
+    // // track important latent variables
+    // BasicBiasGenerator bias_generator;
+    // // track filter
+    // BiasChecker bias_checker;
+    //
     // and the other important set of latent variables
     StrandedSigmaGenerator sigma_generator;
     // and the third set

@@ -69,9 +69,9 @@ def main():
         bin_dir = os.path.dirname(os.path.realpath(__file__))
     bin_dir = os.path.normpath(bin_dir)
 
-    path_to_tvc = os.path.join(bin_dir,'tvcgen')
+    path_to_tvc = os.path.join(bin_dir,'tvc')
     if not os.path.exists(path_to_tvc):
-        path_to_tvc = 'tvcgen'
+        path_to_tvc = 'tvc'
     path_to_tvcassembly = os.path.join(bin_dir,'tvcassembly')
     if not os.path.exists(path_to_tvcassembly):
         path_to_tvcassembly = 'tvcassembly'
@@ -141,7 +141,7 @@ def main():
 
 
     # TVC
-    printtime('Calling small INDELs and SNPs using tvcgen ...')
+    printtime('Calling small INDELs and SNPs using the truncated version of TVC ...')
 
     multisample = (options.bamfile.find(",") != -1)
     meta_tvc_args = parameters.get('meta',{}).get('tvcargs','tvc')

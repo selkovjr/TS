@@ -26,10 +26,10 @@ ScanSpace::ScanSpace(){
 }
 
 FreqMaster::FreqMaster(){
-  data_reliability = 1.0f-0.001f;
+  data_reliability = 1.0f - 0.001f;
   max_hyp_freq.resize(2);
   prior_frequency_weight.resize(2);
-  prior_frequency_weight.assign(2,0.0f); // additional prior weight here
+  prior_frequency_weight.assign(2, 0.0f); // additional prior weight here
   germline_prior_strength = 0.0f;
   germline_log_prior_normalization = 0.0f;
 }
@@ -73,7 +73,7 @@ void FreqMaster::SetPriorStrength(const vector<float> &local_freq){
   double n_hyp = 1.0*prior_frequency_weight.size(); // always at least 2
   // this is n! for uniform distribution over n_hyp
   float total_weight = 0.0f;
-  for (unsigned int i_hyp=0; i_hyp<prior_frequency_weight.size(); i_hyp++){
+  for (unsigned int i_hyp = 0; i_hyp < prior_frequency_weight.size(); i_hyp++){
     total_weight += prior_frequency_weight[i_hyp];
   }
   germline_log_prior_normalization = 1.0*lgamma(total_weight+n_hyp);

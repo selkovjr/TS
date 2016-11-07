@@ -14,18 +14,6 @@ void LatentSlate::PropagateTuningParameters(EnsembleEvalTuningParameters &my_par
   cur_posterior.clustering.germline_prior_strength = my_params.germline_prior_strength;
   cur_posterior.gq_pair.min_detail_level_for_fast_scan = (unsigned int) my_params.min_detail_level_for_fast_scan;
   cur_posterior.ref_vs_all.min_detail_level_for_fast_scan = (unsigned int) my_params.min_detail_level_for_fast_scan;
-  //rev_posterior.data_reliability = my_params.DataReliability();
-  //fwd_posterior.data_reliability = my_params.DataReliability();
-
-  // prior precision and likelihood penalty for moving off-center
-  bias_generator.InitForStrand(num_hyp_no_null-1); // num_alt = num_hyp_no_null-1
-  bias_generator.damper_bias = my_params.prediction_precision;
-  bias_generator.pseudo_sigma_base = my_params.pseudo_sigma_base;
-
-  // check my biases after fit
-  bias_checker.Init(num_hyp_no_null);
-  bias_checker.damper_bias = my_params.prediction_precision;
-  bias_checker.soft_clip = my_params.soft_clip_bias_checker;
 
   // prior variance-by-intensity relationship
   sigma_generator.fwd.prior_sigma_regression[0] = my_params.magic_sigma_base;
@@ -53,7 +41,6 @@ void LatentSlate::LocalExecuteInference(ShortStack &total_theory, bool update_fr
 
 void LatentSlate::FastStep(ShortStack &total_theory, bool update_frequency, bool update_sigma) {
 
-  bias_generator.DoStepForBias(total_theory); // update bias estimate-> residuals->likelihoods
   if (update_frequency)
     cur_posterior.QuickUpdateStep(total_theory);
 
@@ -109,9 +96,9 @@ void LatentSlate::FastExecuteInference(ShortStack &total_theory, bool update_fre
       keep_optimizing = false;
   }
 
-  // evaluate likelihood of current parameter set
-  // currently only done for bias
-  cur_posterior.params_ll = bias_generator.BiasLL();
+  // // evaluate likelihood of current parameter set
+  // // currently only done for bias
+  // cur_posterior.params_ll = bias_generator.BiasLL();
 }
 
 
@@ -124,7 +111,6 @@ void LatentSlate::ScanStrandPosterior(ShortStack &total_theory,bool vs_ref, int 
 }
 
 void LatentSlate::ResetToOrigin(){
-  bias_generator.ResetUpdate();
   sigma_generator.ResetSigmaGenerator();
 }
 
@@ -200,7 +186,6 @@ void HypothesisStack::ExecuteInference() {
   // now with unrestrained inference
   ExecuteExtremeInferences();
   // set up our filter
-  cur_state.bias_checker.UpdateBiasChecker(total_theory);
   // @TODO: Now with fast scan, we can always do it
   if(my_params.max_detail_level > 0){
     cur_state.ScanStrandPosterior(total_theory, true, my_params.max_detail_level);
@@ -277,7 +262,6 @@ void HypothesisStack::ExecuteExtremeInferences() {
 
 void HypothesisStack::RestoreFullInference() {
   //  cur_state = backup_state;
-  cur_state.bias_generator.ResetActiveBias(total_theory);
   // in theory, need to update sigma & skew, but since not fitting for particular variants, don't worry about it at the moment.
   cur_state.sigma_generator.UpdateSigmaEstimates(total_theory);
   total_theory.UpdateRelevantLikelihoods();
@@ -469,7 +453,8 @@ void EnsembleEval::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
 // read_id_[i] = -1 means the i-th read is classified as an outlier.
 // read_id_[i] = 0 means the i-th read is classified as ref.
 // read_id_[i] = 1 means the i-th read is classified as the variant allele 1, and so on.
-void EnsembleEval::ApproximateHardClassifierForReads(){
+void EnsembleEval::ApproximateHardClassifierForReads() {
+  cerr << "ApproximateHardClassifierForReads()\n";
   read_id_.clear();
   strand_id_.clear();
   dist_to_left_.clear();
@@ -480,14 +465,15 @@ void EnsembleEval::ApproximateHardClassifierForReads(){
   dist_to_left_.assign(read_stack.size(), -1);
   dist_to_right_.assign(read_stack.size(), -1);
 
-  int position0 = variant->position -1; // variant->position 1-base: vcflib/Variant.h
+  int position0 = variant->position - 1; // variant->position 1-base: vcflib/Variant.h
 
   for (unsigned int i_read = 0; i_read < read_stack.size(); ++i_read) {
     // compute read_id_
-    if(allele_eval.total_theory.my_hypotheses[i_read].success){
+    if (allele_eval.total_theory.my_hypotheses[i_read].success){
       read_id_[i_read] = allele_eval.total_theory.my_hypotheses[i_read].MostResponsible() - 1; // -1 = null, 0 = ref , ...
     }
     else{
+      cerr << i_read << " is outlier" << endl;
       read_id_[i_read] = -1; // failure = outlier
     }
 

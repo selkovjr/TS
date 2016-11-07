@@ -227,10 +227,6 @@ void DecrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_id
   }
 }
 
-void IncrementFlow(const ion::FlowOrder &flow_order, const char &nuc, int &flow) {
-  // while (flow < flow_order.num_flows() and flow_order.nuc_at(flow) != nuc)
-    flow++;
-}
 
 // -------------------------------------------------------------------
 

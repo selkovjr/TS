@@ -166,16 +166,6 @@ void TinyDiagnosticJsonCrossStack(Json::Value &json, const HypothesisStack &hypo
 }
 
 
-void DiagnosticJsonBias(Json::Value &json, const BasicBiasGenerator &bias_generator) {
-  for (unsigned int i_latent = 0; i_latent < bias_generator.latent_bias.size(); i_latent++) {
-    json["latentbias"][i_latent] = bias_generator.latent_bias[i_latent][0];
-  }
-  for (unsigned int i_strand=0; i_strand<bias_generator.latent_bias.size(); i_strand++){
-    for (unsigned int i_alt=0; i_alt<bias_generator.latent_bias[i_strand].size(); i_alt++)
-      json["allbias"][i_strand][i_alt] = bias_generator.latent_bias[i_strand][i_alt];
-  }
-}
-
 void DiagnosticJsonSkew(Json::Value &json, const BasicSkewGenerator &skew_generator) {
   for (unsigned int i_latent = 0; i_latent < skew_generator.latent_skew.size(); i_latent++) {
     json["latentskew"][i_latent] = skew_generator.latent_skew[i_latent];
@@ -217,7 +207,6 @@ void TinyDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
   // just a little bit of data
   DiagnosticJsonReadStack(diagnostic_json["ReadStack"], read_stack, global_context);
   TinyDiagnosticJsonCrossStack(diagnostic_json["CrossHypotheses"], hypothesis_stack);
-  DiagnosticJsonBias(diagnostic_json["Latent"], hypothesis_stack.cur_state.bias_generator);
   // write it out
   DiagnosticWriteJson(diagnostic_json, outFile);
 }
@@ -239,7 +228,6 @@ void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
 
   DiagnosticJsonReadStack(diagnostic_json["ReadStack"], read_stack, global_context);
   DiagnosticJsonCrossStack(diagnostic_json["CrossHypotheses"], hypothesis_stack);
-  DiagnosticJsonBias(diagnostic_json["Latent"], hypothesis_stack.cur_state.bias_generator);
   DiagnosticJsonSigma(diagnostic_json["Latent"], hypothesis_stack.cur_state.sigma_generator.fwd);
   DiagnosticJsonSigma(diagnostic_json["Latent"]["SigmaRev"], hypothesis_stack.cur_state.sigma_generator.rev);
     DiagnosticJsonSkew(diagnostic_json["Latent"], hypothesis_stack.cur_state.skew_generator);

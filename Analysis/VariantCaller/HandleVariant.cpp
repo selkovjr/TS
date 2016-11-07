@@ -49,7 +49,7 @@ void EnsembleEval::SpliceAllelesIntoReads(PersistingThreadObjects &thread_object
   // Check how many reads had their alignment modified
   std::ostringstream my_info;
   my_info.precision(4);
-  if (doRealignment and num_valid_reads>0){
+  if (doRealignment and num_valid_reads > 0) {
     float frac_realigned = (float)num_realigned / (float)num_valid_reads;
     // And re-do splicing without realignment if we exceed the threshold
     if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold){
@@ -89,30 +89,13 @@ void SummarizeInfoFieldsFromEnsemble(EnsembleEval &my_ensemble, vcf::Variant &ca
 
   candidate_variant.info["MLLD"].push_back(convertToString(mean_ll_delta));
 
-  float radius_bias, fwd_bias, rev_bias, ref_bias,var_bias;
   int fwd_strand = 0;
   int rev_strand = 1;
 
   int var_hyp = 1;
-
-  // get bias terms from cur_allele within a single multi-allele structure
-  var_hyp = _cur_allele_index+1;
-  radius_bias = my_ensemble.allele_eval.cur_state.bias_generator.RadiusOfBias(_cur_allele_index);
-  fwd_bias = my_ensemble.allele_eval.cur_state.bias_generator.latent_bias[fwd_strand][_cur_allele_index];
-  rev_bias = my_ensemble.allele_eval.cur_state.bias_generator.latent_bias[rev_strand][_cur_allele_index];
-  //@TODO: note the disconnect in indexing; inconsistent betwen objects
-  ref_bias = my_ensemble.allele_eval.cur_state.bias_checker.ref_bias_v[var_hyp];
-  var_bias = my_ensemble.allele_eval.cur_state.bias_checker.variant_bias_v[var_hyp];
-
-  candidate_variant.info["RBI"].push_back(convertToString(radius_bias));
-  // this is by strand
-  candidate_variant.info["FWDB"].push_back(convertToString(fwd_bias));
-  candidate_variant.info["REVB"].push_back(convertToString(rev_bias));
-  // this is by hypothesis
-  candidate_variant.info["REFB"].push_back(convertToString(ref_bias));
-  candidate_variant.info["VARB"].push_back(convertToString(var_bias));
-
 }
+
+
 // The structure InferenceResult is used for void MultiMinAlleleFreq(...) only.
 // qual, gt, gq are the QUAL, GT, GQ computed for min_allele_freq, respectively
 struct InferenceResult{
@@ -398,7 +381,7 @@ bool EnsembleProcessOneVariant (
   my_ensemble.StackUpOneVariant(*vc.parameters, bam_position, sample_index);
 
   if (my_ensemble.read_stack.empty()) {
-    //cerr << "Nonfatal: No reads found for " << candidate_variant.variant.sequenceName << "\t" << my_ensemble.multiallele_window_start << endl;
+    cerr << "Nonfatal: No reads found for " << candidate_variant.variant.sequenceName << "\t" << my_ensemble.multiallele_window_start << endl;
     NullFilterReason(candidate_variant.variant, sample_name);
     string my_reason = "NODATA";
     AddFilterReason(candidate_variant.variant, my_reason, sample_name);

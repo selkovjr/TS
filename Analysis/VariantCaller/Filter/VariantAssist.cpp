@@ -11,9 +11,9 @@ MultiBook::MultiBook(){
   invalid_reads = 0;
 }
 
-void MultiBook::Allocate(int num_hyp){
+void MultiBook::Allocate(int num_hyp) {
   my_book.resize(2);
-  for (unsigned int i_strand=0; i_strand <my_book.size(); i_strand++){
+  for (unsigned int i_strand = 0; i_strand <my_book.size(); i_strand++) {
     my_book[i_strand].resize(num_hyp);
   }
 
@@ -25,15 +25,15 @@ void MultiBook::Allocate(int num_hyp){
   }
 }
 
-int MultiBook::NumAltAlleles(){
-  return(my_book[0].size()-1); // not counting Ref =0
+int MultiBook::NumAltAlleles() {
+  return(my_book[0].size() - 1); // not counting Ref = 0
 }
 
-void MultiBook::SetCount(int i_strand, int i_hyp, int count){
+void MultiBook::SetCount(int i_strand, int i_hyp, int count) {
   my_book[i_strand][i_hyp] = count;
 }
 
-void MultiBook::ResetCounter(){
+void MultiBook::ResetCounter() {
   invalid_reads = 0;
   for (int i_strand=0; i_strand<2; i_strand++){
     for (unsigned int i_hyp=0; i_hyp<my_book[i_strand].size(); i_hyp++){
@@ -51,13 +51,13 @@ void MultiBook::AssignPositionFromEndToHardClassifiedReads(const vector<int> &re
 
   unsigned int count = 0;
   for (unsigned int i_read = 0; i_read < read_id.size(); i_read++) {
-     int _allele_index = read_id[i_read];
-     if (_allele_index > -1){
-       to_right[count] = right[i_read];
-       to_left[count] = left[i_read];
-       allele_index[count] = _allele_index;
-       count++;
-     }
+    int _allele_index = read_id[i_read];
+    if (_allele_index > -1){
+      to_right[count] = right[i_read];
+      to_left[count] = left[i_read];
+      allele_index[count] = _allele_index;
+      count++;
+    }
   }
   to_left.resize(count);
   to_right.resize(count);
@@ -70,18 +70,20 @@ void MultiBook::AssignStrandToHardClassifiedReads(const vector<bool> &strand_id,
   ResetCounter();
   // record strand direction for each read with a valid allele
   for (unsigned int i_read = 0; i_read < read_id.size(); i_read++) {
-     int _allele_index = read_id[i_read];
-     int i_strand = 1;
-     if (strand_id[i_read])
-       i_strand = 0;
-     if (_allele_index>-1){
-       my_book[i_strand][_allele_index]+=1;
-     }
-     if (_allele_index==-1){
-       invalid_reads++;
-     }
-     // otherwise no deal - doesn't count for this alternate at all
-   }
+    int _allele_index = read_id[i_read];
+    cerr << "AssignStrandToHardClassifiedReads(strand_id: " << strand_id[i_read] << ", read_id: " << read_id[i_read] << "), i_read = " << i_read << "\n";
+    int i_strand = 1;
+    if (strand_id[i_read])
+      i_strand = 0;
+    if (_allele_index > -1){
+      my_book[i_strand][_allele_index] += 1;
+    }
+    if (_allele_index == -1){
+      invalid_reads++;
+    }
+    cerr << "  " << read_id[i_read] << " -> " << i_strand << endl;
+    // otherwise no deal - doesn't count for this alternate at all
+  }
 }
 
 float VariantAssist::median(std::vector<float>& values)
@@ -92,7 +94,7 @@ float VariantAssist::median(std::vector<float>& values)
 
   if (v.size() == 0)
     return std::numeric_limits<float>::quiet_NaN();
-    
+
   if (v.size() == 1)
     return v[0];
 
@@ -118,7 +120,7 @@ void VariantAssist::randperm(vector<unsigned int> &v, RandSchrange& rand_generat
   for(unsigned int i = 0; i < n-1; i++) {
     // generate 0 <= c < n-i
     unsigned int c = (int)((double)rand_generator.Rand())/((double)rand_generator.RandMax + 1) * (n-i);
-    unsigned int t = v[i]; v[i] = v[i+c]; v[i+c] = t;	/* swap */
+    unsigned int t = v[i]; v[i] = v[i+c]; v[i+c] = t; /* swap */
   }
 }
 
@@ -129,7 +131,7 @@ double VariantAssist::partial_sum(vector<double> &v, size_t n) {
 
   double total = 0;
   for (size_t i=0; i<n; i++)
-      total += v[i];
+    total += v[i];
   return (total) ;
 }
 
@@ -168,36 +170,36 @@ void VariantAssist::tiedrank(vector<double> &vals)
 // Wilcoxon 2-sample or Mann_Whitney U statistic, 1-sided version
 // small values test whether ranks(var) < rank(ref)
 double VariantAssist::MannWhitneyU(vector<float> &ref, vector<float> &var, bool debug){
-   vector<double> both(ref.size() + var.size());
-   for (unsigned int i = 0; i < ref.size(); i++)
-     both[i] = ref[i];
-   for (unsigned int i = ref.size(); i < both.size(); i++)
-     both[i] = var[i - ref.size()];
+  vector<double> both(ref.size() + var.size());
+  for (unsigned int i = 0; i < ref.size(); i++)
+    both[i] = ref[i];
+  for (unsigned int i = ref.size(); i < both.size(); i++)
+    both[i] = var[i - ref.size()];
 
-   VariantAssist::tiedrank(both);
+  VariantAssist::tiedrank(both);
 
-   if (debug) {
-     fprintf(stdout, "ranks: ");
+  if (debug) {
+    fprintf(stdout, "ranks: ");
     for (int j=0; j< (int)both.size(); j++){
       fprintf(stdout, "%.1f ", (float)both[j]);
     }
     fprintf(stdout, "\n");
-   }
+  }
 
-   double maxU = (double)ref.size()*(double)var.size() + (double)ref.size()*(((double)ref.size()+1))/2.0;
-   double U = maxU - VariantAssist::partial_sum(both, ref.size());
-   if ((U < 0) || (U > maxU)) {
-     fprintf(stdout, "Warning: overflow in VariantAssist::MannWhitneyU; ");
-     fprintf(stdout, "ref.size()=%zu; ", ref.size());
-     fprintf(stdout, "var.size()=%zu; ", var.size());
-     fprintf(stdout, "both.size()=%zu; ", both.size());
-     fprintf(stdout, "partial_sum=%f; ", VariantAssist::partial_sum(both, ref.size()));
-     double newU = (U < 0) ? 0 : maxU;
-     fprintf(stdout, "U=%f is set to %f\n", U, newU);
-     U = newU;
-   }
-   return(U);
- }
+  double maxU = (double)ref.size()*(double)var.size() + (double)ref.size()*(((double)ref.size()+1))/2.0;
+  double U = maxU - VariantAssist::partial_sum(both, ref.size());
+  if ((U < 0) || (U > maxU)) {
+    fprintf(stdout, "Warning: overflow in VariantAssist::MannWhitneyU; ");
+    fprintf(stdout, "ref.size()=%zu; ", ref.size());
+    fprintf(stdout, "var.size()=%zu; ", var.size());
+    fprintf(stdout, "both.size()=%zu; ", both.size());
+    fprintf(stdout, "partial_sum=%f; ", VariantAssist::partial_sum(both, ref.size()));
+    double newU = (U < 0) ? 0 : maxU;
+    fprintf(stdout, "U=%f is set to %f\n", U, newU);
+    U = newU;
+  }
+  return(U);
+}
 
 // rho = estimate of P(ref) > var) + 0.5 P(var = ref)
 double VariantAssist::MannWhitneyURho(vector<float> &ref, vector<float> &var, bool debug) {
@@ -210,7 +212,7 @@ double VariantAssist::MannWhitneyURho(vector<float> &ref, vector<float> &var, bo
   }
   if (rho < 0) {
     fprintf(stdout, "Warning: overflow in VariantAssist::MannWhitneyRho; ");
-    fprintf(stdout, "rho=%f is set to 0\n", rho);     
+    fprintf(stdout, "rho=%f is set to 0\n", rho);
     rho = 0;
   }
   return (rho);
@@ -257,7 +259,7 @@ void MultiBook::ComputePositionBias(int i_alt)
   //
   // pval = proportion of times bootstrap positional diff >= observed positional diff
   // rationale is that if this pval < threshold then there is real positional bias
-  // 
+  //
   // repeat for positional bias to the left and to the right
   // return the minimum of the two pvals
 
@@ -326,7 +328,7 @@ void MultiBook::ComputePositionBias(int i_alt)
   }
 
   // look for inset reads with a bunch of variants close to an end
-  #define to_end_cutoff 10
+#define to_end_cutoff 10
   float left_var = VariantAssist::median(to_left_var);
   float right_var = VariantAssist::median(to_right_var);
 
@@ -394,7 +396,7 @@ void MultiBook::ComputePositionBias(int i_alt)
     }
     fprintf(stdout, "\n");
   }
-  
+
   double observed = VariantAssist::MannWhitneyURho(to_ref, to_var, debug);
 
   RandSchrange rand_generator;
@@ -405,7 +407,7 @@ void MultiBook::ComputePositionBias(int i_alt)
   }
   long int N = 1000;
   double total = 0;
-  for  (long int i=0; i<N; i++){    
+  for  (long int i=0; i<N; i++){
     VariantAssist::randperm(ix, rand_generator);
     for (unsigned int ii=0; ii<count_ref; ii++){
       to_ref[ii] = to_end[ix[ii]];
@@ -417,12 +419,12 @@ void MultiBook::ComputePositionBias(int i_alt)
     if (debug && i<10) {
       fprintf(stdout, "to_ref: ");
       for (int j=0; j< (int)to_ref.size(); j++){
-	fprintf(stdout, "%d ", (int)to_ref[j]);
+        fprintf(stdout, "%d ", (int)to_ref[j]);
       }
       fprintf(stdout, "\n");
       fprintf(stdout, "to_var ");
       for (int j=0; j< (int)to_var.size(); j++){
-	fprintf(stdout, "%d ", (int)to_var[j]);
+        fprintf(stdout, "%d ", (int)to_var[j]);
       }
       fprintf(stdout, "\n");
     }
@@ -437,8 +439,8 @@ void MultiBook::ComputePositionBias(int i_alt)
   }
   float pval =  total/N;
   if (debug) {
-      fprintf(stdout, "total= %f, pval=%f\n", total, pval);
-      fflush(stdout);
+    fprintf(stdout, "total= %f, pval=%f\n", total, pval);
+    fflush(stdout);
   }
   my_position_bias[i_alt].rho = observed;
   my_position_bias[i_alt].pval = pval;
@@ -446,48 +448,49 @@ void MultiBook::ComputePositionBias(int i_alt)
 }
 
 int MultiBook::GetDepth(int i_strand, int i_alt){
-  int retval=0;
-  if (i_strand<0){
-    retval += my_book[0][i_alt+1]+my_book[0][0];
-    retval += my_book[1][i_alt+1]+my_book[1][0];
-  }else
-    retval = my_book[i_strand][i_alt+1]+my_book[i_strand][0];
+  int retval = 0;
+  if (i_strand < 0){
+    retval += my_book[0][i_alt + 1] + my_book[0][0];
+    retval += my_book[1][i_alt + 1] + my_book[1][0];
+  }
+  else
+    retval = my_book[i_strand][i_alt + 1] + my_book[i_strand][0];
   return(retval);
 }
 
 float MultiBook::GetFailedReadRatio(){
-  int tdepth=0;
-  for (unsigned int i_strand =0; i_strand<2; i_strand++){
-    for (unsigned int i_hyp=0; i_hyp<my_book[i_strand].size(); i_hyp++){
-      tdepth+= my_book[i_strand][i_hyp];
+  int tdepth = 0;
+  for (unsigned int i_strand = 0; i_strand < 2; i_strand++){
+    for (unsigned int i_hyp = 0; i_hyp < my_book[i_strand].size(); i_hyp++){
+      tdepth += my_book[i_strand][i_hyp];
     }
   }
   // all divisions need a safety factor
-  float retval = 1.0f*invalid_reads/(1.0f*tdepth+1.0f*invalid_reads+0.01f);
+  float retval = 1.0f * invalid_reads/(1.0f * tdepth + 1.0f * invalid_reads + 0.01f);
   return(retval);
 }
 
 float MultiBook::OldStrandBias(int i_alt, float tune_bias){
-  float full_strand_bias = fabs(ComputeTransformStrandBias(my_book[0][i_alt+1], GetDepth(0,i_alt), my_book[1][i_alt+1], GetDepth(1,i_alt), tune_bias));
-//@TODO: revert to full range parameters
-// this ugly transformation makes the range 0.5-1, just like the old strand bias
-// so we don't have to change parameter files
-float old_style_strand_bias = (full_strand_bias+1.0f)/2.0f;
-return(old_style_strand_bias);
+  float full_strand_bias = fabs(ComputeTransformStrandBias(my_book[0][i_alt + 1], GetDepth(0, i_alt), my_book[1][i_alt + 1], GetDepth(1, i_alt), tune_bias));
+  //@TODO: revert to full range parameters
+  // this ugly transformation makes the range 0.5-1, just like the old strand bias
+  // so we don't have to change parameter files
+  float old_style_strand_bias = (full_strand_bias + 1.0f) / 2.0f;
+  return(old_style_strand_bias);
 }
 
 float MultiBook::StrandBiasPval(int i_alt, float tune_bias){
-  float strand_bias_pval = fabs(BootstrapStrandBias(my_book[0][i_alt+1], GetDepth(0,i_alt), my_book[1][i_alt+1], GetDepth(1,i_alt), tune_bias));
+  float strand_bias_pval = fabs(BootstrapStrandBias(my_book[0][i_alt + 1], GetDepth(0, i_alt), my_book[1][i_alt + 1], GetDepth(1, i_alt), tune_bias));
   return strand_bias_pval;
 }
 float MultiBook::GetXBias(int i_alt, float tune_xbias){
-  return(ComputeTunedXBias(my_book[0][i_alt+1], GetDepth(0,i_alt), my_book[1][i_alt+1], GetDepth(1,i_alt), tune_xbias));
+  return(ComputeTunedXBias(my_book[0][i_alt + 1], GetDepth(0, i_alt), my_book[1][i_alt + 1], GetDepth(1, i_alt), tune_xbias));
 }
 
 int MultiBook::GetAlleleCount(int strand_key, int i_hyp){
   int retval;
   if (strand_key<0)
-    retval = my_book[0][i_hyp]+my_book[1][i_hyp];
+    retval = my_book[0][i_hyp] + my_book[1][i_hyp];
   else
     retval= my_book[strand_key][i_hyp];
   return retval;
@@ -517,7 +520,7 @@ float ComputeXBias(long int plus_var, long int plus_depth, long int neg_var, lon
   float mean_minus = (neg_var+0.5f)/(neg_depth+1.0f);
   float var_plus = (plus_var+0.5f)*(plus_depth-plus_var+0.5f)/((plus_depth+1.0f)*(plus_depth+1.0f)*(plus_depth+2.0f));
   float var_minus = (neg_var+0.5f)*(neg_depth-neg_var+0.5f)/((neg_depth+1.0f)*(neg_depth+1.0f)*(neg_depth+2.0f));
-  
+
   // squared difference in mean frequency, divided by variance of quantity, inflated by potential minimal variance
   return((mean_plus-mean_minus)*(mean_plus-mean_minus)/(var_plus+var_minus+var_zero));
 }
@@ -527,10 +530,10 @@ float ComputeTunedXBias(long int plus_var, long int plus_depth, long int neg_var
   float mean_minus = (neg_var+0.5f)/(neg_depth+1.0f);
   float var_plus = (plus_var+0.5f)*(plus_depth-plus_var+0.5f)/((plus_depth+1.0f)*(plus_depth+1.0f)*(plus_depth+2.0f));
   float var_minus = (neg_var+0.5f)*(neg_depth-neg_var+0.5f)/((neg_depth+1.0f)*(neg_depth+1.0f)*(neg_depth+2.0f));
-  
+
   float mean_zero = (plus_var+neg_var+0.5f)/(plus_depth+neg_depth+1.0f);
   float var_zero = proportion_zero*mean_zero*proportion_zero*(1.0f-mean_zero); // variance proportional to frequency to handle near-somatic cases
-  
+
   // squared difference in mean frequency, divided by variance of quantity, inflated by potential minimal variance
   return((mean_plus-mean_minus)*(mean_plus-mean_minus)/(var_plus+var_minus+var_zero));
 }
@@ -542,7 +545,7 @@ float ComputeTunedXBias(long int plus_var, long int plus_depth, long int neg_var
 // return 0 if any strand has 0 reads, or both strands have 0 variant reads
 float ComputeStrandBias(long int plus_var, long int plus_depth, long int neg_var, long int neg_depth){
   float strand_bias;
-    long int num = max((long int)plus_var*neg_depth, (long int)neg_var*plus_depth);
+  long int num = max((long int)plus_var*neg_depth, (long int)neg_var*plus_depth);
   long int denum = (long int)plus_var*neg_depth + (long int)neg_var*plus_depth;
   if (denum == 0)
     strand_bias = 0.0f; //if there is no coverage on one of the strands then there is no bias.
@@ -576,17 +579,17 @@ float BootstrapStrandBias(long int plus_var, long int plus_depth, long int neg_v
   long int N = 1000;
   double total = 0;
 
-  for  (long int i=0; i<N; i++){    
+  for  (long int i=0; i<N; i++){
     long int bootstrap_plus = 0;
     long int bootstrap_neg = 0;
     // bootstrap the sample
     for (long int j=0; j < plus_depth; j++){
       if ((double)(rand_generator.Rand())/rand_generator.RandMax < p)
-	bootstrap_plus++;
+        bootstrap_plus++;
     }
     for (long int j=0; j < neg_depth; j++){
       if ((double)(rand_generator.Rand())/rand_generator.RandMax < p)
-	bootstrap_neg++;
+        bootstrap_neg++;
     }
     // compute the bootstrap ratio given p
     float bootstrap = fabs(ComputeTransformStrandBias(bootstrap_plus, plus_depth, bootstrap_neg, neg_depth, tune_fish));
@@ -619,24 +622,24 @@ float ComputeTransformStrandBias(long int plus_var, long int plus_depth, long in
   // tune_fish should be something like 0.5 on standard grounds
   if (tune_fish<0.001f)
     tune_fish = 0.001f;
-  
+
   // need to handle safety factor properly
   // "if we had tune_fish extra alleles of both reference and alternate for each strand, how would we distribute them across the strands preserving the depth ratio we see"
   // because constant values get hit by depth ratio when looking at 0/0
   // to give tune_fish expected alleles on each strand, given constant depth
   float relative_tune_fish = 1.0f- (plus_depth+neg_depth+2.0f*tune_fish)/(plus_depth+neg_depth+4.0f*tune_fish);
-  
+
   // expected extra alleles to see on positive and negative strand
-  float expected_positive = relative_tune_fish * plus_depth; 
-  float expected_negative = relative_tune_fish * neg_depth;  
-  
+  float expected_positive = relative_tune_fish * plus_depth;
+  float expected_negative = relative_tune_fish * neg_depth;
+
   // bias calculation based on observed counts plus expected safety level
   float pos_val = (plus_var + expected_positive) * (neg_depth + 2.0f*expected_negative);
   float neg_val = (neg_var + expected_negative) * (plus_depth + 2.0f*expected_positive);
   float strand_bias = (pos_val - neg_val)/(pos_val + neg_val+0.001f);  // what if depth on one strand is 0, then of course we can't detect any bias
-  
-//  cout << plus_var << "\t" << plus_depth << "\t" << neg_var << "\t" << neg_depth << "\t" << tune_fish << "\t" << strand_bias << endl;
-  
+
+  //  cout << plus_var << "\t" << plus_depth << "\t" << neg_var << "\t" << neg_depth << "\t" << tune_fish << "\t" << strand_bias << endl;
+
   return(strand_bias);
 }
 

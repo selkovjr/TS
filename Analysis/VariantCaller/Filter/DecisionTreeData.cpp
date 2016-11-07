@@ -20,6 +20,7 @@ void AutoFailTheCandidate(vcf::Variant &candidate_variant, bool use_position_bia
   NullFilterReason(candidate_variant, sample_name);
   string my_reason = "NODATA";
   AddFilterReason(candidate_variant, my_reason, sample_name);
+  cerr << "AutoFailTheCandidate()" << endl;
   SetFilteredStatus(candidate_variant, true);
 }
 
@@ -132,6 +133,7 @@ void FilterByBasicThresholds(const string& allele, int i_alt, MultiBook &m_summa
     const VariantSpecificParams& variant_specific_params,
     bool is_reference_call)
 {
+  cerr << "FilterByBasicThresholds(" <<  allele << ")\n";
   int effective_min_quality_score = basic_filter.min_quality_score;
   if (variant_specific_params.min_variant_score_override)
     effective_min_quality_score = variant_specific_params.min_variant_score;
@@ -140,6 +142,7 @@ void FilterByBasicThresholds(const string& allele, int i_alt, MultiBook &m_summa
     my_reason += convertToString(effective_min_quality_score);
     l_summary_info.filterReason.push_back(my_reason);
     l_summary_info.isFiltered = true;
+    cerr << my_reason;
   }
 
   int effective_min_cov = basic_filter.min_cov;
@@ -151,9 +154,11 @@ void FilterByBasicThresholds(const string& allele, int i_alt, MultiBook &m_summa
     string my_reason = "MINCOV<";
     my_reason += convertToString(effective_min_cov);
     l_summary_info.filterReason.push_back(my_reason);
+    cerr << my_reason << ": GetDepth(-1, " << i_alt << ") = " << m_summary_stats.GetDepth(-1, i_alt) << ", GetDepth(0, " << i_alt << ") = " << m_summary_stats.GetDepth(0, i_alt) << ", GetDepth(0, " << i_alt << ") = " << m_summary_stats.GetDepth(0, i_alt) << endl;
   }
 
-  int effective_min_var_cov = basic_filter.min_var_cov;
+  cerr << "allele count: " << m_summary_stats.GetAlleleCount(-1, i_alt + 1) << endl;
+  int effective_min_var_cov = basic_filter.min_var_cov;;
   // Filter out a variant allele if the variant coverage (FAO) is too low.
   // Don't apply the variant coverage filter if we are making a reference call.
   // This is because, by applying this filter, a reference call will be filtered out if any of the variant allele fails to pass the filter, which does not make sense.
@@ -162,6 +167,7 @@ void FilterByBasicThresholds(const string& allele, int i_alt, MultiBook &m_summa
     string my_reason = "VARCOV<";
     my_reason += convertToString(effective_min_var_cov);
     l_summary_info.filterReason.push_back(my_reason);
+    cerr << my_reason << ": " << m_summary_stats.GetAlleleCount(-1, i_alt + 1) << endl;
   }
 
   int effective_min_cov_each_strand = basic_filter.min_cov_each_strand;
@@ -173,6 +179,7 @@ void FilterByBasicThresholds(const string& allele, int i_alt, MultiBook &m_summa
     string my_reason = "PosCov<";
     my_reason += convertToString(effective_min_cov_each_strand);
     l_summary_info.filterReason.push_back(my_reason);
+    cerr << my_reason << endl;
   }
   bool neg_cov = m_summary_stats.GetDepth(1, i_alt) < effective_min_cov_each_strand;
   if (neg_cov) {
@@ -180,6 +187,7 @@ void FilterByBasicThresholds(const string& allele, int i_alt, MultiBook &m_summa
     string my_reason = "NegCov<";
     my_reason +=convertToString(effective_min_cov_each_strand);
     l_summary_info.filterReason.push_back(my_reason);
+    cerr << my_reason << endl;
   }
 
   float effective_strand_bias_thr = basic_filter.strand_bias_threshold;
@@ -199,6 +207,7 @@ void FilterByBasicThresholds(const string& allele, int i_alt, MultiBook &m_summa
     my_reason += ">";
     my_reason += convertToString(effective_strand_bias_thr);
     l_summary_info.filterReason.push_back(my_reason);
+    cerr << my_reason << endl;
 
     string my_reason1 = "STDBIASPVAL";
     my_reason1 += convertToString( strand_bias_pval );
@@ -207,6 +216,7 @@ void FilterByBasicThresholds(const string& allele, int i_alt, MultiBook &m_summa
     l_summary_info.filterReason.push_back(my_reason1);
 
     l_summary_info.isFiltered = true;
+    cerr << my_reason1 << endl;
   }
 
   /*  if (m_summary_stats.GetXBias(i_alt, tune_xbias) > basic_filter.beta_bias_filter) {
@@ -427,10 +437,10 @@ void DecisionTreeData::AccumulateFilteredAlleles(){
 
 
 void DecisionTreeData::BestSNPsSuppressInDels(bool heal_snps){
-  //now if the best allele is a SNP and one or more Indel alleles present at the same position
-  //then remove all the indel alleles.
-  //This is done mainly to represent SNPs at the exact position and not have to represent it as MNV.
-  //EXAMPLE REF = CA Alt = C, CC. IF C->A SNP is true then we want to move the allele representation to REF = C, Alt = A which is a more standard representation.
+  // now if the best allele is a SNP and one or more Indel alleles present at the same position
+  // then remove all the indel alleles.
+  // This is done mainly to represent SNPs at the exact position and not have to represent it as MNV.
+  // EXAMPLE REF = CA Alt = C, CC. IF C->A SNP is true then we want to move the allele representation to REF = C, Alt = A which is a more standard representation.
   if (isBestAlleleSNP & heal_snps) {
     //loop thru all the alleles and filter all Indel alleles which will be later removed from alts.
     int numAlleles = summary_info_vector.size();
@@ -693,38 +703,7 @@ void DecisionTreeData::FilterOnSpecialTags(vcf::Variant & candidate_variant, con
     const vector<VariantSpecificParams>& variant_specific_params, const string &sample_name)
 {
   // separate my control here
-  /*
-     float max_bias = 0.0f;
-     for (unsigned int _alt_allele_index = 0; _alt_allele_index < allele_identity_vector.size(); _alt_allele_index++) {
-     float bias =  RetrieveQualityTagValue(candidate_variant, "RBI", _alt_allele_index);
-     if (abs(bias) > max_bias) max_bias = abs(bias);
-     }
-     */
   for (unsigned int _alt_allele_index = 0; _alt_allele_index < allele_identity_vector.size(); _alt_allele_index++) {
-    // if something is strange here
-    /*  Not to do this on allele, revert to 4.6*/
-    SpecializedFilterFromLatentVariables(*(variant),  variant_specific_params[_alt_allele_index].filter_unusual_predictions_override ?
-        variant_specific_params[_alt_allele_index].filter_unusual_predictions : parameters.my_eval_control.filter_unusual_predictions, _alt_allele_index, sample_name); // unusual filters
-    // ZZ: Per Earl, the correct filter for bias is max of all the bias in each allele (directional), and check that with the threshold.
-    // No allele overriding.
-    /*
-       if (max_bias > parameters.my_eval_control.filter_unusual_predictions) {
-
-       stringstream filterReasonStr;
-       filterReasonStr << "PREDICTIONSHIFTx" ;
-       filterReasonStr << max_bias;
-       string my_tmp_string = filterReasonStr.str();
-       OverrideFilter(my_tmp_string, _alt_allele_index);
-       }
-       */
-
-    SpecializedFilterFromHypothesisBias(*(variant), allele_identity_vector[_alt_allele_index],
-        variant_specific_params[_alt_allele_index].filter_deletion_predictions_override ?
-        variant_specific_params[_alt_allele_index].filter_deletion_predictions : parameters.my_eval_control.filter_deletion_bias,
-        variant_specific_params[_alt_allele_index].filter_insertion_predictions_override ?
-        variant_specific_params[_alt_allele_index].filter_insertion_predictions : parameters.my_eval_control.filter_insertion_bias,
-        _alt_allele_index, sample_name);
-
     float effective_data_quality_stringency = parameters.my_controls.data_quality_stringency;
     if (variant_specific_params[_alt_allele_index].data_quality_stringency_override)
       effective_data_quality_stringency = variant_specific_params[_alt_allele_index].data_quality_stringency;
@@ -732,71 +711,6 @@ void DecisionTreeData::FilterOnSpecialTags(vcf::Variant & candidate_variant, con
   }
 }
 
-void DecisionTreeData::SpecializedFilterFromLatentVariables(vcf::Variant & candidate_variant, const float bias_radius, int _allele, const string &sample_name) {
-
-  float bias_threshold;
-  // likelihood threshold
-  if (bias_radius < 0.0f)
-    bias_threshold = 100.0f; // oops, wrong variable - should always be positive
-  else
-    bias_threshold = bias_radius; // fine now
-
-  //  float radius_bias = hypothesis_stack.cur_state.bias_generator.RadiusOfBias();
-  float radius_bias = RetrieveQualityTagValue(candidate_variant, "RBI", _allele);
-  //   cout << "RBI checking " << radius_bias << " threshold " << bias_threshold  << " allele " << _allele << endl; // ZZ
-
-  if (radius_bias > bias_threshold) {
-    stringstream filterReasonStr;
-    filterReasonStr << "PREDICTIONSHIFTx" ;
-    filterReasonStr << radius_bias;
-    string my_tmp_string = filterReasonStr.str();
-    OverrideFilter(candidate_variant, my_tmp_string, _allele, sample_name);
-  }
-}
-
-void DecisionTreeData::FilterAlleleHypothesisBias(vcf::Variant & candidate_variant, float ref_bias, float var_bias, float threshold_bias, int _allele, const string &sample_name) {
-  bool ref_bad = (ref_bias > 0 && fabs(ref_bias) > threshold_bias);  // not certain this one is in the correct direction for filtering
-  bool var_bad = (var_bias > 0 && fabs(var_bias) > threshold_bias);
-
-  // the ith variant allele is problematic
-  if (var_bad){
-    stringstream filterReasonStr;
-    filterReasonStr << "PREDICTIONVar";
-    filterReasonStr << _allele+1;
-    filterReasonStr << "SHIFTx" ;
-    filterReasonStr << var_bias;
-    string my_tmp_string = filterReasonStr.str();
-    OverrideFilter(candidate_variant, my_tmp_string, _allele, sample_name);
-  }
-  // the reference is problematicly shifted relative to this allele
-  if (ref_bad){
-    stringstream filterReasonStr;
-    filterReasonStr << "PREDICTIONRefSHIFTx" ;
-    filterReasonStr << ref_bias;
-    string my_tmp_string = filterReasonStr.str();
-    OverrideFilter(candidate_variant, my_tmp_string, _allele, sample_name);
-  }
-
-}
-
-
-void DecisionTreeData::SpecializedFilterFromHypothesisBias(vcf::Variant & candidate_variant, AlleleIdentity allele_identity, const float deletion_bias, const float insertion_bias, int _allele, const string &sample_name)
-{
-
-  //  float ref_bias = hypothesis_stack.cur_state.bias_generator.latent_bias_v[0];
-  //  float var_bias = hypothesis_stack.cur_state.bias_generator.latent_bias_v[1];
-  float ref_bias = RetrieveQualityTagValue(candidate_variant, "REFB", _allele);
-  float var_bias = RetrieveQualityTagValue(candidate_variant, "VARB", _allele);
-
-  if (allele_identity.ActAsHPIndel()) {
-    if (allele_identity.status.isDeletion) {
-      FilterAlleleHypothesisBias(candidate_variant, ref_bias, var_bias, deletion_bias, _allele, sample_name);
-    }
-    else if (allele_identity.status.isInsertion) {
-      FilterAlleleHypothesisBias(candidate_variant, ref_bias, var_bias, insertion_bias, _allele, sample_name);
-    }
-  }
-}
 
 void FilterOnReadRejectionRate(vcf::Variant &candidate_variant, float read_rejection_threshold, const string &sample_name){
   float observed_read_rejection = RetrieveQualityTagValue(candidate_variant, "FXX",0);
@@ -923,7 +837,7 @@ void DecisionTreeData::FillInFiltersAtEnd(VariantCandidate &candidate_variant, c
 
 // once we have standard data format across all alleles, the common filters can execute.
 // this is just horrible at the moment
-// need to clean this code up badly/* Copyright (C) 2013 Ion Torrent Systems, Inc. All Rights Reserved */
+// need to clean this code up badly
 
 
 /* Copyright (C) 2013 Ion Torrent Systems, Inc. All Rights Reserved */
@@ -1044,9 +958,6 @@ class DecisionTreeData {
     string GenotypeStringFromAlleles(std::vector<int> &allowedGenotypes, bool refAlleleFound);
     bool AllowedGenotypesFromSummary(std::vector<int> &allowedGenotypes);
     string GenotypeFromStatus(vcf::Variant &candidate_variant, const ExtendParameters &parameters);
-    void SpecializedFilterFromLatentVariables(vcf::Variant &candidate_variant, const float bias_radius, int _allele, const string &sample_name);
-    void SpecializedFilterFromHypothesisBias(vcf::Variant &candidate_variant, AlleleIdentity allele_identity, const float deletion_bias, const float insertion_bias, int _allele, const string &sample_name);
-    void FilterAlleleHypothesisBias(vcf::Variant &candidate_variant, float ref_bias, float var_bias, float threshold_bias, int _allele, const string &sample_name);
     void FilterOnSpecialTags(vcf::Variant &candidate_variant, const ExtendParameters &parameters, const vector<VariantSpecificParams>& variant_specific_params, const string &sample_name);
     void FilterOnStringency(vcf::Variant &candidate_variant, const float data_quality_stringency,  int _check_allele_index, const string &sample_name);
     void FilterOnPositionBias(const string& allele, int i_alt, MultiBook &m_summary_stats, VariantOutputInfo &l_summary_info, const ControlCallAndFilters &my_filters, const VariantSpecificParams& variant_specific_params);

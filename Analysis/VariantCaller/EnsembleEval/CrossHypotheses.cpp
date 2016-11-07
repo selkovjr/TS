@@ -198,8 +198,9 @@ void CrossHypotheses::InitializeDerivedQualities() {
 }
 
 void CrossHypotheses::InitializeResponsibility() {
+  cerr << "InitializeResponsibility\n";
   responsibility[0] = 1.0f;  // everyone is an outlier until we trust you
-  for (unsigned int i_hyp=1; i_hyp<responsibility.size(); i_hyp++)
+  for (unsigned int i_hyp = 1; i_hyp < responsibility.size(); i_hyp++)
     responsibility[i_hyp] = 0.0f;
 }
 
@@ -211,7 +212,6 @@ void CrossHypotheses::InitializeResponsibility() {
 // treat the 2 hypothesis case to start with
 void CrossHypotheses::UpdateResponsibility(const vector<float > &hyp_prob, float typical_prob) {
   cerr << "UpdateResponsibility()\n";
-  exit(0);
 
   if (!success){
     cout << "alert: fail to splice still called" << endl;
