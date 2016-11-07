@@ -153,7 +153,6 @@ public:
   void  JointLogLikelihood();
   void  ComputeScaledLikelihood();
   float ComputePosteriorLikelihood(const vector<float> &hyp_prob, float typical_prob);
-  void  InitializeSigma();
   void  InitializeResponsibility();
   void  UpdateResponsibility(const vector<float > &hyp_prob, float typical_prob);
   void  UpdateRelevantLikelihoods();

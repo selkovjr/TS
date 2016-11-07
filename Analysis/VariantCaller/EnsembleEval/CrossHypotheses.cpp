@@ -3,13 +3,6 @@
 #include "CrossHypotheses.h"
 
 
-// model as a t-distribution to slightly resist outliers
-/*float TdistThree(float res, float sigma){
-  float x=res/sigma;
-  float xx = x*x;
-  return( 6.0f*sqrt(3.0f)/(sigma*3.14159f*(3.0f+xx)*(3.0f+xx)) );
-}*/
-
 //  control degrees of freedom for tradeoff in outlier resistance/sensitivity
 float xTDistOddN(float res, float sigma, float skew, int half_n) {
   // skew t-dist one direction or the other
@@ -187,8 +180,6 @@ void CrossHypotheses::InitializeDerivedQualities() {
   // in theory don't need to compute any but test flows
   SetModPredictions();  // make sure that mod-predictions=predictions
   ComputeResiduals(); // predicted and measured
-
-  InitializeSigma(); // depends on predicted
 
   my_t.SetV(heavy_tailed);
 
@@ -496,23 +487,6 @@ void CrossHypotheses::ComputeScaledLikelihood() {
   // prevent log(0) events from happening in case we evaluate under weird circumstances
   scaled_likelihood[0] = max(scaled_likelihood[0], MINIMUM_RELATIVE_OUTLIER_PROBABILITY);
 }
-
-// this needs to run past sigma_generator
-void CrossHypotheses::InitializeSigma() {
-  // guess the standard deviation given the prediction
-  // as a reasonable starting point for iteration
-  // magic numbers from some typical experiments
-  // size out to match predictions
-  //  sigma_estimate.resize(predictions.size());
-  for (unsigned int i_hyp=0; i_hyp<mod_predictions.size(); i_hyp++) {
-    //    sigma_estimate.at(i_hyp).resize(predictions.at(i_hyp).size());
-    for (unsigned int t_flow = 0; t_flow<test_flow.size(); t_flow++) {
-      float square_level = mod_predictions[i_hyp][t_flow] * mod_predictions[i_hyp][t_flow] + 1.0f;
-      sigma_estimate[i_hyp][t_flow] = magic_sigma_slope * square_level + magic_sigma_base;
-    }
-  }
-}
-
 
 // The target number of test flows is max_choice, however
 // - we add all valid test flows flows in between splice_start_flow and splice_end_flow

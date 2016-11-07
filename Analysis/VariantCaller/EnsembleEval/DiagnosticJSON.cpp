@@ -89,7 +89,6 @@ void DiagnosticJsonCrossHypotheses(Json::Value &json, const CrossHypotheses &my_
   my_cross_temp.delta_state.ComputeDelta(my_cross_temp.predictions);
   my_cross_temp.SetModPredictions();
   my_cross_temp.ComputeResiduals();
-  my_cross_temp.InitializeSigma();
 
   // fill the data at test flows
   for (unsigned int t_flow = 0; t_flow < my_cross.test_flow.size(); t_flow++) {
@@ -172,13 +171,6 @@ void DiagnosticJsonSkew(Json::Value &json, const BasicSkewGenerator &skew_genera
   }
 }
 
-void DiagnosticJsonSigma(Json::Value &json, const BasicSigmaGenerator &sigma_generator) {
-  for (unsigned int i_latent = 0; i_latent < sigma_generator.latent_sigma.size(); i_latent++) {
-    json["latentsigma"][i_latent] = sigma_generator.latent_sigma[i_latent];
-    json["priorsigma"][i_latent] = sigma_generator.prior_latent_sigma[i_latent];
-  }
-}
-
 void DiagnosticJsonMisc(Json::Value &json, const LatentSlate &cur_state) {
   json["iterdone"] = cur_state.iter_done;
   json["maxiterations"] = cur_state.max_iterations;
@@ -228,8 +220,6 @@ void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
 
   DiagnosticJsonReadStack(diagnostic_json["ReadStack"], read_stack, global_context);
   DiagnosticJsonCrossStack(diagnostic_json["CrossHypotheses"], hypothesis_stack);
-  DiagnosticJsonSigma(diagnostic_json["Latent"], hypothesis_stack.cur_state.sigma_generator.fwd);
-  DiagnosticJsonSigma(diagnostic_json["Latent"]["SigmaRev"], hypothesis_stack.cur_state.sigma_generator.rev);
     DiagnosticJsonSkew(diagnostic_json["Latent"], hypothesis_stack.cur_state.skew_generator);
   DiagnosticJsonMisc(diagnostic_json["Misc"], hypothesis_stack.cur_state);
   DiagnosticJsonHistory(diagnostic_json["History"],hypothesis_stack);

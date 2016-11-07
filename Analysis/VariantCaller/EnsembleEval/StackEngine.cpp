@@ -15,49 +15,34 @@ void LatentSlate::PropagateTuningParameters(EnsembleEvalTuningParameters &my_par
   cur_posterior.gq_pair.min_detail_level_for_fast_scan = (unsigned int) my_params.min_detail_level_for_fast_scan;
   cur_posterior.ref_vs_all.min_detail_level_for_fast_scan = (unsigned int) my_params.min_detail_level_for_fast_scan;
 
-  // prior variance-by-intensity relationship
-  sigma_generator.fwd.prior_sigma_regression[0] = my_params.magic_sigma_base;
-  sigma_generator.fwd.prior_sigma_regression[1] = my_params.magic_sigma_slope;
-  sigma_generator.fwd.prior_weight = my_params.sigma_prior_weight;
-  sigma_generator.fwd.k_zero = my_params.k_zero;
-  sigma_generator.rev=sigma_generator.fwd;
-
   // not actually used at this point
   skew_generator.dampened_skew = my_params.prediction_precision;
 }
 
 // see how quick we can make this
-void LatentSlate::LocalExecuteInference(ShortStack &total_theory, bool update_frequency, bool update_sigma, vector<float> &start_frequency) {
+void LatentSlate::LocalExecuteInference(ShortStack &total_theory, bool update_frequency, vector<float> &start_frequency) {
   if (detailed_integral) {
-    //DetailedExecuteInference(total_theory, update_frequency, update_sigma);
+    //DetailedExecuteInference(total_theory, update_frequency);
     cout << "obsolete in multiallele world" << endl;
   }
   else {
     cerr << "LocalExecuteInference() calling FastExecuteInference()" << endl;
-    FastExecuteInference(total_theory, update_frequency, update_sigma, start_frequency);
+    FastExecuteInference(total_theory, update_frequency, start_frequency);
   }
 }
 
 
-void LatentSlate::FastStep(ShortStack &total_theory, bool update_frequency, bool update_sigma) {
-
+void LatentSlate::FastStep(ShortStack &total_theory, bool update_frequency) {
   if (update_frequency)
     cur_posterior.QuickUpdateStep(total_theory);
-
-  if (update_sigma) {
-    sigma_generator.DoStepForSigma(total_theory); // update sigma estimate
-    if (update_frequency)
-      cur_posterior.QuickUpdateStep(total_theory);
-
-  }
 }
 
-void LatentSlate::FastExecuteInference(ShortStack &total_theory, bool update_frequency, bool update_sigma, vector<float> &start_frequency) {
+void LatentSlate::FastExecuteInference(ShortStack &total_theory, bool update_frequency, vector<float> &start_frequency) {
   // start us out estimating frequency
 
   cerr << "calling cur_posterior.StartAtHardClassify()\n" << flush;
   cur_posterior.StartAtHardClassify(total_theory, update_frequency, start_frequency);
-  FastStep(total_theory, false, false);
+  FastStep(total_theory, false);
 
   float epsilon_ll = 0.01f; // make sure LL steps move us quickly instead of just spinning wheels
   float old_ll = cur_posterior.ReturnJustLL(); // always try at least one step
@@ -70,7 +55,7 @@ void LatentSlate::FastExecuteInference(ShortStack &total_theory, bool update_fre
     //cout << i_count << " max_ll " << max_ll << endl;
     old_ll = cur_posterior.ReturnJustLL(); // see if we improve over this cycle
 
-    FastStep(total_theory, update_frequency, update_sigma);
+    FastStep(total_theory, update_frequency);
     ll_at_stage.push_back(cur_posterior.ReturnJustLL());
     if ((old_ll+epsilon_ll) > cur_posterior.ReturnJustLL())
       keep_optimizing = false;
@@ -108,10 +93,6 @@ void LatentSlate::ScanStrandPosterior(ShortStack &total_theory,bool vs_ref, int 
     cur_posterior.ref_vs_all.DoPosteriorFrequencyScan(total_theory, cur_posterior.clustering, true, ALL_STRAND_KEY, vs_ref, max_detail_level);
     cur_posterior.gq_pair = cur_posterior.ref_vs_all; // pairwise analysis identical
   }
-}
-
-void LatentSlate::ResetToOrigin(){
-  sigma_generator.ResetSigmaGenerator();
 }
 
 
@@ -207,10 +188,9 @@ float HypothesisStack::ExecuteOneRestart(vector<float> &restart_hyp, int max_det
   tmp_state.detailed_integral = false;
   tmp_state.start_freq_of_winner =restart_hyp;
   total_theory.ResetQualities();  // clean slate to begin again
-  tmp_state.ResetToOrigin(); // everyone back to starting places
 
 
-  tmp_state.LocalExecuteInference(total_theory, true, true, restart_hyp); // start at reference
+  tmp_state.LocalExecuteInference(total_theory, true, restart_hyp); // start at reference
   if(max_detail_level < 1){
     tmp_state.ScanStrandPosterior(total_theory, true, 0);
   }
@@ -263,7 +243,6 @@ void HypothesisStack::ExecuteExtremeInferences() {
 void HypothesisStack::RestoreFullInference() {
   //  cur_state = backup_state;
   // in theory, need to update sigma & skew, but since not fitting for particular variants, don't worry about it at the moment.
-  cur_state.sigma_generator.UpdateSigmaEstimates(total_theory);
   total_theory.UpdateRelevantLikelihoods();
   //DoPosteriorFrequencyScan(cur_posterior, true);
   total_theory.UpdateResponsibility(cur_state.cur_posterior.clustering.max_hyp_freq, cur_state.cur_posterior.clustering.data_reliability); // once bias, sigma, max_freq established, reset responsibilities is forced
