@@ -14,9 +14,6 @@ void LatentSlate::PropagateTuningParameters(EnsembleEvalTuningParameters &my_par
   cur_posterior.clustering.germline_prior_strength = my_params.germline_prior_strength;
   cur_posterior.gq_pair.min_detail_level_for_fast_scan = (unsigned int) my_params.min_detail_level_for_fast_scan;
   cur_posterior.ref_vs_all.min_detail_level_for_fast_scan = (unsigned int) my_params.min_detail_level_for_fast_scan;
-
-  // not actually used at this point
-  skew_generator.dampened_skew = my_params.prediction_precision;
 }
 
 // see how quick we can make this

@@ -568,7 +568,6 @@ set(tvcSRCS
   VariantCaller/Filter/VariantAssist.cpp
 
   VariantCaller/EnsembleEval/DiagnosticJSON.cpp
-  VariantCaller/EnsembleEval/SkewGenerator.cpp
   VariantCaller/EnsembleEval/PosteriorInference.cpp
   VariantCaller/EnsembleEval/ShortStack.cpp
   VariantCaller/EnsembleEval/StackEngine.cpp

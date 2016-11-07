@@ -165,12 +165,6 @@ void TinyDiagnosticJsonCrossStack(Json::Value &json, const HypothesisStack &hypo
 }
 
 
-void DiagnosticJsonSkew(Json::Value &json, const BasicSkewGenerator &skew_generator) {
-  for (unsigned int i_latent = 0; i_latent < skew_generator.latent_skew.size(); i_latent++) {
-    json["latentskew"][i_latent] = skew_generator.latent_skew[i_latent];
-  }
-}
-
 void DiagnosticJsonMisc(Json::Value &json, const LatentSlate &cur_state) {
   json["iterdone"] = cur_state.iter_done;
   json["maxiterations"] = cur_state.max_iterations;
@@ -220,7 +214,6 @@ void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
 
   DiagnosticJsonReadStack(diagnostic_json["ReadStack"], read_stack, global_context);
   DiagnosticJsonCrossStack(diagnostic_json["CrossHypotheses"], hypothesis_stack);
-    DiagnosticJsonSkew(diagnostic_json["Latent"], hypothesis_stack.cur_state.skew_generator);
   DiagnosticJsonMisc(diagnostic_json["Misc"], hypothesis_stack.cur_state);
   DiagnosticJsonHistory(diagnostic_json["History"],hypothesis_stack);
 

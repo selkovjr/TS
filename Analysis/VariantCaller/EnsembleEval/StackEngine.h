@@ -15,7 +15,6 @@
 
 #include "ExtendedReadInfo.h"
 #include "CrossHypotheses.h"
-#include "SkewGenerator.h"
 #include "ExtendParameters.h"
 #include "PosteriorInference.h"
 #include "ClassifyVariant.h"
@@ -40,7 +39,7 @@ class LatentSlate{
     // StrandedSigmaGenerator sigma_generator;
     //
     // // and the third set
-    BasicSkewGenerator skew_generator;
+    // BasicSkewGenerator skew_generator;
 
     bool detailed_integral;
     int max_iterations;
