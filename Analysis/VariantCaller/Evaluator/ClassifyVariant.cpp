@@ -262,13 +262,13 @@ void AlleleIdentity::IdentifyHPinsertion(const LocalReferenceContext& reference_
         status.isHPIndel = false;
     }
   } else if (inDelLength == 1) {
-    status.isHPIndel = IdentifyDyslexicMotive(altAllele[left_anchor], reference_context.position0+left_anchor,
+    status.isHPIndel = IdentifyDyslexicMotif(altAllele[left_anchor], reference_context.position0+left_anchor,
         ref_reader, chr_idx);
   }
 }
 
-// Identify some special motives
-bool AlleleIdentity::IdentifyDyslexicMotive(char base, int position,
+// Identify some special motifs
+bool AlleleIdentity::IdentifyDyslexicMotif(char base, int position,
     const ReferenceReader &ref_reader, int chr_idx) {
 
   status.isDyslexic = false;

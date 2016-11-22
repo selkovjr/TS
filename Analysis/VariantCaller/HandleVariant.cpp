@@ -9,9 +9,13 @@
 #include "DecisionTreeData.h"
 
 
-void Evaluator::SpliceAllelesIntoReads(PersistingThreadObjects &thread_objects, const InputStructures &global_context,
-    const ExtendParameters &parameters, const ReferenceReader &ref_reader, int chr_idx)
-{
+void Evaluator::SpliceAllelesIntoReads (
+  PersistingThreadObjects &thread_objects,
+  const InputStructures &global_context,
+  const ExtendParameters &parameters,
+  const ReferenceReader &ref_reader,
+  int chr_idx
+) {
   bool changed_alignment;
   unsigned int  num_valid_reads = 0;
   unsigned int  num_realigned = 0;
@@ -20,6 +24,7 @@ void Evaluator::SpliceAllelesIntoReads(PersistingThreadObjects &thread_objects, 
   // generate null+ref+nr.alt hypotheses per read in the case of do_multiallele_eval
   allele_eval.total_theory.my_hypotheses.resize(read_stack.size());
 
+  cerr << "evaluating " << allele_eval.total_theory.my_hypotheses.size() << " hypotheses\n";
   for (unsigned int i_read = 0; i_read < allele_eval.total_theory.my_hypotheses.size(); i_read++) {
     // --- New splicing function ---
     allele_eval.total_theory.my_hypotheses[i_read].success =

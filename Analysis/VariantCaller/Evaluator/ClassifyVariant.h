@@ -192,7 +192,7 @@ class AlleleIdentity {
     void IdentifyHPdeletion(const LocalReferenceContext& reference_context);
     void IdentifyHPinsertion(const LocalReferenceContext& reference_context,
         const ReferenceReader &ref_reader, int chr_idx);
-    bool IdentifyDyslexicMotive(char base, int position,
+    bool IdentifyDyslexicMotif(char base, int position,
         const ReferenceReader &ref_reader, int chr_idx);
 
     void SubCategorizeSNP(const LocalReferenceContext &reference_contextl);
