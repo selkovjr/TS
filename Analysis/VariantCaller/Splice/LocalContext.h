@@ -26,7 +26,7 @@ using namespace std;
 //  genome       42 42 44 45 46 47 48 49 50 51 52   (0 based)
 //  ref is        C  C  A  A  A  A  T  G  T  A  A  A
 //  alt is                       A  d  G  G
-//  variant is                     |d  G  G|              
+//  variant is                     |d  G  G|
 //  position0                   47 (includes anchor_right)
 //  my_hp_start_pos            {47 48 49 49}
 //  my_hp_length               { 1  1  2  2}
@@ -74,14 +74,12 @@ class LocalReferenceContext{
   }
 
   //! @brief  Fills in the member variables
-  void DetectContext(const vcf::Variant &candidate_variant, int DEBUG,
-      const ReferenceReader &ref_reader, int chr_idx);
+  void DetectContext(const vcf::Variant &candidate_variant, int DEBUG, const ReferenceReader &ref_reader, int chr_idx);
 
   //! @brief  Basic sanity checks on the provided vcf positions
   //! Sets member context_detected to true if sanity checks are passed.
   //! Returns false if VCF position is not valid.
-  bool ContextSanityChecks(const vcf::Variant &candidate_variant,
-      const ReferenceReader &ref_reader, int chr_idx);
+  bool ContextSanityChecks(const vcf::Variant &candidate_variant, const ReferenceReader &ref_reader, int chr_idx);
 };
 
 #endif //LOCALCONTEXT_H

@@ -8,8 +8,7 @@
 
 
 
-void LocalReferenceContext::DetectContext(const vcf::Variant &candidate_variant, int DEBUG,
-    const ReferenceReader &ref_reader, int chr_idx) {
+void LocalReferenceContext::DetectContext(const vcf::Variant &candidate_variant, int DEBUG, const ReferenceReader &ref_reader, int chr_idx) {
 
   // VCF stores positions in 1-based index; local_contig_sequence has a zero based index
   // all positions in this object are zero based so that they correspond to reference in memory.
@@ -27,7 +26,7 @@ void LocalReferenceContext::DetectContext(const vcf::Variant &candidate_variant,
   my_hp_start_pos[0] = position0;
   my_hp_length[0] = 1;
   while (my_hp_start_pos[0] > 0
-         and ref_reader.base(chr_idx,my_hp_start_pos[0]-1) == ref_reader.base(chr_idx,position0)) {
+      and ref_reader.base(chr_idx,my_hp_start_pos[0]-1) == ref_reader.base(chr_idx,position0)) {
     my_hp_start_pos[0]--;
     my_hp_length[0]++;
   }
@@ -49,7 +48,7 @@ void LocalReferenceContext::DetectContext(const vcf::Variant &candidate_variant,
   // Get HP context of the remaining bases in the reference allele and record for each base
   for (unsigned int b_idx = 1; b_idx < reference_allele.length(); b_idx++) {
     // See if next base in reference allele starts a new HP and adjust length
-	if (ref_reader.base(chr_idx,position0 + b_idx-1) == ref_reader.base(chr_idx,position0 + b_idx)) {
+    if (ref_reader.base(chr_idx,position0 + b_idx-1) == ref_reader.base(chr_idx,position0 + b_idx)) {
       my_hp_start_pos[b_idx] = my_hp_start_pos[b_idx-1];
       for (unsigned int l_idx = 0; l_idx < b_idx; l_idx++)
         if (my_hp_start_pos[l_idx] == my_hp_start_pos[b_idx])
@@ -66,7 +65,7 @@ void LocalReferenceContext::DetectContext(const vcf::Variant &candidate_variant,
   temp_position = position0 + reference_allele.length() -1;
   while (temp_position < ref_reader.chr_size(chr_idx)-1 and
       ref_reader.base(chr_idx,temp_position+1) ==
-          ref_reader.base(chr_idx,position0 + reference_allele.length() -1)) {
+      ref_reader.base(chr_idx,position0 + reference_allele.length() -1)) {
     temp_position++;
     for (unsigned int b_idx = 0; b_idx < reference_allele.length(); b_idx++) {
       if (my_hp_start_pos[b_idx] == my_hp_start_pos[reference_allele.length()-1])
@@ -115,11 +114,11 @@ bool LocalReferenceContext::ContextSanityChecks(const vcf::Variant &candidate_va
 
   if (candidate_variant.position < 1 or candidate_variant.position > (long)ref_reader.chr_size(chr_idx)) {
     cerr << "Non-fatal ERROR: Candidate Variant Position is not within the Contig Bounds at VCF Position "
-         << candidate_variant.sequenceName << ":" << candidate_variant.position
-         << " Contig length = " << ref_reader.chr_size(chr_idx) <<  endl;
+      << candidate_variant.sequenceName << ":" << candidate_variant.position
+      << " Contig length = " << ref_reader.chr_size(chr_idx) <<  endl;
     cout << "Non-fatal ERROR: Candidate Variant Position is not within the Contig Bounds at VCF Position "
-         << candidate_variant.sequenceName << ":" << candidate_variant.position
-         << " Contig length = " << ref_reader.chr_size(chr_idx) << endl;
+      << candidate_variant.sequenceName << ":" << candidate_variant.position
+      << " Contig length = " << ref_reader.chr_size(chr_idx) << endl;
     // Choose safe parameter
     position0 = 0;
     context_detected = false;
@@ -127,9 +126,9 @@ bool LocalReferenceContext::ContextSanityChecks(const vcf::Variant &candidate_va
 
   if (reference_allele.length() == 0) {
     cerr << "Non-fatal ERROR: Reference allele has zero length at vcf position "
-         << candidate_variant.sequenceName << ":" << candidate_variant.position << endl;
+      << candidate_variant.sequenceName << ":" << candidate_variant.position << endl;
     cout << "Non-fatal ERROR: Reference allele has zero length at vcf position "
-         << candidate_variant.sequenceName << ":" << candidate_variant.position << endl;
+      << candidate_variant.sequenceName << ":" << candidate_variant.position << endl;
     // Choose safe parameter
     reference_allele = ref_reader.base(chr_idx,position0); //local_contig_sequence.at(position0);
     context_detected = false;
@@ -137,13 +136,13 @@ bool LocalReferenceContext::ContextSanityChecks(const vcf::Variant &candidate_va
 
   if ((candidate_variant.position + (long)reference_allele.length() -1) > ref_reader.chr_size(chr_idx)) {
     cerr << "Non-fatal ERROR: Reference Allele stretches beyond Contig Bounds at VCF Position "
-	     << candidate_variant.sequenceName << ":" << candidate_variant.position
-	     << " Contig length = " << ref_reader.chr_size(chr_idx)
-	     << " Reference Allele: " << reference_allele << endl;
+      << candidate_variant.sequenceName << ":" << candidate_variant.position
+      << " Contig length = " << ref_reader.chr_size(chr_idx)
+      << " Reference Allele: " << reference_allele << endl;
     cout << "Non-fatal ERROR: Reference Allele stretches beyond Contig Bounds at VCF Position "
-	     << candidate_variant.sequenceName << ":" << candidate_variant.position
-	     << " Contig length = " << ref_reader.chr_size(chr_idx)
-	     << " Reference Allele: " << reference_allele << endl;
+      << candidate_variant.sequenceName << ":" << candidate_variant.position
+      << " Contig length = " << ref_reader.chr_size(chr_idx)
+      << " Reference Allele: " << reference_allele << endl;
     // Choose safe parameter
     reference_allele = reference_allele[0];
     context_detected = false;
@@ -153,11 +152,11 @@ bool LocalReferenceContext::ContextSanityChecks(const vcf::Variant &candidate_va
   string contig_str = ref_reader.substr(chr_idx, position0, reference_allele.length());
   if (reference_allele.compare(contig_str) != 0) {
     cerr << "Non-fatal ERROR: Reference allele does not match reference at VCF position "
-         << candidate_variant.sequenceName << ":" << candidate_variant.position
-         << " Reference Allele: " << reference_allele << " Reference: " << contig_str << endl;
+      << candidate_variant.sequenceName << ":" << candidate_variant.position
+      << " Reference Allele: " << reference_allele << " Reference: " << contig_str << endl;
     cout << "Non-fatal ERROR: Reference allele does not match reference at VCF position "
-         << candidate_variant.sequenceName << ":" << candidate_variant.position
-         << " Reference Allele: " << reference_allele << " Reference: " << contig_str << endl;
+      << candidate_variant.sequenceName << ":" << candidate_variant.position
+      << " Reference Allele: " << reference_allele << " Reference: " << contig_str << endl;
     context_detected = false;
   }
 
