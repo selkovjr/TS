@@ -110,7 +110,7 @@ class DecisionTreeData {
 
 
 
-    void SetupFromMultiAllele(const Eval &my_ensemble);
+    void SetupFromMultiAllele(const Evaluator &my_ensemble);
     void AddStrandBiasTags(vcf::Variant &candidate_variant, const string &sample_name);
     void AddPositionBiasTags(vcf::Variant &candidate_variant, const string &sample_name);
     void AddLodTags(vcf::Variant &candidate_variant, const string &sample_name, const ExtendParameters &parameters);

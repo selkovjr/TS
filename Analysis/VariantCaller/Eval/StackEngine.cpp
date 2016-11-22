@@ -8,7 +8,7 @@ bool compare_best_response(pair<int,float> a, pair<int,float> b){
 }
 
 
-void LatentSlate::PropagateTuningParameters(EvalTuningParameters &my_params, int num_hyp_no_null) {
+void LatentSlate::PropagateTuningParameters(EvaluatorTuningParameters &my_params, int num_hyp_no_null) {
   // prior reliability for outlier read frequency
   cur_posterior.clustering.data_reliability = my_params.DataReliability();
   cur_posterior.clustering.germline_prior_strength = my_params.germline_prior_strength;
@@ -406,7 +406,7 @@ bool HypothesisStack::CallGermline(float hom_safety, int &genotype_call, float &
 
 
 // evidence for i_allele vs ref
-void Eval::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
+void Evaluator::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
 
   mean_ll_delta = 0.0f;
   int count = 0;
@@ -429,7 +429,7 @@ void Eval::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
 // read_id_[i] = -1 means the i-th read is classified as an outlier.
 // read_id_[i] = 0 means the i-th read is classified as ref.
 // read_id_[i] = 1 means the i-th read is classified as the variant allele 1, and so on.
-void Eval::ApproximateHardClassifierForReads() {
+void Evaluator::ApproximateHardClassifierForReads() {
   cerr << "ApproximateHardClassifierForReads()\n";
   read_id_.clear();
   strand_id_.clear();
@@ -470,7 +470,7 @@ void Eval::ApproximateHardClassifierForReads() {
 }
 
 
-int Eval::DetectBestMultiAllelePair(){
+int Evaluator::DetectBestMultiAllelePair(){
   int best_alt_ndx = 0; // forced choice with ref
   //@TODO: just get the plane off the ground
   //@TODO: do the top pair by responsibility
@@ -518,12 +518,12 @@ int Eval::DetectBestMultiAllelePair(){
 
 
 
-void Eval::ComputePosteriorGenotype(int _alt_allele_index,float local_min_allele_freq,
+void Evaluator::ComputePosteriorGenotype(int _alt_allele_index,float local_min_allele_freq,
     int &genotype_call, float &gt_quality_score, float &reject_status_quality_score){
   allele_eval.CallGermline(local_min_allele_freq, genotype_call, gt_quality_score, reject_status_quality_score);
 }
 
-void Eval::MultiAlleleGenotype(float local_min_allele_freq, vector<int> &genotype_component, float &gt_quality_score, float &reject_status_quality_score, int max_detail_level){
+void Evaluator::MultiAlleleGenotype(float local_min_allele_freq, vector<int> &genotype_component, float &gt_quality_score, float &reject_status_quality_score, int max_detail_level){
   // detect best allele hard classify
   if(not is_detect_best_multi_allele_pair_done_){ // don't need to do it again if we've already done
     DetectBestMultiAllelePair(); // diploid_choice set by posterior responsibility

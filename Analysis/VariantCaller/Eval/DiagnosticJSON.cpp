@@ -220,7 +220,7 @@ void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
   DiagnosticWriteJson(diagnostic_json, outFile);
 }
 
-void JustOneDiagnosis(const Eval &my_ensemble, const InputStructures &global_context,
+void JustOneDiagnosis(const Evaluator &my_ensemble, const InputStructures &global_context,
     const string &out_dir, bool rich_diag)
 {
   //diagnose one particular variant

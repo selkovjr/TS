@@ -17,7 +17,7 @@
 
 using namespace std;
 
-void JustOneDiagnosis(const Eval &my_ensemble, const InputStructures &global_context,
+void JustOneDiagnosis(const Evaluator &my_ensemble, const InputStructures &global_context,
     const string &out_dir, bool rich_diag);
 
 #endif // DIAGNOSTICJSON_H

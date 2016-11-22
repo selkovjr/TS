@@ -111,7 +111,7 @@ void SuppressReferenceCalls(vcf::Variant &candidate_variant, const ExtendParamet
 //*** Below here is actual decision tree data ***/
 
 
-void DecisionTreeData::SetupFromMultiAllele(const Eval &my_ensemble) {
+void DecisionTreeData::SetupFromMultiAllele(const Evaluator &my_ensemble) {
   //multi_allele = _multi_allele;
   allele_identity_vector = my_ensemble.allele_identity_vector;
   info_fields = my_ensemble.info_fields;
@@ -950,7 +950,7 @@ class DecisionTreeData {
 
 
 
-    void SetupFromMultiAllele(const Eval &my_ensemble);
+    void SetupFromMultiAllele(const Evaluator &my_ensemble);
     void AddStrandBiasTags(vcf::Variant &candidate_variant, const string &sample_name);
     void AddPositionBiasTags(vcf::Variant &candidate_variant, const string &sample_name);
     void AddLodTags(vcf::Variant &candidate_variant, const string &sample_name, const ExtendParameters &parameters);

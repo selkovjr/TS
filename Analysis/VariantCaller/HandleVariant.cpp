@@ -9,7 +9,7 @@
 #include "DecisionTreeData.h"
 
 
-void Eval::SpliceAllelesIntoReads(PersistingThreadObjects &thread_objects, const InputStructures &global_context,
+void Evaluator::SpliceAllelesIntoReads(PersistingThreadObjects &thread_objects, const InputStructures &global_context,
     const ExtendParameters &parameters, const ReferenceReader &ref_reader, int chr_idx)
 {
   bool changed_alignment;
@@ -81,7 +81,7 @@ void Eval::SpliceAllelesIntoReads(PersistingThreadObjects &thread_objects, const
 
 
 
-void SummarizeInfoFieldsFromEnsemble(Eval &my_ensemble, vcf::Variant &candidate_variant, int _cur_allele_index, const string &sample_name) {
+void SummarizeInfoFieldsFromEnsemble(Evaluator &my_ensemble, vcf::Variant &candidate_variant, int _cur_allele_index, const string &sample_name) {
 
   float mean_ll_delta;
 
@@ -107,7 +107,7 @@ struct InferenceResult{
   bool operator==(const float &rhs) const { return min_allele_freq == rhs; } // use the operator "==" for "std::find"
 };
 
-void MultiMinAlleleFreq(Eval &my_ensemble, VariantCandidate &candidate_variant, int sample_index, ProgramControlSettings &program_flow, int max_detail_level){
+void MultiMinAlleleFreq(Evaluator &my_ensemble, VariantCandidate &candidate_variant, int sample_index, ProgramControlSettings &program_flow, int max_detail_level){
   string sample_name = "";
   if(sample_index >= 0) {
     sample_name = candidate_variant.variant.sampleNames[sample_index];
@@ -245,7 +245,7 @@ void MultiMinAlleleFreq(Eval &my_ensemble, VariantCandidate &candidate_variant, 
 }
 
 
-void GlueOutputVariant(Eval &my_ensemble, VariantCandidate &candidate_variant, const ExtendParameters &parameters, int _best_allele_index, int sample_index){
+void GlueOutputVariant(Evaluator &my_ensemble, VariantCandidate &candidate_variant, const ExtendParameters &parameters, int _best_allele_index, int sample_index){
   string sample_name = "";
   if(sample_index >= 0) {
     sample_name = candidate_variant.variant.sampleNames[sample_index];
@@ -316,7 +316,7 @@ void GlueOutputVariant(Eval &my_ensemble, VariantCandidate &candidate_variant, c
 }
 
 // Read and process records appropriate for this variant; positions are zero based
-void Eval::StackUpOneVariant(const ExtendParameters &parameters, const PositionInProgress& bam_position, int sample_index)
+void Evaluator::StackUpOneVariant(const ExtendParameters &parameters, const PositionInProgress& bam_position, int sample_index)
 {
 
   // Initialize random number generator for each stack -> ensure reproducibility
@@ -373,7 +373,7 @@ bool EnsembleProcessOneVariant (
 
   int chr_idx = vc.ref_reader->chr_idx(candidate_variant.variant.sequenceName.c_str());
 
-  Eval my_ensemble(candidate_variant.variant);
+  Evaluator my_ensemble(candidate_variant.variant);
   my_ensemble.SetupAllAlleles(*vc.parameters, *vc.global_context, *vc.ref_reader, chr_idx);
   my_ensemble.FilterAllAlleles(vc.parameters->my_controls.filter_variant, candidate_variant.variant_specific_params); // put filtering here in case we want to skip below entries
 

@@ -671,7 +671,7 @@ void AlleleIdentity::DetectCasesToForceNoCall(const LocalReferenceContext &seq_c
 // ====================================================================
 
 
-void Eval::SetupAllAlleles(
+void Evaluator::SetupAllAlleles(
   const ExtendParameters &parameters,
   const InputStructures  &global_context,
   const ReferenceReader &ref_reader,
@@ -742,7 +742,7 @@ void Eval::SetupAllAlleles(
 
 // ------------------------------------------------------------
 
-void Eval::FilterAllAlleles(const ClassifyFilters &filter_variant, const vector<VariantSpecificParams>& variant_specific_params) {
+void Evaluator::FilterAllAlleles(const ClassifyFilters &filter_variant, const vector<VariantSpecificParams>& variant_specific_params) {
   if (seq_context.context_detected) {
     for (uint8_t i_allele = 0; i_allele < allele_identity_vector.size(); i_allele++) {
       allele_identity_vector[i_allele].DetectCasesToForceNoCall(seq_context, filter_variant, variant_specific_params[i_allele]);

@@ -29,7 +29,7 @@ public:
     void FindValidIndexes(); // only loop over reads where we successfully filled in variants
     void FillInPredictionsAndTestFlows(PersistingThreadObjects &thread_objects, vector<const Alignment *>& read_stack, const InputStructures &global_context);
     void ResetQualities();
-    void PropagateTuningParameters(EvalTuningParameters &my_params);
+    void PropagateTuningParameters(EvaluatorTuningParameters &my_params);
     void ResetRelevantResiduals();
     void UpdateRelevantLikelihoods();
     void ResetNullBias();

@@ -4,7 +4,7 @@
 
 
 
-void ShortStack::PropagateTuningParameters(EvalTuningParameters &my_params){
+void ShortStack::PropagateTuningParameters(EvaluatorTuningParameters &my_params){
   for (unsigned int i_read = 0; i_read < my_hypotheses.size(); i_read++) {
     // basic likelihoods
     my_hypotheses[i_read].heavy_tailed = my_params.heavy_tailed;

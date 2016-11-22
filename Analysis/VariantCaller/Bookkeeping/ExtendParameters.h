@@ -16,7 +16,7 @@ using namespace std;
 
 
 // provide an interface to set useful parameters across the objects
-class EvalTuningParameters {
+class EvaluatorTuningParameters {
   public:
     float germline_prior_strength; // how concentrated are we at 0,0.5,1.0 frequency for germline calls
     float outlier_prob;  // 1-data_reliability
@@ -46,7 +46,7 @@ class EvalTuningParameters {
 
     bool preserve_full_data; // Preserve the data for all flows if true, otherwise preserve the data only at test flows
 
-    EvalTuningParameters() {
+    EvaluatorTuningParameters() {
       germline_prior_strength = 0.0f;
       outlier_prob = 0.01f;
       heavy_tailed = 3; //t5
@@ -256,7 +256,7 @@ public:
 
   OptArgs opts;
   ControlCallAndFilters my_controls;
-  EvalTuningParameters my_eval_control;
+  EvaluatorTuningParameters my_eval_control;
   ProgramControlSettings program_flow;
 
   //Input files
