@@ -56,7 +56,7 @@ class VarButton {
 
   bool isHotSpot;           // Signifies a hotspot variant (set per variant for all alleles, regardless of their specific origin)
   bool isProblematicAllele; // There is something wrong with this allele, we should filter it.
-  bool doRealignment;       // Switch to turn realignment on or off 
+  bool doRealignment;       // Switch to turn realignment on or off
 
   VarButton() {
     isHPIndel      = false;
@@ -97,14 +97,14 @@ class VarButton {
 //  right_anchor                 0
 //  inDelLength         0 (always)
 //  ref_hp_length       2 (>=1 always) -- T T starting at 48
-//  start_window   
-//  end_window     
+//  start_window
+//  end_window
 
 //  VarButton isIndel true, isDeletion false
 //  genome       42 42 44 45 46 47 48 49 50 51 52   (0 based)
 //  ref is        C  A  A  A  A  T  G  T  A  A  A
 //  alt is                       d  C  G
-//  altAllele is                 T  C  G 
+//  altAllele is                 T  C  G
 //  left_anchor                  1
 //  right_anchor                 0
 //  inDelLength                  2
@@ -133,7 +133,7 @@ class AlleleIdentity {
     int           DEBUG;
 
     // useful context
-    int left_anchor;        //!< Number of left bases that are common between the ref. and alt. allele
+    int left_anchor;          //!< Number of left bases that are common between the ref. and alt. allele
     int right_anchor;         //!< Number of right bases that are common between the ref. and alt. allele
                               //   left_anchor + right_anchor <= shorter allele length
     int inDelLength;          //!< Difference in length between longer and shorter allele
@@ -158,7 +158,7 @@ class AlleleIdentity {
       start_window = 0;
       end_window = 0;
       DEBUG = 0;
-      
+
       // filterable statuses
       sse_prob_positive_strand = 0;
       sse_prob_negative_strand = 0;
@@ -169,22 +169,22 @@ class AlleleIdentity {
     bool Ordinary() {
       return(status.isIndel && !(status.isHPIndel));
     };
-    
+
     bool ActAsSNP(){
       // return(status.isSNP || status.isMNV || (status.isIndel && !status.isHPIndel));
       if (indelActAsHPIndel)
-	return(status.isSNP || status.isPaddedSNP);
+        return(status.isSNP || status.isPaddedSNP);
       else
-	return(status.isSNP || status.isPaddedSNP || (status.isIndel && !status.isHPIndel));
+        return(status.isSNP || status.isPaddedSNP || (status.isIndel && !status.isHPIndel));
     }
     bool ActAsMNP(){
       return(status.isMNV);
     }
     bool ActAsHPIndel(){
       if (indelActAsHPIndel)
-	return(status.isIndel);
+        return(status.isIndel);
       else
-	return(status.isIndel && status.isHPIndel);
+        return(status.isIndel && status.isHPIndel);
     }
     //void DetectPotentialCorrelation(const LocalReferenceContext &reference_context);
     bool SubCategorizeInDel(const LocalReferenceContext &reference_context,

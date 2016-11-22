@@ -164,7 +164,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
       my_hypotheses[i_hyp] = my_hypotheses[0];
     if (global_context.DEBUG > 1) {
       cout << "Failed to splice " << local_context.reference_allele << "->";
-      for (unsigned int i_alt = 0; i_alt<my_ensemble.allele_identity_vector.size(); i_alt++) {
+      for (unsigned int i_alt = 0; i_alt < my_ensemble.allele_identity_vector.size(); i_alt++) {
         cout << my_ensemble.allele_identity_vector[i_alt].altAllele;
         if (i_alt < my_ensemble.allele_identity_vector.size()-1)
           cout << ",";
@@ -172,9 +172,9 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
       cout << " into read " << current_read.alignment.Name << endl;
     }
   }
-  else if (global_context.DEBUG > 1) {
-    cout << "Spliced " << local_context.reference_allele << "->";
-    for (unsigned int i_alt = 0; i_alt<my_ensemble.allele_identity_vector.size(); i_alt++) {
+  else if (global_context.DEBUG > 1 and my_hypotheses[0] != my_hypotheses[1]) {
+    cout << "Spliced " << local_context.reference_allele << " -> ";
+    for (unsigned int i_alt = 0; i_alt < my_ensemble.allele_identity_vector.size(); i_alt++) {
       cout << my_ensemble.allele_identity_vector[i_alt].altAllele;
       if (i_alt < my_ensemble.allele_identity_vector.size()-1)
         cout << ",";
@@ -351,7 +351,6 @@ int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_
         error_occurred = true;
         break;
       }
-      cerr << "global_context.flow_order_vector.at(" << current_read.flow_order_index << "), " << my_hypotheses[i_hyp][i_base] << ", " << my_flow << endl;
       // IncrementFlow(global_context.flow_order_vector.at(current_read.flow_order_index), my_hypotheses[i_hyp][i_base], my_flow);
       my_flow++;
     }

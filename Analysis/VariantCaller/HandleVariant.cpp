@@ -15,7 +15,7 @@ void EnsembleEval::SpliceAllelesIntoReads(PersistingThreadObjects &thread_object
   bool changed_alignment;
   unsigned int  num_valid_reads = 0;
   unsigned int  num_realigned = 0;
-  int  num_hyp_no_null = allele_identity_vector.size()+1; // num alleles +1 for ref
+  int  num_hyp_no_null = allele_identity_vector.size() + 1; // num alleles +1 for ref
 
   // generate null+ref+nr.alt hypotheses per read in the case of do_multiallele_eval
   allele_eval.total_theory.my_hypotheses.resize(read_stack.size());

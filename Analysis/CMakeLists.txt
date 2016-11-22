@@ -608,21 +608,6 @@ add_dependencies(tvc IONVERSION bamtools armadillo_proj htslib_proj)
 install(TARGETS tvc DESTINATION bin)
 
 
-## tmol executable ##
-
-include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/tmol")
-
-set(tmolSRCS
-  VariantCaller/tmol/tmol.cpp
-  ${PROJECT_BINARY_DIR}/IonVersion.cpp
-)
-
-add_executable(tmol ${tmolSRCS})
-target_link_libraries(tmol ${ION_BAMTOOLS_LIBS} ${EXTRA_LIBS} z pthread)
-add_dependencies(tmol IONVERSION bamtools)
-install(TARGETS tmol DESTINATION bin)
-
-
 # bbctools
 set(bbctools_src
 bbctools/src/AmpliconRegionStatistics.cpp
