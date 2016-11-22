@@ -532,7 +532,7 @@ set(ION_FREEBAYES_DIR ${ION_TS_EXTERNAL}/freebayes)
 include_directories(${ION_VCFLIB_DIR})
 include_directories(${ION_FREEBAYES_DIR}/src)
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller")
-include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/EnsembleEval")
+include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Eval")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Bookkeeping")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Reads")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Splice")
@@ -567,11 +567,11 @@ set(tvcSRCS
   VariantCaller/Filter/DecisionTreeData.cpp
   VariantCaller/Filter/VariantAssist.cpp
 
-  VariantCaller/EnsembleEval/DiagnosticJSON.cpp
-  VariantCaller/EnsembleEval/PosteriorInference.cpp
-  VariantCaller/EnsembleEval/ShortStack.cpp
-  VariantCaller/EnsembleEval/StackEngine.cpp
-  VariantCaller/EnsembleEval/CrossHypotheses.cpp
+  VariantCaller/Eval/DiagnosticJSON.cpp
+  VariantCaller/Eval/PosteriorInference.cpp
+  VariantCaller/Eval/ShortStack.cpp
+  VariantCaller/Eval/StackEngine.cpp
+  VariantCaller/Eval/CrossHypotheses.cpp
 
   # TODO: Actually build vcflib as a static library and link to variant caller.
   # TODO2: Resolve bgzf.c collisions between vcflib and bamtools

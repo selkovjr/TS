@@ -52,7 +52,7 @@ class LatentSlate{
     void FastStep(ShortStack &total_theory, bool update_frequency);
     void DetailedStep(ShortStack &total_theory, bool update_frequency);
     void ScanStrandPosterior(ShortStack &total_theory, bool vs_ref, int max_detail_level);
-    void PropagateTuningParameters(EnsembleEvalTuningParameters &my_params, int num_hyp_no_null);
+    void PropagateTuningParameters(EvalTuningParameters &my_params, int num_hyp_no_null);
     LatentSlate(){
       max_iterations = 10;
       detailed_integral = true;
@@ -65,7 +65,7 @@ class HypothesisStack{
     // latent variables under states of the world
     LatentSlate cur_state;
     ShortStack total_theory;
-    EnsembleEvalTuningParameters my_params;
+    EvalTuningParameters my_params;
     bool try_alternatives;
 
     vector<float> ll_record;
@@ -95,7 +95,7 @@ class HypothesisStack{
 
 class PositionInBam;
 
-class EnsembleEval {
+class Eval {
   public:
     // Raw read information
     vector<const Alignment *> read_stack;    //!< Reads spanning the variant position
@@ -111,7 +111,7 @@ class EnsembleEval {
     HypothesisStack allele_eval;
     vector<int> diploid_choice;
 
-    EnsembleEval(vcf::Variant &candidate_variant) {
+    Eval(vcf::Variant &candidate_variant) {
       diploid_choice.assign(2,0);
       diploid_choice[1] = 1; // ref = 0, alt = 1
       variant = &candidate_variant;
@@ -141,7 +141,7 @@ class EnsembleEval {
         float &gt_quality_score, float &reject_status_quality_score,
         int max_detail_level = 0);
 
-    friend void GlueOutputVariant(EnsembleEval &my_ensemble, VariantCandidate &candidate_variant, const ExtendParameters &parameters, int _best_allele_index, int sample_index); // I want to access your private members
+    friend void GlueOutputVariant(Eval &my_ensemble, VariantCandidate &candidate_variant, const ExtendParameters &parameters, int _best_allele_index, int sample_index); // I want to access your private members
 
     // The following private members are used only in the internal steps at
     // a) int DetectBestMultiAllelePair()

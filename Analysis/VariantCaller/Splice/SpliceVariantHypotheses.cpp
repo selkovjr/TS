@@ -5,7 +5,7 @@
 
 #include "StackEngine.h"
 
-bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &my_ensemble,
+bool SpliceVariantHypotheses(const Alignment &current_read, const Eval &my_ensemble,
     const LocalReferenceContext &local_context, PersistingThreadObjects &thread_objects,
     int &splice_start_flow, int &splice_end_flow, vector<string> &my_hypotheses,
     vector<bool> & same_as_null_hypothesis, bool & changed_alignment, const InputStructures &global_context,
@@ -232,7 +232,7 @@ void DecrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_id
 
 // This function is useful in the case that insertion count towards reference index before them.
 bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty_alignment,
-    const EnsembleEval &my_ensemble,
+    const Eval &my_ensemble,
     const LocalReferenceContext &local_context, vector<string> &my_hypotheses,
     unsigned int pretty_idx_orig, int DEBUG)
 {

@@ -512,7 +512,7 @@ int RetrieveParameterVectorFloat(OptArgs &opts, Json::Value& json, char short_na
 
 // =============================================================================
 
-void EnsembleEvalTuningParameters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
+void EvalTuningParameters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
 
   max_flows_to_test                     = RetrieveParameterInt   (opts, tvc_params, '-', "max-flows-to-test", 10);
   min_delta_for_flow                    = RetrieveParameterDouble(opts, tvc_params, '-', "min-delta-for-flow", 0.1);
@@ -538,7 +538,7 @@ void EnsembleEvalTuningParameters::SetOpts(OptArgs &opts, Json::Value& tvc_param
   k_zero                                = RetrieveParameterDouble(opts, tvc_params, '-', "k-zero", 3.0f); // add variance from cluster shifts
 }
 
-void EnsembleEvalTuningParameters::CheckParameterLimits() {
+void EvalTuningParameters::CheckParameterLimits() {
 
   CheckParameterLowerUpperBound<int>  ("max-flows-to-test",       max_flows_to_test,       1,     100);
   CheckParameterLowerUpperBound<float>("min-delta-for-flow",      min_delta_for_flow,      0.01f, 0.5f);

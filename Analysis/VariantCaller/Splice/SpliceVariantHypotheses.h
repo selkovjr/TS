@@ -19,9 +19,9 @@
 using namespace std;
 using namespace ion;
 
-class EnsembleEval;
+class Eval;
 
-bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &my_ensemble,
+bool SpliceVariantHypotheses(const Alignment &current_read, const Eval &my_ensemble,
                         const LocalReferenceContext &local_context, PersistingThreadObjects &thread_objects,
                         int &splice_start_flow, int &splice_end_flow, vector<string> &my_hypotheses,
                         vector<bool> & same_as_null_hypothesis, bool & changed_alignment, const InputStructures &global_context,
@@ -29,7 +29,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const EnsembleEval &
 
 
 bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty_alignment,
-                             const EnsembleEval &my_ensemble,
+                             const Eval &my_ensemble,
                              const LocalReferenceContext &local_context, vector<string> &my_hypotheses,
                              unsigned int pretty_idx, int DEBUG);
 
