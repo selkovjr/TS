@@ -362,12 +362,12 @@ void Evaluator::StackUpOneVariant(const ExtendParameters &parameters, const Posi
 }
 
 bool ProcessOneVariant (
-    PersistingThreadObjects &thread_objects,
-    VariantCallerContext& vc,
-    VariantCandidate &candidate_variant,
-    const PositionInProgress& bam_position,
-    int sample_index
-    ) {
+  PersistingThreadObjects &thread_objects,
+  VariantCallerContext& vc,
+  VariantCandidate &candidate_variant,
+  const PositionInProgress& bam_position,
+  int sample_index
+) {
   string sample_name = "";
   if (sample_index >= 0) {sample_name = candidate_variant.variant.sampleNames[sample_index];}
 

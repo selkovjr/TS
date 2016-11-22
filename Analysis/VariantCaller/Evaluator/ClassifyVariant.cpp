@@ -8,7 +8,7 @@
 #include "ErrorMotifs.h"
 #include "StackEngine.h"
 
-// This function only works for the 1Base -> 1 Base snp representation
+// This function only works for the 1 base -> 1 base SNP representation
 void AlleleIdentity::SubCategorizeSNP(const LocalReferenceContext &reference_context) {
 
   // This classification only works if allele lengths == 1
@@ -681,14 +681,13 @@ void Evaluator::SetupAllAlleles(
   allele_identity_vector.resize(variant->alt.size());
 
   if (global_context.DEBUG > 0 and variant->alt.size()>0) {
-    cout << "Investigating variant candidate " << seq_context.reference_allele
-         << " -> " << variant->alt[0];
+    cout << "Investigating variant candidate " << seq_context.reference_allele << " -> " << variant->alt[0];
     for (uint8_t i_allele = 1; i_allele < allele_identity_vector.size(); i_allele++)
       cout << ',' << variant->alt[i_allele];
     cout << endl;
   }
 
-  //now calculate the allele type (SNP/Indel/MNV/HPIndel etc.) and window for hypothesis calculation for each alt allele.
+  // now calculate the allele type (SNP/Indel/MNV/HPIndel etc.) and window for hypothesis calculation for each alt allele.
   for (uint8_t i_allele = 0; i_allele < allele_identity_vector.size(); i_allele++) {
 
     // TODO: Hotspot should be an allele property but we only set all or none to Hotspots, depending on the vcf record
@@ -703,7 +702,7 @@ void Evaluator::SetupAllAlleles(
     allele_identity_vector[i_allele].CalculateWindowForVariant(seq_context, global_context.DEBUG, ref_reader, chr_idx);
   }
 
-  //GetMultiAlleleVariantWindow();
+  // GetMultiAlleleVariantWindow();
   multiallele_window_start = -1;
   multiallele_window_end   = -1;
 

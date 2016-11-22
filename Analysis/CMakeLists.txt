@@ -561,12 +561,12 @@ set(tvcSRCS
 
   VariantCaller/Splice/ErrorMotifs.cpp
   VariantCaller/Splice/LocalContext.cpp
-  VariantCaller/Splice/ClassifyVariant.cpp
   VariantCaller/Splice/SpliceVariantHypotheses.cpp
 
   VariantCaller/Filter/DecisionTreeData.cpp
   VariantCaller/Filter/VariantAssist.cpp
 
+  VariantCaller/Evaluator/ClassifyVariant.cpp
   VariantCaller/Evaluator/DiagnosticJSON.cpp
   VariantCaller/Evaluator/PosteriorInference.cpp
   VariantCaller/Evaluator/ShortStack.cpp
