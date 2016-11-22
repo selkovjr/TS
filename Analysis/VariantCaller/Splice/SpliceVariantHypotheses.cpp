@@ -5,7 +5,7 @@
 
 #include "StackEngine.h"
 
-bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &my_ensemble,
+bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &eval,
     const LocalReferenceContext &local_context, PersistingThreadObjects &thread_objects,
     int &splice_start_flow, int &splice_end_flow, vector<string> &my_hypotheses,
     vector<bool> & same_as_null_hypothesis, bool & changed_alignment, const InputStructures &global_context,
@@ -14,7 +14,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &my_
 
   // Hypotheses: 1) Null; read as called 2) Reference Hypothesis 3-?) Variant Hypotheses
 
-  my_hypotheses.resize(my_ensemble.allele_identity_vector.size()+2);
+  my_hypotheses.resize(eval.allele_identity_vector.size()+2);
   same_as_null_hypothesis.assign(my_hypotheses.size(), false);
 
   // Set up variables to log the flows we splice into
@@ -42,7 +42,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &my_
   changed_alignment = false;
 
   // do realignment of a small region around variant if desired
-  if (my_ensemble.doRealignment) {
+  if (eval.doRealignment) {
     pretty_alignment = SpliceDoRealignement(thread_objects, current_read, local_context.position0,
         changed_alignment, global_context.DEBUG, ref_reader, chr_idx);
     if (pretty_alignment.empty() and global_context.DEBUG > 0)
@@ -58,7 +58,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &my_
 
   for (unsigned int pretty_idx = 0; pretty_idx < pretty_alignment.length(); pretty_idx++) {
 
-    bool outside_of_window = ref_idx < my_ensemble.multiallele_window_start or ref_idx >= my_ensemble.multiallele_window_end;
+    bool outside_of_window = ref_idx < eval.multiallele_window_start or ref_idx >= eval.multiallele_window_end;
     bool outside_ref_allele = (long)ref_idx < local_context.position0 or ref_idx >= (int)(local_context.position0 + local_context.reference_allele.length());
 
     // Basic sanity checks
@@ -78,7 +78,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &my_
         read_idx++;
         pretty_idx++;
       }
-      did_splicing = SpliceAddVariantAlleles(current_read, pretty_alignment, my_ensemble,
+      did_splicing = SpliceAddVariantAlleles(current_read, pretty_alignment, eval,
           local_context, my_hypotheses, pretty_idx, global_context.DEBUG);
       just_did_splicing = did_splicing;
     } // --- ---
@@ -164,9 +164,9 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &my_
       my_hypotheses[i_hyp] = my_hypotheses[0];
     if (global_context.DEBUG > 1) {
       cout << "Failed to splice " << local_context.reference_allele << "->";
-      for (unsigned int i_alt = 0; i_alt < my_ensemble.allele_identity_vector.size(); i_alt++) {
-        cout << my_ensemble.allele_identity_vector[i_alt].altAllele;
-        if (i_alt < my_ensemble.allele_identity_vector.size()-1)
+      for (unsigned int i_alt = 0; i_alt < eval.allele_identity_vector.size(); i_alt++) {
+        cout << eval.allele_identity_vector[i_alt].altAllele;
+        if (i_alt < eval.allele_identity_vector.size()-1)
           cout << ",";
       }
       cout << " into read " << current_read.alignment.Name << endl;
@@ -174,9 +174,9 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &my_
   }
   else if (global_context.DEBUG > 1 and my_hypotheses[0] != my_hypotheses[1]) {
     cout << "Spliced " << local_context.reference_allele << " -> ";
-    for (unsigned int i_alt = 0; i_alt < my_ensemble.allele_identity_vector.size(); i_alt++) {
-      cout << my_ensemble.allele_identity_vector[i_alt].altAllele;
-      if (i_alt < my_ensemble.allele_identity_vector.size()-1)
+    for (unsigned int i_alt = 0; i_alt < eval.allele_identity_vector.size(); i_alt++) {
+      cout << eval.allele_identity_vector[i_alt].altAllele;
+      if (i_alt < eval.allele_identity_vector.size()-1)
         cout << ",";
     }
     cout << " into ";
@@ -232,7 +232,7 @@ void DecrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_id
 
 // This function is useful in the case that insertion count towards reference index before them.
 bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty_alignment,
-    const Evaluator &my_ensemble,
+    const Evaluator &eval,
     const LocalReferenceContext &local_context, vector<string> &my_hypotheses,
     unsigned int pretty_idx_orig, int DEBUG)
 {
@@ -244,7 +244,7 @@ bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty
     int my_allele_idx = i_hyp-2;
 
     // Special SNP splicing to not accidentally split HPs in the presence of insertions at start of HP
-    if (my_ensemble.allele_identity_vector[my_allele_idx].status.isSNP) {
+    if (eval.allele_identity_vector[my_allele_idx].status.isSNP) {
       int shifted_position = 0;
       unsigned int splice_idx = my_hypotheses[i_hyp].length();
       unsigned int pretty_idx = pretty_idx_orig;
@@ -260,13 +260,13 @@ bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty
         // printouts
         cout << "Shifted splice position by " << shifted_position << " in " << current_read.alignment.Name
           << " " << local_context.position0 << local_context.reference_allele
-          << "->" << my_ensemble.allele_identity_vector[my_allele_idx].altAllele << endl;
+          << "->" << eval.allele_identity_vector[my_allele_idx].altAllele << endl;
         cout << my_hypotheses[i_hyp] << endl;
       }
-      my_hypotheses[i_hyp][splice_idx] = my_ensemble.allele_identity_vector[my_allele_idx].altAllele[0];
+      my_hypotheses[i_hyp][splice_idx] = eval.allele_identity_vector[my_allele_idx].altAllele[0];
     }
     else { // Default splicing
-      my_hypotheses[i_hyp] += my_ensemble.allele_identity_vector[my_allele_idx].altAllele;
+      my_hypotheses[i_hyp] += eval.allele_identity_vector[my_allele_idx].altAllele;
     }
   } // end looping over hypotheses
   return true;

@@ -21,7 +21,7 @@ using namespace ion;
 
 class Evaluator;
 
-bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &my_ensemble,
+bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &eval,
                         const LocalReferenceContext &local_context, PersistingThreadObjects &thread_objects,
                         int &splice_start_flow, int &splice_end_flow, vector<string> &my_hypotheses,
                         vector<bool> & same_as_null_hypothesis, bool & changed_alignment, const InputStructures &global_context,
@@ -29,7 +29,7 @@ bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &my_
 
 
 bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty_alignment,
-                             const Evaluator &my_ensemble,
+                             const Evaluator &eval,
                              const LocalReferenceContext &local_context, vector<string> &my_hypotheses,
                              unsigned int pretty_idx, int DEBUG);
 

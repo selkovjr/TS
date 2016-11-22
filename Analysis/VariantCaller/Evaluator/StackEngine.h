@@ -141,7 +141,7 @@ class Evaluator {
         float &gt_quality_score, float &reject_status_quality_score,
         int max_detail_level = 0);
 
-    friend void GlueOutputVariant(Evaluator &my_ensemble, VariantCandidate &candidate_variant, const ExtendParameters &parameters, int _best_allele_index, int sample_index); // I want to access your private members
+    friend void GlueOutputVariant(Evaluator &eval, VariantCandidate &candidate_variant, const ExtendParameters &parameters, int _best_allele_index, int sample_index); // I want to access your private members
 
     // The following private members are used only in the internal steps at
     // a) int DetectBestMultiAllelePair()

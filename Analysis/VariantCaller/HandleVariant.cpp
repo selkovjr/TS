@@ -81,11 +81,11 @@ void Evaluator::SpliceAllelesIntoReads(PersistingThreadObjects &thread_objects, 
 
 
 
-void SummarizeInfoFieldsFromEnsemble(Evaluator &my_ensemble, vcf::Variant &candidate_variant, int _cur_allele_index, const string &sample_name) {
+void SummarizeInfoFields(Evaluator &eval, vcf::Variant &candidate_variant, int _cur_allele_index, const string &sample_name) {
 
   float mean_ll_delta;
 
-  my_ensemble.ScanSupportingEvidence(mean_ll_delta, _cur_allele_index);
+  eval.ScanSupportingEvidence(mean_ll_delta, _cur_allele_index);
 
   candidate_variant.info["MLLD"].push_back(convertToString(mean_ll_delta));
 
@@ -107,7 +107,7 @@ struct InferenceResult{
   bool operator==(const float &rhs) const { return min_allele_freq == rhs; } // use the operator "==" for "std::find"
 };
 
-void MultiMinAlleleFreq(Evaluator &my_ensemble, VariantCandidate &candidate_variant, int sample_index, ProgramControlSettings &program_flow, int max_detail_level){
+void MultiMinAlleleFreq(Evaluator &eval, VariantCandidate &candidate_variant, int sample_index, ProgramControlSettings &program_flow, int max_detail_level){
   string sample_name = "";
   if(sample_index >= 0) {
     sample_name = candidate_variant.variant.sampleNames[sample_index];
@@ -136,34 +136,34 @@ void MultiMinAlleleFreq(Evaluator &my_ensemble, VariantCandidate &candidate_vari
   bool is_hotspot_done = false;
   bool is_indel_done = false;
 
-  for(unsigned int alt_allele_index = 0; alt_allele_index < my_ensemble.allele_identity_vector.size(); ++alt_allele_index){
+  for(unsigned int alt_allele_index = 0; alt_allele_index < eval.allele_identity_vector.size(); ++alt_allele_index){
     // ptr_maf_vec = the pointer to the multi_min_allele_freq vector of which type of variant for this allele
     vector<float> *ptr_maf_vec = &(program_flow.snp_multi_min_allele_freq);
     string type_prefix = "S";
 
     // Note that no override here!
-    if(my_ensemble.allele_identity_vector[alt_allele_index].status.isHotSpot){
+    if(eval.allele_identity_vector[alt_allele_index].status.isHotSpot){
       if(is_hotspot_done){
         continue;
       }
       ptr_maf_vec = &(program_flow.hotspot_multi_min_allele_freq);
       type_prefix = "H";
     }
-    else if(my_ensemble.allele_identity_vector[alt_allele_index].ActAsSNP()){
+    else if(eval.allele_identity_vector[alt_allele_index].ActAsSNP()){
       if(is_snp_done){
         continue;
       }
       ptr_maf_vec = &(program_flow.snp_multi_min_allele_freq);
       type_prefix = "S";
     }
-    else if(my_ensemble.allele_identity_vector[alt_allele_index].ActAsMNP()){
+    else if(eval.allele_identity_vector[alt_allele_index].ActAsMNP()){
       if(is_mnp_done){
         continue;
       }
       ptr_maf_vec = &(program_flow.mnp_multi_min_allele_freq);
       type_prefix = "M";
     }
-    else if(my_ensemble.allele_identity_vector[alt_allele_index].ActAsHPIndel()){
+    else if(eval.allele_identity_vector[alt_allele_index].ActAsHPIndel()){
       if(is_indel_done){
         continue;
       }
@@ -188,15 +188,15 @@ void MultiMinAlleleFreq(Evaluator &my_ensemble, VariantCandidate &candidate_vari
         int genotype_call;
         float evaluated_genotype_quality;
         // Let's do the inference for the given loc_min_allele_freq
-        my_ensemble.allele_eval.CallGermline(loc_min_allele_freq, genotype_call, evaluated_genotype_quality, loc_qual);
+        eval.allele_eval.CallGermline(loc_min_allele_freq, genotype_call, evaluated_genotype_quality, loc_qual);
 
-        vector<int> genotype_component = {my_ensemble.diploid_choice[0], my_ensemble.diploid_choice[1]}; // starts with het var
+        vector<int> genotype_component = {eval.diploid_choice[0], eval.diploid_choice[1]}; // starts with het var
 
         if(genotype_call == 2){ //hom var
-          genotype_component[0] = my_ensemble.diploid_choice[1];
+          genotype_component[0] = eval.diploid_choice[1];
         }
         else if(genotype_call == 0){ //hom ref
-          genotype_component[1] = my_ensemble.diploid_choice[0];
+          genotype_component[1] = eval.diploid_choice[0];
         }
 
         loc_gt = convertToString(genotype_component[0]) + "/" + convertToString(genotype_component[1]);
@@ -245,30 +245,30 @@ void MultiMinAlleleFreq(Evaluator &my_ensemble, VariantCandidate &candidate_vari
 }
 
 
-void GlueOutputVariant(Evaluator &my_ensemble, VariantCandidate &candidate_variant, const ExtendParameters &parameters, int _best_allele_index, int sample_index){
+void GlueOutputVariant(Evaluator &eval, VariantCandidate &candidate_variant, const ExtendParameters &parameters, int _best_allele_index, int sample_index){
   string sample_name = "";
   if(sample_index >= 0) {
     sample_name = candidate_variant.variant.sampleNames[sample_index];
   }
 
-  DecisionTreeData my_decision(*(my_ensemble.variant));
+  DecisionTreeData my_decision(*(eval.variant));
   my_decision.tune_sbias = parameters.my_controls.sbias_tune;
-  my_decision.SetupFromMultiAllele(my_ensemble);
+  my_decision.SetupFromMultiAllele(eval);
 
   // pretend we can classify reads across multiple alleles
-  if(not my_ensemble.is_hard_classification_for_reads_done_){
-    my_ensemble.ApproximateHardClassifierForReads();
+  if(not eval.is_hard_classification_for_reads_done_){
+    eval.ApproximateHardClassifierForReads();
   }
 
-  my_decision.all_summary_stats.AssignStrandToHardClassifiedReads(my_ensemble.strand_id_, my_ensemble.read_id_);
+  my_decision.all_summary_stats.AssignStrandToHardClassifiedReads(eval.strand_id_, eval.read_id_);
 
-  my_decision.all_summary_stats.AssignPositionFromEndToHardClassifiedReads(my_ensemble.read_id_, my_ensemble.dist_to_left_, my_ensemble.dist_to_right_);
+  my_decision.all_summary_stats.AssignPositionFromEndToHardClassifiedReads(eval.read_id_, eval.dist_to_left_, eval.dist_to_right_);
 
   float smallest_allele_freq = 1.0f;
   for (unsigned int _alt_allele_index = 0; _alt_allele_index < my_decision.allele_identity_vector.size(); _alt_allele_index++) {
     // for each alt allele, do my best
     // thresholds here can vary by >type< of allele
-    float local_min_allele_freq = FreqThresholdByType(my_ensemble.allele_identity_vector[_alt_allele_index], parameters.my_controls,
+    float local_min_allele_freq = FreqThresholdByType(eval.allele_identity_vector[_alt_allele_index], parameters.my_controls,
         candidate_variant.variant_specific_params[_alt_allele_index]);
 
     if (local_min_allele_freq < smallest_allele_freq){
@@ -276,12 +276,12 @@ void GlueOutputVariant(Evaluator &my_ensemble, VariantCandidate &candidate_varia
     }
 
     /* The following piece of code seems redundant. Perhaps due to historical reasons?
-       my_ensemble.ComputePosteriorGenotype(_alt_allele_index, local_min_allele_freq,
+       eval.ComputePosteriorGenotype(_alt_allele_index, local_min_allele_freq,
        my_decision.summary_info_vector[_alt_allele_index].genotype_call,
        my_decision.summary_info_vector[_alt_allele_index].gt_quality_score,
        my_decision.summary_info_vector[_alt_allele_index].variant_qual_score);
        */
-    SummarizeInfoFieldsFromEnsemble(my_ensemble, *(my_ensemble.variant), _alt_allele_index, sample_name);
+    SummarizeInfoFields(eval, *(eval.variant), _alt_allele_index, sample_name);
   }
 
   my_decision.best_allele_index = _best_allele_index;
@@ -294,7 +294,7 @@ void GlueOutputVariant(Evaluator &my_ensemble, VariantCandidate &candidate_varia
   //@TODO: fix this frequency to be sensible
   float local_min_allele_freq = smallest_allele_freq; // must choose a qual score relative to some frequency
 
-  my_ensemble.MultiAlleleGenotype(local_min_allele_freq,
+  eval.MultiAlleleGenotype(local_min_allele_freq,
       my_decision.eval_genotype.genotype_component,
       my_decision.eval_genotype.evaluated_genotype_quality,
       my_decision.eval_genotype.evaluated_variant_quality,
@@ -361,7 +361,7 @@ void Evaluator::StackUpOneVariant(const ExtendParameters &parameters, const Posi
   }
 }
 
-bool EnsembleProcessOneVariant (
+bool ProcessOneVariant (
     PersistingThreadObjects &thread_objects,
     VariantCallerContext& vc,
     VariantCandidate &candidate_variant,
@@ -373,15 +373,15 @@ bool EnsembleProcessOneVariant (
 
   int chr_idx = vc.ref_reader->chr_idx(candidate_variant.variant.sequenceName.c_str());
 
-  Evaluator my_ensemble(candidate_variant.variant);
-  my_ensemble.SetupAllAlleles(*vc.parameters, *vc.global_context, *vc.ref_reader, chr_idx);
-  my_ensemble.FilterAllAlleles(vc.parameters->my_controls.filter_variant, candidate_variant.variant_specific_params); // put filtering here in case we want to skip below entries
+  Evaluator eval(candidate_variant.variant);
+  eval.SetupAllAlleles(*vc.parameters, *vc.global_context, *vc.ref_reader, chr_idx);
+  eval.FilterAllAlleles(vc.parameters->my_controls.filter_variant, candidate_variant.variant_specific_params); // put filtering here in case we want to skip below entries
 
   // We read in one stack per multi-allele variant
-  my_ensemble.StackUpOneVariant(*vc.parameters, bam_position, sample_index);
+  eval.StackUpOneVariant(*vc.parameters, bam_position, sample_index);
 
-  if (my_ensemble.read_stack.empty()) {
-    cerr << "Nonfatal: No reads found for " << candidate_variant.variant.sequenceName << "\t" << my_ensemble.multiallele_window_start << endl;
+  if (eval.read_stack.empty()) {
+    cerr << "Nonfatal: No reads found for " << candidate_variant.variant.sequenceName << "\t" << eval.multiallele_window_start << endl;
     NullFilterReason(candidate_variant.variant, sample_name);
     string my_reason = "NODATA";
     AddFilterReason(candidate_variant.variant, my_reason, sample_name);
@@ -397,34 +397,34 @@ bool EnsembleProcessOneVariant (
   // leave ensemble in ref vs alt state
 
   // glue in variants
-  my_ensemble.SpliceAllelesIntoReads(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx);
+  eval.SpliceAllelesIntoReads(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx);
 
-  my_ensemble.allele_eval.my_params = vc.parameters->my_eval_control;
+  eval.allele_eval.my_params = vc.parameters->my_eval_control;
 
   // fill in quantities derived from predictions
-  int num_hyp_no_null = my_ensemble.allele_identity_vector.size() + 1; // num alleles +1 for ref
-  my_ensemble.allele_eval.InitForInference(thread_objects, my_ensemble.read_stack, *vc.global_context, num_hyp_no_null, my_ensemble.allele_identity_vector);
+  int num_hyp_no_null = eval.allele_identity_vector.size() + 1; // num alleles +1 for ref
+  eval.allele_eval.InitForInference(thread_objects, eval.read_stack, *vc.global_context, num_hyp_no_null, eval.allele_identity_vector);
 
   // do inference
-  my_ensemble.allele_eval.ExecuteInference();
+  eval.allele_eval.ExecuteInference();
   // now we're in the guaranteed state of best index
-  int best_allele = my_ensemble.DetectBestMultiAllelePair();
+  int best_allele = eval.DetectBestMultiAllelePair();
 
   // output to variant
-  GlueOutputVariant(my_ensemble, candidate_variant, *vc.parameters, best_allele, sample_index);
+  GlueOutputVariant(eval, candidate_variant, *vc.parameters, best_allele, sample_index);
 
   // output the inference results (MUQUAL, MUGT, MUGQ, etc.) if I turn on multi_min_allele_freq
   if (true or vc.parameters->program_flow.is_multi_min_allele_freq) {
-    MultiMinAlleleFreq(my_ensemble, candidate_variant, sample_index, vc.parameters->program_flow, vc.parameters->my_eval_control.max_detail_level);
+    MultiMinAlleleFreq(eval, candidate_variant, sample_index, vc.parameters->program_flow, vc.parameters->my_eval_control.max_detail_level);
   }
 
   cerr << "diagnostic: " << vc.parameters->program_flow.rich_json_diagnostic << endl;
   // test diagnostic output for this ensemble
-  // if (vc.parameters->program_flow.rich_json_diagnostic & (!(my_ensemble.variant->isFiltered) | my_ensemble.variant->isHotSpot)) // look at everything that came through
+  // if (vc.parameters->program_flow.rich_json_diagnostic & (!(eval.variant->isFiltered) | eval.variant->isHotSpot)) // look at everything that came through
   if (vc.parameters->program_flow.rich_json_diagnostic) // look at everything
-    JustOneDiagnosis(my_ensemble, *vc.global_context, vc.parameters->program_flow.json_plot_dir, true);
-  if (vc.parameters->program_flow.minimal_diagnostic & (!(my_ensemble.variant->isFiltered) | my_ensemble.variant->isHotSpot)) // look at everything that came through
-    JustOneDiagnosis(my_ensemble, *vc.global_context, vc.parameters->program_flow.json_plot_dir, false);
+    JustOneDiagnosis(eval, *vc.global_context, vc.parameters->program_flow.json_plot_dir, true);
+  if (vc.parameters->program_flow.minimal_diagnostic & (!(eval.variant->isFiltered) | eval.variant->isHotSpot)) // look at everything that came through
+    JustOneDiagnosis(eval, *vc.global_context, vc.parameters->program_flow.json_plot_dir, false);
 
   return true;
 }

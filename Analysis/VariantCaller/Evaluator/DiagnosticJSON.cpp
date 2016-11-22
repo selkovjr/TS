@@ -220,7 +220,7 @@ void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
   DiagnosticWriteJson(diagnostic_json, outFile);
 }
 
-void JustOneDiagnosis(const Evaluator &my_ensemble, const InputStructures &global_context,
+void JustOneDiagnosis(const Evaluator &eval, const InputStructures &global_context,
     const string &out_dir, bool rich_diag)
 {
   //diagnose one particular variant
@@ -230,19 +230,19 @@ void JustOneDiagnosis(const Evaluator &my_ensemble, const InputStructures &globa
   cerr << "JustOneDiagnosis() rich = " << rich_diag << endl;
 
   // build a unique identifier to write out diagnostics
-  int variant_position = my_ensemble.variant->position;
-  string ref_allele = my_ensemble.variant->ref;
-  string var_allele = my_ensemble.variant->alt[0];
-  for (unsigned int i_allele=1; i_allele<my_ensemble.variant->alt.size(); i_allele++) {
+  int variant_position = eval.variant->position;
+  string ref_allele = eval.variant->ref;
+  string var_allele = eval.variant->alt[0];
+  for (unsigned int i_allele=1; i_allele<eval.variant->alt.size(); i_allele++) {
     var_allele += ',';
-    var_allele += my_ensemble.variant->alt[i_allele];
+    var_allele += eval.variant->alt[i_allele];
   }
-  string variant_contig =  my_ensemble.variant->sequenceName;
+  string variant_contig =  eval.variant->sequenceName;
 
   if (rich_diag)
-    RichDiagnosticOutput(my_ensemble.read_stack, my_ensemble.allele_eval,
+    RichDiagnosticOutput(eval.read_stack, eval.allele_eval,
         variant_contig, variant_position, ref_allele, var_allele, global_context, out_dir);
   else
-    TinyDiagnosticOutput(my_ensemble.read_stack, my_ensemble.allele_eval,
+    TinyDiagnosticOutput(eval.read_stack, eval.allele_eval,
         variant_contig, variant_position, ref_allele, var_allele, global_context, out_dir);
 }

@@ -56,7 +56,7 @@ using namespace ion;
 // ----------------------------------------------------------------------
 
 
-bool EnsembleProcessOneVariant (
+bool ProcessOneVariant (
   PersistingThreadObjects &thread_objects,
   VariantCallerContext& vc,
   VariantCandidate &current_variant,
