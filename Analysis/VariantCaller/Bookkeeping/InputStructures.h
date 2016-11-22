@@ -17,7 +17,7 @@
 #include <VariantCaller/OrderedBAMWriter.h>
 
 #include "LinearCalibrationModel.h"
-#include "../Splice/ErrorMotifs.h"
+#include "../Evaluator/ErrorMotifs.h"
 #include "ExtendParameters.h"
 #include "Realigner.h"
 

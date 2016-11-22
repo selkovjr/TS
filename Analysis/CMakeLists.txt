@@ -559,19 +559,19 @@ set(tvcSRCS
 
   VariantCaller/Reads/ExtendedReadInfo.cpp
 
-  VariantCaller/Splice/ErrorMotifs.cpp
-  VariantCaller/Splice/LocalContext.cpp
   VariantCaller/Splice/SpliceVariantHypotheses.cpp
 
   VariantCaller/Filter/DecisionTreeData.cpp
   VariantCaller/Filter/VariantAssist.cpp
 
   VariantCaller/Evaluator/ClassifyVariant.cpp
+  VariantCaller/Evaluator/CrossHypotheses.cpp
   VariantCaller/Evaluator/DiagnosticJSON.cpp
+  VariantCaller/Evaluator/ErrorMotifs.cpp
+  VariantCaller/Evaluator/LocalContext.cpp
   VariantCaller/Evaluator/PosteriorInference.cpp
   VariantCaller/Evaluator/ShortStack.cpp
   VariantCaller/Evaluator/StackEngine.cpp
-  VariantCaller/Evaluator/CrossHypotheses.cpp
 
   # TODO: Actually build vcflib as a static library and link to variant caller.
   # TODO2: Resolve bgzf.c collisions between vcflib and bamtools

@@ -38,10 +38,10 @@ using namespace std;
 //  right_hp_length                          3
 //  right_hp_start                          51
 
-class LocalReferenceContext{
+class LocalReferenceContext {
   public:
-	// VCF stores positions in 1-based index; local_contig_sequence has a zero based index
-	// all positions in this object are zero based so that they correspond to reference in memory.
+    // VCF stores positions in 1-based index; local_contig_sequence has a zero based index
+    // all positions in this object are zero based so that they correspond to reference in memory.
     long     position0;                 //!< Zero based allele start position.
     string   contigName;                //!< Contig Name from VCF
     bool     context_detected;          //!< Check to see if the reference allele matches the given genome position.
@@ -60,26 +60,26 @@ class LocalReferenceContext{
     int      right_hp_length;           //!< Length of the HP to the left of of the HP encompassing position
     int      right_hp_start;
 
-  LocalReferenceContext(){
-    my_hp_length.clear();
-    my_hp_start_pos.clear();
-    context_detected = false;
-    position0                  = -1;
-	ref_left_hp_base           = 'X'; // Something that can't occur in the reference
-	ref_right_hp_base          = 'X';
-	left_hp_start              = 0;
-    left_hp_length             = 0;
-    right_hp_start             = 0;
-    right_hp_length            = 0;
-  }
+    LocalReferenceContext() {
+      my_hp_length.clear();
+      my_hp_start_pos.clear();
+      context_detected = false;
+      position0                  = -1;
+      ref_left_hp_base           = 'X'; // Something that can't occur in the reference
+      ref_right_hp_base          = 'X';
+      left_hp_start              = 0;
+      left_hp_length             = 0;
+      right_hp_start             = 0;
+      right_hp_length            = 0;
+    }
 
-  //! @brief  Fills in the member variables
-  void DetectContext(const vcf::Variant &candidate_variant, int DEBUG, const ReferenceReader &ref_reader, int chr_idx);
+    //! @brief  Fills in the member variables
+    void DetectContext(const vcf::Variant &candidate_variant, int DEBUG, const ReferenceReader &ref_reader, int chr_idx);
 
-  //! @brief  Basic sanity checks on the provided vcf positions
-  //! Sets member context_detected to true if sanity checks are passed.
-  //! Returns false if VCF position is not valid.
-  bool ContextSanityChecks(const vcf::Variant &candidate_variant, const ReferenceReader &ref_reader, int chr_idx);
+    //! @brief  Basic sanity checks on the provided vcf positions
+    //! Sets member context_detected to true if sanity checks are passed.
+    //! Returns false if VCF position is not valid.
+    bool ContextSanityChecks(const vcf::Variant &candidate_variant, const ReferenceReader &ref_reader, int chr_idx);
 };
 
 #endif //LOCALCONTEXT_H
