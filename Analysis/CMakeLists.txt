@@ -551,6 +551,8 @@ set(tvcSRCS
   VariantCaller/HandleVariant.cpp
   VariantCaller/HotspotReader.cpp
   VariantCaller/MetricsManager.cpp
+  VariantCaller/ErrorMotifs.cpp
+  VariantCaller/LocalContext.cpp
 
   VariantCaller/Bookkeeping/MiscUtil.cpp
   VariantCaller/Bookkeeping/ExtendParameters.cpp
@@ -567,8 +569,6 @@ set(tvcSRCS
   VariantCaller/Evaluator/ClassifyVariant.cpp
   VariantCaller/Evaluator/CrossHypotheses.cpp
   VariantCaller/Evaluator/DiagnosticJSON.cpp
-  VariantCaller/Evaluator/ErrorMotifs.cpp
-  VariantCaller/Evaluator/LocalContext.cpp
   VariantCaller/Evaluator/PosteriorInference.cpp
   VariantCaller/Evaluator/ShortStack.cpp
   VariantCaller/Evaluator/StackEngine.cpp
