@@ -24,8 +24,6 @@ using namespace std;
 class HypothesisStack{
   public:
     // latent variables under states of the world
-    LocusData total_theory;
-    EvaluatorTuningParameters my_params;
     bool try_alternatives;
 
     vector<float> ll_record;
@@ -62,7 +60,7 @@ class Evaluator {
     vector<string>         info_fields;
     bool                   doRealignment;
     // Allele evaluation information
-    HypothesisStack allele_eval;
+    LocusData allele_eval;
     vector<int> diploid_choice;
 
     Evaluator(vcf::Variant &candidate_variant) {

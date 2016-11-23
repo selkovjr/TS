@@ -510,47 +510,6 @@ int RetrieveParameterVectorFloat(OptArgs &opts, Json::Value& json, char short_na
 
 // =============================================================================
 
-void EvaluatorTuningParameters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
-
-
-  prediction_precision                  = RetrieveParameterDouble(opts, tvc_params, '-', "prediction-precision", 30.0);
-  outlier_prob                          = RetrieveParameterDouble(opts, tvc_params, '-', "outlier-probability", 0.01);
-  germline_prior_strength               = RetrieveParameterDouble(opts, tvc_params, '-', "germline-prior-strength", 0.0f);
-  heavy_tailed                          = RetrieveParameterInt   (opts, tvc_params, '-', "heavy-tailed", 3);
-
-  filter_unusual_predictions            = RetrieveParameterDouble(opts, tvc_params, '-', "filter-unusual-predictions", 0.3f);
-  soft_clip_bias_checker                = RetrieveParameterDouble(opts, tvc_params, '-', "soft-clip-bias-checker", 0.1f);
-  filter_deletion_bias                  = RetrieveParameterDouble(opts, tvc_params, '-', "filter-deletion-predictions", 100.0f);
-  filter_insertion_bias                 = RetrieveParameterDouble(opts, tvc_params, '-', "filter-insertion-predictions", 100.0f);
-  max_detail_level                      = RetrieveParameterInt(opts, tvc_params, '-', "max-detail-level", 0);
-  min_detail_level_for_fast_scan        = RetrieveParameterInt(opts, tvc_params, '-', "min-detail-level-for-fast-scan", 2500);
-  try_few_restart_freq                  = RetrieveParameterBool(opts, tvc_params, '-', "try-few-restart-freq", false);
-
-  // shouldn't majorly affect anything, but still expose parameters for completeness
-  pseudo_sigma_base                     = RetrieveParameterDouble(opts, tvc_params, '-', "shift-likelihood-penalty", 0.3f);
-  sigma_prior_weight                    = RetrieveParameterDouble(opts, tvc_params, '-', "sigma-prior-weight", 1.0f);
-  k_zero                                = RetrieveParameterDouble(opts, tvc_params, '-', "k-zero", 3.0f); // add variance from cluster shifts
-}
-
-void EvaluatorTuningParameters::CheckParameterLimits() {
-
-  CheckParameterLowerBound<float>     ("prediction-precision",    prediction_precision,    0.1f);
-  CheckParameterLowerUpperBound<float>("outlier-probability",     outlier_prob,            0.0000001f,  1.0f); // extremely low outlier_prob causes floating exception
-  CheckParameterLowerUpperBound<float>("germline-prior-strength", germline_prior_strength, 0.0f,  1000.0f);
-  CheckParameterLowerBound<int>       ("heavy-tailed",            heavy_tailed,            1);
-
-  CheckParameterLowerBound<float>     ("filter-unusual-predictions",    filter_unusual_predictions,   0.0f);
-  CheckParameterLowerUpperBound<float>("soft-clip-bias-checker",        soft_clip_bias_checker, 0.0f, 1.0f);
-  CheckParameterLowerBound<float>     ("filter-deletion-predictions",   filter_deletion_bias,         0.0f);
-  CheckParameterLowerBound<float>     ("filter-insertion-predictions",  filter_insertion_bias,        0.0f);
-  CheckParameterLowerUpperBound<int>  ("max-detail-level",    max_detail_level,   0, 10000);
-  CheckParameterLowerBound<int>       ("min-detail-level-for-fast-scan",min_detail_level_for_fast_scan,   0);
-
-  CheckParameterLowerBound<float>     ("k-zero",                    k_zero,               0.0f);
-}
-
-// ============================================================================
-
 void ClassifyFilters::SetOpts(OptArgs &opts, Json::Value & tvc_params) {
 
   hp_max_length                         = RetrieveParameterInt   (opts, tvc_params, 'L', "hp-max-length", 8);
@@ -913,7 +872,6 @@ void ExtendParameters::ParametersFromJSON(OptArgs &opts, Json::Value &tvc_params
 void ExtendParameters::CheckParameterLimits() {
   // Check in the order they were set
   my_controls.CheckParameterLimits();
-  my_eval_control.CheckParameterLimits();
   program_flow.CheckParameterLimits();
 
   // Checking FreeBayes parameters
@@ -989,7 +947,6 @@ ExtendParameters::ExtendParameters(int argc, char** argv)
   SetupFileIO(opts, tvc_params);
 
   my_controls.SetOpts(opts, tvc_params);
-  my_eval_control.SetOpts(opts, tvc_params);
   program_flow.SetOpts(opts, tvc_params);
 
   // Dummy lines for HP recalibration

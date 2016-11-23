@@ -15,57 +15,6 @@
 using namespace std;
 
 
-// provide an interface to set useful parameters across the objects
-class EvaluatorTuningParameters {
-  public:
-    float germline_prior_strength; // how concentrated are we at 0,0.5,1.0 frequency for germline calls
-    float outlier_prob;  // 1-data_reliability
-    int heavy_tailed;    // how heavy are the tails of my distribution to resist mis-shapen items = CrossHypotheses
-    float prediction_precision; //  damper_bias = bias_generator - how likely the predictions are to be accurately calibrated
-
-    float pseudo_sigma_base; // general likelihood penalty for shifting locations
-
-    float sigma_prior_weight;
-    float k_zero;  // weight for cluster shifts in adding to variance
-
-    // filter parameters specialized to ensemble eval
-    float filter_unusual_predictions;
-    float soft_clip_bias_checker;
-    float filter_deletion_bias;
-    float filter_insertion_bias;
-
-    int   max_detail_level;
-    int   min_detail_level_for_fast_scan;
-    bool  try_few_restart_freq;
-
-    EvaluatorTuningParameters() {
-      germline_prior_strength = 0.0f;
-      outlier_prob = 0.01f;
-      heavy_tailed = 3; //t5
-      prediction_precision = 30.0f;
-      pseudo_sigma_base = 0.3f;
-
-      k_zero = 0.0f;
-
-      filter_unusual_predictions = 0.3f;
-      soft_clip_bias_checker = 0.1f;
-      filter_deletion_bias = 10.0f;
-      filter_insertion_bias = 10.0f;
-      max_detail_level = 0;
-      min_detail_level_for_fast_scan = 2500;
-
-      try_few_restart_freq = false;
-    };
-
-    float DataReliability() {
-      return(1.0f - outlier_prob);
-    };
-
-    void CheckParameterLimits();
-    void SetOpts(OptArgs &opts, Json::Value& tvc_params);
-
-};
-
 class BasicFilters {
   public:
     float min_allele_freq;
@@ -240,7 +189,6 @@ public:
 
   OptArgs opts;
   ControlCallAndFilters my_controls;
-  EvaluatorTuningParameters my_eval_control;
   ProgramControlSettings program_flow;
 
   //Input files

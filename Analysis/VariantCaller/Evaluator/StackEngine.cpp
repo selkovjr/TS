@@ -13,53 +13,6 @@ void HypothesisStack::DefaultValues()
   try_alternatives = true;
 }
 
-// if try_alternatives and my_params.try_few_restart_freq, then I skip the pure
-// frequencies of snp or mnp alt alleles, also skip the pure frequency of ref
-// allele if "all" alt alleles are snp or mnp
-void HypothesisStack::AllocateFrequencyStarts(int num_hyp_no_null, vector<AlleleIdentity> &allele_identity_vector){
-  // int num_hyp = 2; // ref + alt, called doesn't count as a "start"
-  //int num_start = num_hyp_no_null + 1;
-  vector<float> try_me(num_hyp_no_null);
-  float safety_zero = 0.0f;
-
-  // I try at most (1 + num_hyp_no_null) frequencies: one uniform allele freq and num_hyp_no_null pure freq
-  try_hyp_freq.reserve(1 + num_hyp_no_null);
-
-  // Always try uniform hyp_freq
-  try_me.assign(num_hyp_no_null, 1.0f / (float) num_hyp_no_null);
-  try_hyp_freq.push_back(try_me);
-
-  // -----------------------------------
-  // For now, try_few_restart_freq means don't try alternative
-  if(my_params.try_few_restart_freq){
-    try_alternatives = false;
-  }
-  // -----------------------------------
-
-  // try pure frequencies for the alleles
-  if(try_alternatives){
-    // try pure frequencies for alt alleles
-    for(int i_hyp = 1; i_hyp < num_hyp_no_null; ++i_hyp){
-      int i_alt = i_hyp - 1;
-      if(my_params.try_few_restart_freq and (allele_identity_vector[i_alt].ActAsSNP() or allele_identity_vector[i_alt].ActAsMNP())){
-        // skip the pure frequency of a snp or mnp alt allele.
-        continue;
-      }
-      try_me.assign(num_hyp_no_null, safety_zero / float(num_hyp_no_null - 1));
-      try_me[i_hyp] = 1.0f - safety_zero;
-      try_hyp_freq.push_back(try_me);
-    }
-    // try the pure frequency of the ref allele if we try at least one pure frequency of alt allele
-    if(try_hyp_freq.size() > 1){
-      try_me.assign(num_hyp_no_null, safety_zero / float(num_hyp_no_null - 1));
-      try_me[0] = 1.0f - safety_zero;
-      try_hyp_freq.push_back(try_me);
-    }
-  }
-
-  ll_record.assign(try_hyp_freq.size(), 0.0f);
-}
-
 
 // tool for combining items at differing log-levels
 float log_sum(float a, float b) {
@@ -78,11 +31,11 @@ void Evaluator::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
   int ref_hyp = 1;
   int alt_hyp = i_allele + 2;  // alt_alleles = 0->n not counting ref >or< null, therefore alt-allele 0 = 2
 
-  for (unsigned int i_read = 0; i_read < allele_eval.total_theory.my_hypotheses.size(); i_read++) {
-    if (allele_eval.total_theory.my_hypotheses[i_read].success) {
+  for (unsigned int i_read = 0; i_read < allele_eval.my_hypotheses.size(); i_read++) {
+    if (allele_eval.my_hypotheses[i_read].success) {
       // measure disruption
 
-      mean_ll_delta += allele_eval.total_theory.my_hypotheses[i_read].ComputeLLDifference(ref_hyp, alt_hyp);
+      mean_ll_delta += allele_eval.my_hypotheses[i_read].ComputeLLDifference(ref_hyp, alt_hyp);
       count++;
     }
   }
@@ -110,8 +63,8 @@ void Evaluator::ApproximateHardClassifierForReads() {
 
   for (unsigned int i_read = 0; i_read < read_stack.size(); ++i_read) {
     // compute read_id_
-    if (allele_eval.total_theory.my_hypotheses[i_read].success){
-      read_id_[i_read] = allele_eval.total_theory.my_hypotheses[i_read].MostResponsible() - 1; // -1 = null, 0 = ref , ...
+    if (allele_eval.my_hypotheses[i_read].success){
+      read_id_[i_read] = allele_eval.my_hypotheses[i_read].MostResponsible() - 1; // -1 = null, 0 = ref , ...
     }
     else{
       cerr << i_read << " is outlier" << endl;
@@ -140,7 +93,7 @@ int Evaluator::DetectBestMultiAllelePair(){
   //@TODO: just get the plane off the ground
   //@TODO: do the top pair by responsibility
   vector< pair<int,float> > best_allele_test;
-  int num_hyp_no_null = allele_eval.total_theory.my_hypotheses[0].responsibility.size()-1;
+  int num_hyp_no_null = allele_eval.my_hypotheses[0].responsibility.size()-1;
   best_allele_test.resize(num_hyp_no_null); // null can never be a winner in "best allele" sweepstakes
 
   for (unsigned int i_alt=0; i_alt<best_allele_test.size(); i_alt++){
@@ -155,7 +108,7 @@ int Evaluator::DetectBestMultiAllelePair(){
   for(unsigned int i_read = 0; i_read < read_id_.size(); ++i_read){
     int my_alt = read_id_[i_read];
     if (my_alt > -1){
-      best_allele_test[my_alt].second += allele_eval.total_theory.my_hypotheses[i_read].responsibility[my_alt + 1];
+      best_allele_test[my_alt].second += allele_eval.my_hypotheses[i_read].responsibility[my_alt + 1];
     } // otherwise count for nothing
   }
 

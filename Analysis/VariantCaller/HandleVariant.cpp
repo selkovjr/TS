@@ -21,12 +21,12 @@ void Evaluator::SampleLikelihood (
   unsigned int  num_realigned = 0;
   int  num_hyp_no_null = allele_identity_vector.size() + 1; // num alleles +1 for ref
   // generate null+ref+nr.alt hypotheses per read in the case of do_multiallele_eval
-  allele_eval.total_theory.my_hypotheses.resize(read_stack.size());
+  allele_eval.my_hypotheses.resize(read_stack.size());
 
-  cerr << "evaluating " << allele_eval.total_theory.my_hypotheses.size() << " hypotheses\n";
-  for (unsigned int i_read = 0; i_read < allele_eval.total_theory.my_hypotheses.size(); i_read++) {
+  cerr << "evaluating " << allele_eval.my_hypotheses.size() << " hypotheses\n";
+  for (unsigned int i_read = 0; i_read < allele_eval.my_hypotheses.size(); i_read++) {
     // --- New splicing function ---
-    allele_eval.total_theory.my_hypotheses[i_read].success =
+    allele_eval.my_hypotheses[i_read].success =
       SpliceVariantHypotheses(
         *read_stack[i_read],
         *this,
@@ -37,7 +37,7 @@ void Evaluator::SampleLikelihood (
         ref_reader, chr_idx
     );
 
-    if (allele_eval.total_theory.my_hypotheses[i_read].success){
+    if (allele_eval.my_hypotheses[i_read].success){
       num_valid_reads++;
       if (changed_alignment)
         num_realigned++;
@@ -56,8 +56,8 @@ void Evaluator::SampleLikelihood (
     if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold) {
       my_info << "SKIPREALIGNx" << frac_realigned;
       doRealignment = false;
-      for (unsigned int i_read = 0; i_read < allele_eval.total_theory.my_hypotheses.size(); i_read++) {
-        allele_eval.total_theory.my_hypotheses[i_read].success =
+      for (unsigned int i_read = 0; i_read < allele_eval.my_hypotheses.size(); i_read++) {
+        allele_eval.my_hypotheses[i_read].success =
           SpliceVariantHypotheses(
             *read_stack[i_read],
             *this,
@@ -399,8 +399,6 @@ bool ProcessOneVariant (
   eval.SampleLikelihood(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx);
   exit(0);
 
-  eval.allele_eval.my_params = vc.parameters->my_eval_control;
-
   // fill in quantities derived from predictions
   int num_hyp_no_null = eval.allele_identity_vector.size() + 1; // num alleles +1 for ref
   //eval.allele_eval.InitForInference(thread_objects, eval.read_stack, *vc.global_context, num_hyp_no_null, eval.allele_identity_vector);
@@ -415,7 +413,7 @@ bool ProcessOneVariant (
 
   // output the inference results (MUQUAL, MUGT, MUGQ, etc.) if I turn on multi_min_allele_freq
   if (true or vc.parameters->program_flow.is_multi_min_allele_freq) {
-    MultiMinAlleleFreq(eval, candidate_variant, sample_index, vc.parameters->program_flow, vc.parameters->my_eval_control.max_detail_level);
+    // MultiMinAlleleFreq(eval, candidate_variant, sample_index, vc.parameters->program_flow, vc.parameters->my_eval_control.max_detail_level);
   }
 
   cerr << "diagnostic: " << vc.parameters->program_flow.rich_json_diagnostic << endl;

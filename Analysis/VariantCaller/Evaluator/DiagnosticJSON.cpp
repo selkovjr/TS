@@ -35,20 +35,8 @@ void DiagnosticJsonCrossHypotheses(Json::Value &json, const CrossHypotheses &my_
   }
 }
 
-void DiagnosticJsonCrossStack(Json::Value &json, const HypothesisStack &hypothesis_stack) {
-  for (unsigned int i_read = 0; i_read < hypothesis_stack.total_theory.my_hypotheses.size(); i_read++) {
-    DiagnosticJsonCrossHypotheses(json["Cross"][i_read], hypothesis_stack.total_theory.my_hypotheses[i_read]);
-  }
-}
 
-
-void DiagnosticJsonHistory(Json::Value &json, const HypothesisStack &hypothesis_stack){
-  for (unsigned int i_start=0; i_start<hypothesis_stack.ll_record.size(); i_start++){
-    json["LLrecord"][i_start] = hypothesis_stack.ll_record[i_start];
-  }
-}
-
-void TinyDiagnosticOutput(const vector<const Alignment *>& read_stack, const HypothesisStack &hypothesis_stack,
+void TinyDiagnosticOutput(const vector<const Alignment *>& read_stack, const LocusData &hypothesis_stack,
     const string& variant_contig, int variant_position, const string& ref_allele, const string& var_allele,
     const InputStructures &global_context, const string &out_dir){
   string outFile;
@@ -64,7 +52,7 @@ void TinyDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
   DiagnosticWriteJson(diagnostic_json, outFile);
 }
 
-void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const HypothesisStack &hypothesis_stack,
+void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const LocusData &hypothesis_stack,
     const string& variant_contig, int variant_position, const string& ref_allele, const string& var_allele,
     const InputStructures &global_context, const string  &out_dir) {
   string outFile;
@@ -79,8 +67,6 @@ void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
   diagnostic_json["MagicNumber"] = 12;
 
   DiagnosticJsonReadStack(diagnostic_json["ReadStack"], read_stack, global_context);
-  DiagnosticJsonCrossStack(diagnostic_json["CrossHypotheses"], hypothesis_stack);
-  DiagnosticJsonHistory(diagnostic_json["History"],hypothesis_stack);
 
   DiagnosticWriteJson(diagnostic_json, outFile);
 }
@@ -105,9 +91,7 @@ void JustOneDiagnosis(const Evaluator &eval, const InputStructures &global_conte
   string variant_contig =  eval.variant->sequenceName;
 
   if (rich_diag)
-    RichDiagnosticOutput(eval.read_stack, eval.allele_eval,
-        variant_contig, variant_position, ref_allele, var_allele, global_context, out_dir);
+    RichDiagnosticOutput(eval.read_stack, eval.allele_eval, variant_contig, variant_position, ref_allele, var_allele, global_context, out_dir);
   else
-    TinyDiagnosticOutput(eval.read_stack, eval.allele_eval,
-        variant_contig, variant_position, ref_allele, var_allele, global_context, out_dir);
+    TinyDiagnosticOutput(eval.read_stack, eval.allele_eval, variant_contig, variant_position, ref_allele, var_allele, global_context, out_dir);
 }
