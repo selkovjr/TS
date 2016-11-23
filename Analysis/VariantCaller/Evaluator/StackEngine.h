@@ -43,12 +43,6 @@ class HypothesisStack{
     void SetAlternateFromMain();
     void ExecuteExtremeInferences();
     void TriangulateRestart();
-    float ExecuteOneRestart(vector<float> &restart_hyp, int max_detail_level = 0);
-    void ExecuteInference();
-    void InitForInference(PersistingThreadObjects &thread_objects, vector<const Alignment *>& read_stack, const InputStructures &global_context, int num_hyp_no_null, vector<AlleleIdentity> &allele_identity_vector);
-
-    // tool for posterior density estimation
-    bool CallGermline(float hom_safety, int &genotype_call, float &quasi_phred_quality_score, float &reject_status_quality_score);
 
     float ReturnMaxLL();
 };

@@ -403,10 +403,10 @@ bool ProcessOneVariant (
 
   // fill in quantities derived from predictions
   int num_hyp_no_null = eval.allele_identity_vector.size() + 1; // num alleles +1 for ref
-  eval.allele_eval.InitForInference(thread_objects, eval.read_stack, *vc.global_context, num_hyp_no_null, eval.allele_identity_vector);
+  //eval.allele_eval.InitForInference(thread_objects, eval.read_stack, *vc.global_context, num_hyp_no_null, eval.allele_identity_vector);
 
   // do inference
-  eval.allele_eval.ExecuteInference();
+  //eval.allele_eval.ExecuteInference();
   // now we're in the guaranteed state of best index
   int best_allele = eval.DetectBestMultiAllelePair();
 

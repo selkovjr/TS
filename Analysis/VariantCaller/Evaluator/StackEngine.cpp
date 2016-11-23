@@ -60,50 +60,6 @@ void HypothesisStack::AllocateFrequencyStarts(int num_hyp_no_null, vector<Allele
   ll_record.assign(try_hyp_freq.size(), 0.0f);
 }
 
-void HypothesisStack::InitForInference(PersistingThreadObjects &thread_objects, vector<const Alignment *>& read_stack, const InputStructures &global_context, int num_hyp_no_null, vector<AlleleIdentity> &allele_identity_vector) {
-  PropagateTuningParameters(num_hyp_no_null); // sub-objects need to know
-  // predict given hypotheses per read
-  total_theory.FillInPredictionsAndTestFlows(thread_objects, read_stack, global_context);
-  total_theory.FindValidIndexes();
-  // how many alleles?
-  AllocateFrequencyStarts(num_hyp_no_null, allele_identity_vector);
-}
-
-
-void HypothesisStack::ExecuteInference() {
-  // now with unrestrained inference
-  ExecuteExtremeInferences();
-  // set up our filter
-  // @TODO: Now with fast scan, we can always do it
-}
-
-void HypothesisStack::SetAlternateFromMain() {
-  // make sure things are populated
-
-  //  ref_state = cur_state;
-  //  var_state = cur_state;
-}
-
-
-
-// try altenatives to the main function to see if we have a better fit somewhere else
-void HypothesisStack::ExecuteExtremeInferences() {
-  /*
-  for (unsigned int i_start=0; i_start < try_hyp_freq.size(); i_start++){
-    ll_record[i_start] = ExecuteOneRestart(try_hyp_freq[i_start], my_params.max_detail_level);
-  }
-  //TriangulateRestart();
-  RestoreFullInference(); // put total_theory to be consistent with whoever won
-  */
-}
-
-// subobjects need to know their tuning
-void HypothesisStack::PropagateTuningParameters(int num_hyp_no_null) {
-  total_theory.PropagateTuningParameters(my_params);
-  // number of pseudo-data points at no bias
-}
-
-
 
 // tool for combining items at differing log-levels
 float log_sum(float a, float b) {
@@ -112,75 +68,6 @@ float log_sum(float a, float b) {
   return log_sum_val;
 }
 
-
-void GenotypeByIntegral(vector<float> genotype_interval, int &genotype_call, float &quasi_phred_quality_score){
-  //@TODO: do as paired and sort, for clean code
-  // best zone = call
-  unsigned int best_call = 0;
-  float best_val = genotype_interval[0];
-  unsigned int worst_call = 0;
-  float worst_val = genotype_interval[0];
-  for (unsigned int i_geno = 1; i_geno < genotype_interval.size(); i_geno++) {
-    if (best_val < genotype_interval[i_geno]) {
-      best_val = genotype_interval[i_geno];
-      best_call = i_geno;
-    }
-    if (worst_val > genotype_interval[i_geno]) {
-      worst_val = genotype_interval[i_geno];
-      worst_call = i_geno;
-    }
-  }
-  float middle_val = 0.0f;
-  for (unsigned int i_geno = 0; i_geno < genotype_interval.size(); i_geno++) {
-    if ((i_geno != worst_call) & (i_geno != best_call)) {
-      middle_val = genotype_interval[i_geno];
-    }
-  }
-  // most likely interval
-  genotype_call = best_call;
-
-  // quality score
-  float log_alternative = middle_val + log(1 + exp(worst_val - middle_val)); // total mass on alternative intervals
-  float log_all = best_val + log(1 + exp(log_alternative - best_val)); // total mass on all intervals
-
-  // output
-  quasi_phred_quality_score = 10 * (log_all - log_alternative) / log(10); // -10*log(error), base 10
-
-  if (isnan(quasi_phred_quality_score)) {
-    cout << "Warning: quality score NAN "  << endl;
-    quasi_phred_quality_score = 0.0f;
-  }
-}
-
-bool RejectionByIntegral(vector<float> dual_interval, float &reject_status_quality_score){
-  // reject ref = quality of rejection call
-  bool is_ref = false;
-  float log_ref = 0.0f;
-  int top = 0;
-  int bottom = 1;
-  if (dual_interval[1]>dual_interval[0]) {
-    // if reference, how strongly can we reject the outer interval
-    log_ref = dual_interval[0];
-    is_ref = false;
-    top=1;
-    bottom=0;
-  }
-  else {
-    // if var, how strongly can we reject ref
-    log_ref = dual_interval[1];
-    is_ref = true;
-    top=0;
-    bottom=1;
-  }
-
-  float log_all = dual_interval[top]+ log(1+exp(dual_interval[bottom]-dual_interval[top]));
-  reject_status_quality_score = 10 * (log_all - log_ref) / log(10); // how much mass speaks against the pure reference state
-  if (isnan(reject_status_quality_score)) {
-    cout << "Warning: reject ref score NAN " << endl;
-    reject_status_quality_score = 0.0f;
-  }
-  return is_ref;
-}
 
 
 // evidence for i_allele vs ref
