@@ -16,8 +16,8 @@
 #include "ExtendedReadInfo.h"
 #include "CrossHypotheses.h"
 #include "ExtendParameters.h"
-#include "PosteriorInference.h"
 #include "ClassifyVariant.h"
+#include "ShortStack.h"
 
 using namespace std;
 

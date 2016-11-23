@@ -569,7 +569,6 @@ set(tvcSRCS
   VariantCaller/Evaluator/ClassifyVariant.cpp
   VariantCaller/Evaluator/CrossHypotheses.cpp
   VariantCaller/Evaluator/DiagnosticJSON.cpp
-  VariantCaller/Evaluator/PosteriorInference.cpp
   VariantCaller/Evaluator/ShortStack.cpp
   VariantCaller/Evaluator/StackEngine.cpp
 

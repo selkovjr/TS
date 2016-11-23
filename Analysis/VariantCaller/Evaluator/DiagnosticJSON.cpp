@@ -19,37 +19,6 @@ void DiagnosticJsonReadStack(Json::Value &json, const vector<const Alignment *>&
   }
 }
 
-void DiagnosticJsonFrequency(Json::Value &json, const PosteriorInference &cur_posterior) {
-
-  json["MaxFreq"] = cur_posterior.clustering.max_hyp_freq[0]; // reference tentry
-
-  for (unsigned int i_val=0; i_val<cur_posterior.clustering.max_hyp_freq.size(); i_val++){
-    json["AllFreq"][i_val] = cur_posterior.clustering.max_hyp_freq[i_val];
-  }
-
-  json["MaxLL"] = cur_posterior.ref_vs_all.max_ll;
-  json["ParamLL"] = cur_posterior.params_ll;
-
-  for (unsigned int i_val = 0; i_val < cur_posterior.ref_vs_all.log_posterior_by_frequency.size(); i_val++) {
-    json["LogPosterior"][i_val] = cur_posterior.ref_vs_all.log_posterior_by_frequency[i_val];
-    json["EvalFrequency"][i_val] = cur_posterior.ref_vs_all.eval_at_frequency[i_val];
-  }
-
-  for (unsigned int i_val=0; i_val<cur_posterior.gq_pair.freq_pair.size(); i_val++)
-    json["GQ"]["Allele"][i_val] = cur_posterior.gq_pair.freq_pair[i_val];
-
-  for (unsigned int i_val = 0; i_val < cur_posterior.gq_pair.log_posterior_by_frequency.size(); i_val++) {
-    json["GQ"]["LogPosterior"][i_val] = cur_posterior.gq_pair.log_posterior_by_frequency[i_val];
-    json["GQ"]["EvalFrequency"][i_val] = cur_posterior.gq_pair.eval_at_frequency[i_val];
-  }
-
-  for (unsigned int i_hyp=0; i_hyp<cur_posterior.clustering.prior_frequency_weight.size(); i_hyp++){
-    json["PriorFreq"][i_hyp]= cur_posterior.clustering.prior_frequency_weight[i_hyp];
-  }
-  json["PriorStrength"] = cur_posterior.clustering.germline_prior_strength;
-  json["PriorLL"] = cur_posterior.clustering.germline_log_prior_normalization;
-}
-
 void DiagnosticJsonCrossHypotheses(Json::Value &json, const CrossHypotheses &my_cross) {
   // output relevant data from the individual read hypothesis tester
   json["strand"] = my_cross.strand_key;

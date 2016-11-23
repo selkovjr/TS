@@ -112,11 +112,6 @@ float log_sum(float a, float b) {
   return log_sum_val;
 }
 
-void update_genotype_interval(vector<float> &genotype_interval, vector<float> &interval_cuts, PosteriorInference &local_posterior) {
-  for (unsigned int i_cut = 0; i_cut < genotype_interval.size(); i_cut++) {
-    genotype_interval[i_cut] = log_sum(genotype_interval[i_cut], local_posterior.gq_pair.LogDefiniteIntegral(interval_cuts[i_cut+1], interval_cuts[i_cut]) + local_posterior.params_ll);
-  }
-}
 
 void GenotypeByIntegral(vector<float> genotype_interval, int &genotype_call, float &quasi_phred_quality_score){
   //@TODO: do as paired and sort, for clean code
@@ -157,22 +152,6 @@ void GenotypeByIntegral(vector<float> genotype_interval, int &genotype_call, flo
   }
 }
 
-void DoGenotypeByIntegral(PosteriorInference &cur_posterior, float real_safety, int &genotype_call, float &quasi_phred_quality_score){
-  vector<float> interval_cuts(4);
-  interval_cuts[0] = 1.0f;
-  interval_cuts[1] = 1.0f - real_safety;
-  interval_cuts[2] = real_safety;
-  interval_cuts[3] = 0.0f;
-
-  vector<float> genotype_interval(3);
-  for (unsigned int i_cut = 0; i_cut < genotype_interval.size(); i_cut++) {
-    genotype_interval[i_cut] = cur_posterior.gq_pair.LogDefiniteIntegral(interval_cuts[i_cut+1], interval_cuts[i_cut]);
-  }
-
-  GenotypeByIntegral(genotype_interval, genotype_call, quasi_phred_quality_score);
-
-}
-
 bool RejectionByIntegral(vector<float> dual_interval, float &reject_status_quality_score){
   // reject ref = quality of rejection call
   bool is_ref = false;
@@ -201,51 +180,6 @@ bool RejectionByIntegral(vector<float> dual_interval, float &reject_status_quali
     reject_status_quality_score = 0.0f;
   }
   return is_ref;
-}
-
-bool DoRejectionByIntegral(PosteriorInference &cur_posterior, float real_safety, float &reject_status_quality_score){
-  vector<float> variant_cuts(3);
-  variant_cuts[0] = 1.0f; // all reference
-  variant_cuts[1] = 1.0f-real_safety; // all variant
-  variant_cuts[2] = 0.0f;
-
-  vector<float> dual_interval(2);
-  for (unsigned int i_cut = 0; i_cut < dual_interval.size(); i_cut++) {
-    dual_interval[i_cut] = cur_posterior.ref_vs_all.LogDefiniteIntegral(variant_cuts[i_cut+1], variant_cuts[i_cut]);
-  }
-
-  return RejectionByIntegral(dual_interval, reject_status_quality_score);
-}
-
-// must have scan done to be workable
-// must have set which pair of hypotheses are being checked
-bool CallByIntegral(PosteriorInference &cur_posterior, float hom_safety, int &genotype_call, float &quasi_phred_quality_score, float &reject_status_quality_score) {
-  // divide MAF into three zones = 0/1/2 variant alleles
-
-  // make sure we're safe based on the number of reads
-  int detail_level = cur_posterior.ref_vs_all.eval_at_frequency.size();
-  // if we don't have enough reads might be crazy near mid
-  float fine_scale = 0.5f / (detail_level + 1.0f);
-  float mid_cutoff = 0.5f - fine_scale;
-  // if we don't have any variants, still can't exclude 3/num_reads frequency
-  // so no sense testing that low
-  float low_cutoff = 1.0f / detail_level;
-  // if we have a small number of reads, these ranges may conflict
-  float real_safety = min(mid_cutoff, max(low_cutoff, hom_safety));
-
-  bool safety_active_flag = false;
-  if (fabs(real_safety - hom_safety) > fine_scale)
-    safety_active_flag = true;
-
-  // bool isref =
-  DoRejectionByIntegral(cur_posterior, real_safety, reject_status_quality_score);
-
-  // in dual allele case, do not need to check "is-ref" before making some quality assessment
-  DoGenotypeByIntegral(cur_posterior, real_safety, genotype_call, quasi_phred_quality_score);
-
-  //cout << genotype_call << "\t" << reject_status_quality_score << "\t" << quasi_phred_quality_score << endl;
-
-  return safety_active_flag;
 }
 
 
