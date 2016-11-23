@@ -70,8 +70,6 @@ void VariantCallerHelp() {
   printf("\n");
 
   printf("Variant candidate scoring options:\n");
-  printf("     --min-delta-for-flow               FLOAT       minimum prediction delta for scoring flows [0.1]\n");
-  printf("     --max-flows-to-test                INT         maximum number of scoring flows [10]\n");
   printf("     --outlier-probability              FLOAT       probability for outlier reads [0.01]\n");
   printf("     --heavy-tailed                     INT         degrees of freedom in t-dist modeling signal residual heavy tail [3]\n");
   printf("     --suppress-recalibration           on/off      Suppress homopolymer recalibration [on].\n");
@@ -514,8 +512,6 @@ int RetrieveParameterVectorFloat(OptArgs &opts, Json::Value& json, char short_na
 
 void EvaluatorTuningParameters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
 
-  max_flows_to_test                     = RetrieveParameterInt   (opts, tvc_params, '-', "max-flows-to-test", 10);
-  min_delta_for_flow                    = RetrieveParameterDouble(opts, tvc_params, '-', "min-delta-for-flow", 0.1);
 
   prediction_precision                  = RetrieveParameterDouble(opts, tvc_params, '-', "prediction-precision", 30.0);
   outlier_prob                          = RetrieveParameterDouble(opts, tvc_params, '-', "outlier-probability", 0.01);
@@ -532,16 +528,12 @@ void EvaluatorTuningParameters::SetOpts(OptArgs &opts, Json::Value& tvc_params) 
 
   // shouldn't majorly affect anything, but still expose parameters for completeness
   pseudo_sigma_base                     = RetrieveParameterDouble(opts, tvc_params, '-', "shift-likelihood-penalty", 0.3f);
-  magic_sigma_base                      = RetrieveParameterDouble(opts, tvc_params, '-', "minimum-sigma-prior", 0.085f);
-  magic_sigma_slope                     = RetrieveParameterDouble(opts, tvc_params, '-', "slope-sigma-prior", 0.0084f);
   sigma_prior_weight                    = RetrieveParameterDouble(opts, tvc_params, '-', "sigma-prior-weight", 1.0f);
   k_zero                                = RetrieveParameterDouble(opts, tvc_params, '-', "k-zero", 3.0f); // add variance from cluster shifts
 }
 
 void EvaluatorTuningParameters::CheckParameterLimits() {
 
-  CheckParameterLowerUpperBound<int>  ("max-flows-to-test",       max_flows_to_test,       1,     100);
-  CheckParameterLowerUpperBound<float>("min-delta-for-flow",      min_delta_for_flow,      0.01f, 0.5f);
   CheckParameterLowerBound<float>     ("prediction-precision",    prediction_precision,    0.1f);
   CheckParameterLowerUpperBound<float>("outlier-probability",     outlier_prob,            0.0000001f,  1.0f); // extremely low outlier_prob causes floating exception
   CheckParameterLowerUpperBound<float>("germline-prior-strength", germline_prior_strength, 0.0f,  1000.0f);
@@ -554,11 +546,6 @@ void EvaluatorTuningParameters::CheckParameterLimits() {
   CheckParameterLowerUpperBound<int>  ("max-detail-level",    max_detail_level,   0, 10000);
   CheckParameterLowerBound<int>       ("min-detail-level-for-fast-scan",min_detail_level_for_fast_scan,   0);
 
-
-  CheckParameterLowerBound<float>     ("shift-likelihood-penalty",  pseudo_sigma_base,    0.01f);
-  CheckParameterLowerBound<float>     ("minimum-sigma-prior",       magic_sigma_base,     0.01f);
-  CheckParameterLowerBound<float>     ("slope-sigma-prior",         magic_sigma_slope,    0.0f);
-  CheckParameterLowerBound<float>     ("sigma-prior-weight",        sigma_prior_weight,   0.01f);
   CheckParameterLowerBound<float>     ("k-zero",                    k_zero,               0.0f);
 }
 
@@ -1004,10 +991,6 @@ ExtendParameters::ExtendParameters(int argc, char** argv)
   my_controls.SetOpts(opts, tvc_params);
   my_eval_control.SetOpts(opts, tvc_params);
   program_flow.SetOpts(opts, tvc_params);
-
-  // Preserve the data for all flows if we want to do rich diagnostic
-  // Otherwise we only keep the data for test flows
-  my_eval_control.preserve_full_data = program_flow.rich_json_diagnostic;
 
   // Dummy lines for HP recalibration
   recal_model_file_name = opts.GetFirstString ('-', "model-file", "");

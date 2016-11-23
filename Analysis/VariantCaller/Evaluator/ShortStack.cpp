@@ -8,17 +8,6 @@ void ShortStack::PropagateTuningParameters(EvaluatorTuningParameters &my_params)
   for (unsigned int i_read = 0; i_read < my_hypotheses.size(); i_read++) {
     // basic likelihoods
     my_hypotheses[i_read].heavy_tailed = my_params.heavy_tailed;
-
-    // test flow construction
-    my_hypotheses[i_read].max_flows_to_test = my_params.max_flows_to_test;
-    my_hypotheses[i_read].min_delta_for_flow = my_params.min_delta_for_flow;
-
-    // used to initialize sigma-estimates
-    my_hypotheses[i_read].magic_sigma_base = my_params.magic_sigma_base;
-    my_hypotheses[i_read].magic_sigma_slope = my_params.magic_sigma_slope;
-
-    // preserve the data for all flows?
-    my_hypotheses[i_read].preserve_full_data = my_params.preserve_full_data;
   }
 }
 
@@ -30,8 +19,6 @@ void ShortStack::FillInPredictionsAndTestFlows(PersistingThreadObjects &thread_o
   //ion::FlowOrder flow_order(my_data.flow_order, my_data.flow_order.length());
   for (unsigned int i_read = 0; i_read < my_hypotheses.size(); i_read++) {
     my_hypotheses[i_read].FillInPrediction(thread_objects, *read_stack[i_read], global_context);
-    my_hypotheses[i_read].start_flow = read_stack[i_read]->start_flow;
-    my_hypotheses[i_read].InitializeTestFlows();
   }
 }
 
@@ -53,7 +40,7 @@ float ShortStack::PosteriorFrequencyLogLikelihood(const vector<float> &hyp_freq,
   for (unsigned int i_ndx = 0; i_ndx < valid_indexes.size(); i_ndx++) {
     unsigned int i_read = valid_indexes[i_ndx];
     if ((strand_key < 0) || (my_hypotheses[i_read].strand_key == strand_key)) {
-      cerr << "calling ComputePosteriorLikelihood() for read " << i_read << "\n";
+      cerr << "calling ComputePosteriorLikelihood(" << hyp_freq[i_read] << ", " << prior_frequency_weight[i_read] << ", " << prior_log_normalization << ", " << my_reliability << ") for read " << i_read << "\n";
       my_LL += my_hypotheses[i_read].ComputePosteriorLikelihood(hyp_freq, my_reliability); // XXX
     }
   }
@@ -76,16 +63,8 @@ void ShortStack::UpdateRelevantLikelihoods() {
     my_hypotheses[i_read].UpdateRelevantLikelihoods();
   }
 }
-void ShortStack::ResetRelevantResiduals() {
-  for (unsigned int i_ndx = 0; i_ndx < valid_indexes.size(); i_ndx++) {
-    unsigned int i_read = valid_indexes[i_ndx];
-    my_hypotheses[i_read].ResetRelevantResiduals();
-  }
-}
-
 
 void ShortStack::ResetNullBias() {
-  ResetRelevantResiduals();
   UpdateRelevantLikelihoods();
 }
 

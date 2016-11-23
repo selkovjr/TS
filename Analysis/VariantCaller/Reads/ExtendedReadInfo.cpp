@@ -13,20 +13,6 @@
 
 
 // -------------------------------------------------------
-//! @brief  Populates object members flowIndex
-// This is a trivial 1-1 index we use with Illumina data (pending complete flow data clean-up
-void CreateFlowIndex(Alignment *rai)
-{
-  rai->flow_index.assign(rai->read_bases.length(), rai->read_bases.length());
-  unsigned int base_idx = 0;
-  while (base_idx < rai->read_bases.length()) {
-    rai->flow_index[base_idx] = base_idx;
-    base_idx++;
-  }
-}
-
-
-// -------------------------------------------------------
 
 // Sets the member variables ref_aln, seq_aln, pretty_aln, startSC, endSC
 void UnpackAlignmentInfo(Alignment *rai)
@@ -113,9 +99,6 @@ void UnpackOnLoad(Alignment *rai, const InputStructures &global_context)
   }
 
   // Unpack alignment
-
-  // reserve space for flow order / key sequence?
-  //rai->pretty_aln.reserve(global_context.num_flows_by_run_id.at(rai->runid));
   rai->pretty_aln.reserve(rai->alignment.QueryBases.length());
 
   UnpackAlignmentInfo(rai);
@@ -123,11 +106,6 @@ void UnpackOnLoad(Alignment *rai, const InputStructures &global_context)
     rai->start_sc = rai->right_sc;
   else
     rai->start_sc = rai->left_sc;
-
-  // Generate flow index
-
-  rai->start_flow = 0;
-  CreateFlowIndex(rai);
 
   // Retrieve read group name
   if (not rai->alignment.GetTag("RG", rai->read_group)) {

@@ -9,7 +9,7 @@
 #include "DecisionTreeData.h"
 
 
-void Evaluator::SpliceAllelesIntoReads (
+void Evaluator::SampleLikelihood (
   PersistingThreadObjects &thread_objects,
   const InputStructures &global_context,
   const ExtendParameters &parameters,
@@ -20,7 +20,6 @@ void Evaluator::SpliceAllelesIntoReads (
   unsigned int  num_valid_reads = 0;
   unsigned int  num_realigned = 0;
   int  num_hyp_no_null = allele_identity_vector.size() + 1; // num alleles +1 for ref
-
   // generate null+ref+nr.alt hypotheses per read in the case of do_multiallele_eval
   allele_eval.total_theory.my_hypotheses.resize(read_stack.size());
 
@@ -28,28 +27,25 @@ void Evaluator::SpliceAllelesIntoReads (
   for (unsigned int i_read = 0; i_read < allele_eval.total_theory.my_hypotheses.size(); i_read++) {
     // --- New splicing function ---
     allele_eval.total_theory.my_hypotheses[i_read].success =
-      SpliceVariantHypotheses(*read_stack[i_read],
-          *this,
-          seq_context,
-          thread_objects,
-          allele_eval.total_theory.my_hypotheses[i_read].splice_start_flow,
-          allele_eval.total_theory.my_hypotheses[i_read].splice_end_flow,
-          allele_eval.total_theory.my_hypotheses[i_read].instance_of_read_by_state,
-          allele_eval.total_theory.my_hypotheses[i_read].same_as_null_hypothesis,
-          changed_alignment,
-          global_context,
-          ref_reader, chr_idx);
+      SpliceVariantHypotheses(
+        *read_stack[i_read],
+        *this,
+        seq_context,
+        thread_objects,
+        changed_alignment,
+        global_context,
+        ref_reader, chr_idx
+    );
 
     if (allele_eval.total_theory.my_hypotheses[i_read].success){
       num_valid_reads++;
       if (changed_alignment)
         num_realigned++;
     }
-
-    // if we need to compare likelihoods across multiple possibilities
-    if (num_hyp_no_null > 2)
-      allele_eval.total_theory.my_hypotheses[i_read].use_correlated_likelihood = false;
   }
+  cerr << "num_realigned: " << num_realigned << endl;
+  exit(0);
+
 
   // Check how many reads had their alignment modified
   std::ostringstream my_info;
@@ -62,17 +58,15 @@ void Evaluator::SpliceAllelesIntoReads (
       doRealignment = false;
       for (unsigned int i_read = 0; i_read < allele_eval.total_theory.my_hypotheses.size(); i_read++) {
         allele_eval.total_theory.my_hypotheses[i_read].success =
-          SpliceVariantHypotheses(*read_stack[i_read],
-              *this,
-              seq_context,
-              thread_objects,
-              allele_eval.total_theory.my_hypotheses[i_read].splice_start_flow,
-              allele_eval.total_theory.my_hypotheses[i_read].splice_end_flow,
-              allele_eval.total_theory.my_hypotheses[i_read].instance_of_read_by_state,
-              allele_eval.total_theory.my_hypotheses[i_read].same_as_null_hypothesis,
-              changed_alignment,
-              global_context,
-              ref_reader, chr_idx);
+          SpliceVariantHypotheses(
+            *read_stack[i_read],
+            *this,
+            seq_context,
+            thread_objects,
+            changed_alignment,
+            global_context,
+            ref_reader, chr_idx
+          );
       }
     }
     else {
@@ -401,8 +395,9 @@ bool ProcessOneVariant (
   // try only ref vs alt allele here
   // leave ensemble in ref vs alt state
 
-  // glue in variants
-  eval.SpliceAllelesIntoReads(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx);
+  // Estimate single-sample likelihood
+  eval.SampleLikelihood(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx);
+  exit(0);
 
   eval.allele_eval.my_params = vc.parameters->my_eval_control;
 

@@ -21,11 +21,18 @@ using namespace ion;
 
 class Evaluator;
 
-bool SpliceVariantHypotheses(const Alignment &current_read, const Evaluator &eval,
-                        const LocalReferenceContext &local_context, PersistingThreadObjects &thread_objects,
-                        int &splice_start_flow, int &splice_end_flow, vector<string> &my_hypotheses,
-                        vector<bool> & same_as_null_hypothesis, bool & changed_alignment, const InputStructures &global_context,
-                        const ReferenceReader &ref_reader, int chr_idx);
+bool SpliceVariantHypotheses(
+  const Alignment &current_read,
+  const Evaluator &eval,
+  const LocalReferenceContext &local_context,
+  PersistingThreadObjects &thread_objects,
+  bool & changed_alignment,
+  const InputStructures
+  &global_context,
+  const ReferenceReader
+  &ref_reader,
+  int chr_idx
+);
 
 
 bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty_alignment,
@@ -37,10 +44,6 @@ bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty
 void IncrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_idx);
 
 void DecrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_idx);
-
-int GetSpliceFlows(const Alignment &current_read, const InputStructures &global_context,
-                   vector<string> &my_hypotheses, vector<bool> & same_as_null_hypothesis,
-                   int splice_start_idx, vector<int> splice_end_idx, int &splice_start_flow);
 
 string SpliceDoRealignement (PersistingThreadObjects &thread_objects, const Alignment &current_read, long variant_position,
                          bool &changed_alignment, int DEBUG, const ReferenceReader &ref_reader, int chr_idx);

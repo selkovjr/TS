@@ -321,6 +321,7 @@ void ScanSpace::DoPosteriorFrequencyScan(ShortStack &total_theory, FreqMaster &b
   ptr_strand_key_ = &strand_key;
   ptr_scan_ref_ = &scan_ref;
 
+  /*
   if(detail_level < min_detail_level_for_fast_scan or detail_level < (unsigned int)(1.0f / coarse_freq_resolution_)){
     // Do full scan
     for (unsigned int i_eval = 0; i_eval < eval_at_frequency.size(); ++i_eval){
@@ -333,6 +334,7 @@ void ScanSpace::DoPosteriorFrequencyScan(ShortStack &total_theory, FreqMaster &b
     max_ll = max_log_posterior_scanned_;
     max_index = (int) argmax_log_posterior_scanned_;
   }
+  */
 
   // if doing monomorphic eval, set frequency to begin with and don't update
   //FindMaxFrequency(update_frequency);

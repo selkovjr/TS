@@ -23,14 +23,8 @@ class EvaluatorTuningParameters {
     int heavy_tailed;    // how heavy are the tails of my distribution to resist mis-shapen items = CrossHypotheses
     float prediction_precision; //  damper_bias = bias_generator - how likely the predictions are to be accurately calibrated
 
-    float min_delta_for_flow; // select flows to test based on this minimum level
-    int max_flows_to_test;  // select how many flows to test
-     //bool use_all_compare_for_test_flows;  // include the read-as-called in the comparison to avoid damaged hot-spots
-
     float pseudo_sigma_base; // general likelihood penalty for shifting locations
 
-    float magic_sigma_base; // weak prior on predicting variance by intensity
-    float magic_sigma_slope;
     float sigma_prior_weight;
     float k_zero;  // weight for cluster shifts in adding to variance
 
@@ -44,8 +38,6 @@ class EvaluatorTuningParameters {
     int   min_detail_level_for_fast_scan;
     bool  try_few_restart_freq;
 
-    bool preserve_full_data; // Preserve the data for all flows if true, otherwise preserve the data only at test flows
-
     EvaluatorTuningParameters() {
       germline_prior_strength = 0.0f;
       outlier_prob = 0.01f;
@@ -53,13 +45,7 @@ class EvaluatorTuningParameters {
       prediction_precision = 30.0f;
       pseudo_sigma_base = 0.3f;
 
-      magic_sigma_base = 0.085f;
-      magic_sigma_slope = 0.0084f;
-      sigma_prior_weight = 1.0f;
       k_zero = 0.0f;
-
-      min_delta_for_flow = 0.1f;
-      max_flows_to_test = 10;
 
       filter_unusual_predictions = 0.3f;
       soft_clip_bias_checker = 0.1f;
@@ -69,8 +55,6 @@ class EvaluatorTuningParameters {
       min_detail_level_for_fast_scan = 2500;
 
       try_few_restart_freq = false;
-      preserve_full_data = false;
-      //use_all_compare_for_test_flows = false;
     };
 
     float DataReliability() {

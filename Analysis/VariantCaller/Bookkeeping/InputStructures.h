@@ -135,15 +135,6 @@ struct VariantCandidate {
 
 class InputStructures {
 public:
-
-
-  // Key and barcode sequence are read group specific
-  // whereas flow order and recalibration are chip specific
-  vector<ion::FlowOrder >   flow_order_vector;
-  map<string, int>          flow_order_index_by_run_id;
-  map<string, int>          num_flows_by_run_id;
-  map<string, string>       key_by_read_group;
-
   int                       DEBUG;
 
   // Reusable objects
@@ -152,7 +143,6 @@ public:
   InputStructures();
   void Initialize(ExtendParameters &parameters, const ReferenceReader& ref_reader, const SamHeader &bam_header);
   void read_error_motifs(string & fname){ErrorMotifs.load_from_file(fname.c_str());};
-  void DetectFlowOrderzAndKeyFromBam(const SamHeader &samHeader);
 };
 
 // ==============================================================================
