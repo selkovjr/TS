@@ -8,91 +8,6 @@ bool compare_best_response(pair<int,float> a, pair<int,float> b){
 }
 
 
-void LatentSlate::PropagateTuningParameters(EvaluatorTuningParameters &my_params, int num_hyp_no_null) {
-  // prior reliability for outlier read frequency
-  cur_posterior.clustering.data_reliability = my_params.DataReliability();
-  cur_posterior.clustering.germline_prior_strength = my_params.germline_prior_strength;
-  cur_posterior.gq_pair.min_detail_level_for_fast_scan = (unsigned int) my_params.min_detail_level_for_fast_scan;
-  cur_posterior.ref_vs_all.min_detail_level_for_fast_scan = (unsigned int) my_params.min_detail_level_for_fast_scan;
-}
-
-// see how quick we can make this
-void LatentSlate::LocalExecuteInference(ShortStack &total_theory, bool update_frequency, vector<float> &start_frequency) {
-  if (detailed_integral) {
-    //DetailedExecuteInference(total_theory, update_frequency);
-    cout << "obsolete in multiallele world" << endl;
-  }
-  else {
-    cerr << "LocalExecuteInference() calling FastExecuteInference()" << endl;
-    FastExecuteInference(total_theory, update_frequency, start_frequency);
-  }
-}
-
-
-void LatentSlate::FastStep(ShortStack &total_theory, bool update_frequency) {
-  if (update_frequency)
-    cur_posterior.QuickUpdateStep(total_theory);
-}
-
-void LatentSlate::FastExecuteInference(ShortStack &total_theory, bool update_frequency, vector<float> &start_frequency) {
-  // start us out estimating frequency
-
-  cerr << "calling cur_posterior.StartAtHardClassify()\n" << flush;
-  cur_posterior.StartAtHardClassify(total_theory, update_frequency, start_frequency);
-  FastStep(total_theory, false);
-
-  float epsilon_ll = 0.01f; // make sure LL steps move us quickly instead of just spinning wheels
-  float old_ll = cur_posterior.ReturnJustLL(); // always try at least one step
-  iter_done = 0;
-  bool keep_optimizing = true;
-  ll_at_stage.resize(0);
-  ll_at_stage.push_back(cur_posterior.ReturnJustLL());
-  while ((iter_done < max_iterations) & keep_optimizing) {
-    iter_done++;
-    //cout << i_count << " max_ll " << max_ll << endl;
-    old_ll = cur_posterior.ReturnJustLL(); // see if we improve over this cycle
-
-    FastStep(total_theory, update_frequency);
-    ll_at_stage.push_back(cur_posterior.ReturnJustLL());
-    if ((old_ll+epsilon_ll) > cur_posterior.ReturnJustLL())
-      keep_optimizing = false;
-
-  }
-  // now we've iterated to frustration bias/variance
-  // but our responsibilities and allele frequency may not have converged to the latest values
-  keep_optimizing=true;
-  vector <float> old_hyp_freq;
-
-  int nreads = total_theory.my_hypotheses.size(); //
-  // always do a little cleanup on frequency even if hit max iterations
-  int post_max = max(2,max_iterations-iter_done)+iter_done;
-  while ((iter_done<post_max) & keep_optimizing){
-    iter_done++;
-    old_ll = cur_posterior.ReturnJustLL(); // do we improve?
-    old_hyp_freq = cur_posterior.clustering.max_hyp_freq;
-    cur_posterior.QuickUpdateStep(total_theory);  // updates max_ll as well
-    ll_at_stage.push_back(cur_posterior.ReturnJustLL());
-    if (cur_posterior.clustering.Compare(old_hyp_freq,nreads,0.5f))  // if total change less than 1/2 read worth
-      keep_optimizing=false;
-    if ((old_ll+epsilon_ll) > cur_posterior.ReturnJustLL())
-      keep_optimizing = false;
-  }
-
-  // // evaluate likelihood of current parameter set
-  // // currently only done for bias
-  // cur_posterior.params_ll = bias_generator.BiasLL();
-}
-
-
-void LatentSlate::ScanStrandPosterior(ShortStack &total_theory,bool vs_ref, int max_detail_level) {
-  // keep information on distribution by strand
-  if (!cur_posterior.ref_vs_all.scan_done){
-    cur_posterior.ref_vs_all.DoPosteriorFrequencyScan(total_theory, cur_posterior.clustering, true, ALL_STRAND_KEY, vs_ref, max_detail_level);
-    cur_posterior.gq_pair = cur_posterior.ref_vs_all; // pairwise analysis identical
-  }
-}
-
-
 void HypothesisStack::DefaultValues()
 {
   try_alternatives = true;
@@ -145,13 +60,8 @@ void HypothesisStack::AllocateFrequencyStarts(int num_hyp_no_null, vector<Allele
   ll_record.assign(try_hyp_freq.size(), 0.0f);
 }
 
-float HypothesisStack::ReturnMaxLL() {
-  return cur_state.cur_posterior.ReturnMaxLL();
-}
-
 void HypothesisStack::InitForInference(PersistingThreadObjects &thread_objects, vector<const Alignment *>& read_stack, const InputStructures &global_context, int num_hyp_no_null, vector<AlleleIdentity> &allele_identity_vector) {
   PropagateTuningParameters(num_hyp_no_null); // sub-objects need to know
-  cur_state.cur_posterior.SetDebug(global_context.DEBUG > 1); // debug information for fast scan
   // predict given hypotheses per read
   total_theory.FillInPredictionsAndTestFlows(thread_objects, read_stack, global_context);
   total_theory.FindValidIndexes();
@@ -165,9 +75,6 @@ void HypothesisStack::ExecuteInference() {
   ExecuteExtremeInferences();
   // set up our filter
   // @TODO: Now with fast scan, we can always do it
-  if(my_params.max_detail_level > 0){
-    cur_state.ScanStrandPosterior(total_theory, true, my_params.max_detail_level);
-  }
 }
 
 void HypothesisStack::SetAlternateFromMain() {
@@ -179,78 +86,21 @@ void HypothesisStack::SetAlternateFromMain() {
 
 
 
-float HypothesisStack::ExecuteOneRestart(vector<float> &restart_hyp, int max_detail_level){
-  LatentSlate tmp_state;
-  tmp_state = cur_state;
-  tmp_state.detailed_integral = false;
-  tmp_state.start_freq_of_winner =restart_hyp;
-  total_theory.ResetQualities();  // clean slate to begin again
-
-
-  tmp_state.LocalExecuteInference(total_theory, true, restart_hyp); // start at reference
-  if(max_detail_level < 1){
-    tmp_state.ScanStrandPosterior(total_theory, true, 0);
-  }
-  float restart_LL=tmp_state.cur_posterior.ReturnMaxLL();
-
-  if (cur_state.cur_posterior.ReturnMaxLL() <restart_LL) {
-    cur_state = tmp_state; // update to the better solution, hypothetically
-  }
-  return restart_LL;
-}
-
-void HypothesisStack::TriangulateRestart(){
-  // cur_state contains the best remaining guys
-  // take the top 3, try by pairs because of diploid theories of the world
-  if (cur_state.cur_posterior.clustering.max_hyp_freq.size()>2){
-    vector<float> tmp_freq = cur_state.cur_posterior.clustering.max_hyp_freq;
-    vector< pair<int,float> > best_freq_test;
-    best_freq_test.resize(tmp_freq.size());
-    for (unsigned int i_alt=0; i_alt<tmp_freq.size(); i_alt++){
-      best_freq_test[i_alt].first = i_alt;
-      best_freq_test[i_alt].second = tmp_freq[i_alt];
-    }
-    sort(best_freq_test.begin(), best_freq_test.end(), compare_best_response);
-
-    // top 3 elements now in vector
-    // try by pairs
-    // AB, AC, BC
-    for (int i_zero=0; i_zero<2; i_zero++){
-      for (int i_one=i_zero+1; i_one<3; i_one++){
-        // try a restart
-        tmp_freq.assign(tmp_freq.size(), 0.0f);
-        tmp_freq[best_freq_test[i_zero].first]=0.5f;
-        tmp_freq[best_freq_test[i_one].first]=0.5f;
-        float try_LL = ExecuteOneRestart(tmp_freq);
-        ll_record.push_back(try_LL); // adding one to the number we try
-      }
-    }
-  }
-}
-
 // try altenatives to the main function to see if we have a better fit somewhere else
 void HypothesisStack::ExecuteExtremeInferences() {
+  /*
   for (unsigned int i_start=0; i_start < try_hyp_freq.size(); i_start++){
     ll_record[i_start] = ExecuteOneRestart(try_hyp_freq[i_start], my_params.max_detail_level);
   }
   //TriangulateRestart();
   RestoreFullInference(); // put total_theory to be consistent with whoever won
+  */
 }
-
-void HypothesisStack::RestoreFullInference() {
-  //  cur_state = backup_state;
-  // in theory, need to update sigma & skew, but since not fitting for particular variants, don't worry about it at the moment.
-  total_theory.UpdateRelevantLikelihoods();
-  //DoPosteriorFrequencyScan(cur_posterior, true);
-  total_theory.UpdateResponsibility(cur_state.cur_posterior.clustering.max_hyp_freq, cur_state.cur_posterior.clustering.data_reliability); // once bias, sigma, max_freq established, reset responsibilities is forced
-}
-
 
 // subobjects need to know their tuning
 void HypothesisStack::PropagateTuningParameters(int num_hyp_no_null) {
   total_theory.PropagateTuningParameters(my_params);
   // number of pseudo-data points at no bias
-  cur_state.PropagateTuningParameters(my_params, num_hyp_no_null);
 }
 
 
@@ -398,12 +248,6 @@ bool CallByIntegral(PosteriorInference &cur_posterior, float hom_safety, int &ge
   return safety_active_flag;
 }
 
-bool HypothesisStack::CallGermline(float hom_safety, int &genotype_call, float &quasi_phred_quality_score, float &reject_status_quality_score){
-  bool retval = CallByIntegral(cur_state.cur_posterior, hom_safety, genotype_call, quasi_phred_quality_score, reject_status_quality_score);
-  return retval;
-}
-
-
 
 // evidence for i_allele vs ref
 void Evaluator::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
@@ -514,39 +358,5 @@ int Evaluator::DetectBestMultiAllelePair(){
 
   is_detect_best_multi_allele_pair_done_ = true;
   return best_alt_ndx;
-}
-
-
-
-void Evaluator::ComputePosteriorGenotype(int _alt_allele_index,float local_min_allele_freq,
-    int &genotype_call, float &gt_quality_score, float &reject_status_quality_score){
-  allele_eval.CallGermline(local_min_allele_freq, genotype_call, gt_quality_score, reject_status_quality_score);
-}
-
-void Evaluator::MultiAlleleGenotype(float local_min_allele_freq, vector<int> &genotype_component, float &gt_quality_score, float &reject_status_quality_score, int max_detail_level){
-  // detect best allele hard classify
-  if(not is_detect_best_multi_allele_pair_done_){ // don't need to do it again if we've already done
-    DetectBestMultiAllelePair(); // diploid_choice set by posterior responsibility
-  }
-  // set diploid in gq_pair
-  allele_eval.cur_state.cur_posterior.gq_pair.freq_pair = diploid_choice;
-  // scan gq_pair
-  allele_eval.cur_state.cur_posterior.gq_pair.DoPosteriorFrequencyScan(allele_eval.total_theory,
-      allele_eval.cur_state.cur_posterior.clustering,
-      true, ALL_STRAND_KEY, false, max_detail_level);
-
-  //call-germline
-  int genotype_call;
-  allele_eval.CallGermline(local_min_allele_freq, genotype_call, gt_quality_score, reject_status_quality_score);
-  // set the outputs
-  // start at "het" by choice
-  genotype_component[0] = diploid_choice[0];
-  genotype_component[1] = diploid_choice[1];
-  if(genotype_call == 2){ // hom var
-    genotype_component[0] = diploid_choice[1];
-  }
-  else if(genotype_call == 0){ // hom ref
-    genotype_component[1] = diploid_choice[0];
-  }
 }
 

@@ -73,16 +73,6 @@ void DiagnosticJsonCrossStack(Json::Value &json, const HypothesisStack &hypothes
 }
 
 
-void DiagnosticJsonMisc(Json::Value &json, const LatentSlate &cur_state) {
-  json["iterdone"] = cur_state.iter_done;
-  json["maxiterations"] = cur_state.max_iterations;
-  for (unsigned int i_iter = 0; i_iter < cur_state.ll_at_stage.size(); i_iter++) {
-    json["llatstage"][i_iter] = cur_state.ll_at_stage[i_iter];
-  }
-  for (unsigned int i_freq=0; i_freq<cur_state.start_freq_of_winner.size(); i_freq++)
-    json["startfreq"][i_freq] = cur_state.start_freq_of_winner[i_freq];
-}
-
 void DiagnosticJsonHistory(Json::Value &json, const HypothesisStack &hypothesis_stack){
   for (unsigned int i_start=0; i_start<hypothesis_stack.ll_record.size(); i_start++){
     json["LLrecord"][i_start] = hypothesis_stack.ll_record[i_start];
@@ -118,11 +108,9 @@ void RichDiagnosticOutput(const vector<const Alignment *>& read_stack, const Hyp
   cerr << "RichDiagnosticOutput() -> " << outFile << endl;
 
   diagnostic_json["MagicNumber"] = 12;
-  DiagnosticJsonFrequency(diagnostic_json["TopLevel"], hypothesis_stack.cur_state.cur_posterior);
 
   DiagnosticJsonReadStack(diagnostic_json["ReadStack"], read_stack, global_context);
   DiagnosticJsonCrossStack(diagnostic_json["CrossHypotheses"], hypothesis_stack);
-  DiagnosticJsonMisc(diagnostic_json["Misc"], hypothesis_stack.cur_state);
   DiagnosticJsonHistory(diagnostic_json["History"],hypothesis_stack);
 
   DiagnosticWriteJson(diagnostic_json, outFile);

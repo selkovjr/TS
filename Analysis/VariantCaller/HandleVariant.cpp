@@ -43,17 +43,17 @@ void Evaluator::SampleLikelihood (
         num_realigned++;
     }
   }
+  cerr << "num_valid_reads: " << num_valid_reads << endl;
   cerr << "num_realigned: " << num_realigned << endl;
-  exit(0);
-
 
   // Check how many reads had their alignment modified
   std::ostringstream my_info;
   my_info.precision(4);
   if (doRealignment and num_valid_reads > 0) {
+    cerr << "checking modified reads\n";
     float frac_realigned = (float)num_realigned / (float)num_valid_reads;
     // And re-do splicing without realignment if we exceed the threshold
-    if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold){
+    if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold) {
       my_info << "SKIPREALIGNx" << frac_realigned;
       doRealignment = false;
       for (unsigned int i_read = 0; i_read < allele_eval.total_theory.my_hypotheses.size(); i_read++) {
@@ -74,7 +74,7 @@ void Evaluator::SampleLikelihood (
     }
     info_fields.push_back(my_info.str());
   }
-
+  cerr << my_info.str() << endl;
 }
 
 
@@ -187,14 +187,14 @@ void MultiMinAlleleFreq(Evaluator &eval, VariantCandidate &candidate_variant, in
         int genotype_call;
         float evaluated_genotype_quality;
         // Let's do the inference for the given loc_min_allele_freq
-        eval.allele_eval.CallGermline(loc_min_allele_freq, genotype_call, evaluated_genotype_quality, loc_qual);
+        // eval.allele_eval.CallGermline(loc_min_allele_freq, genotype_call, evaluated_genotype_quality, loc_qual);
 
         vector<int> genotype_component = {eval.diploid_choice[0], eval.diploid_choice[1]}; // starts with het var
 
-        if(genotype_call == 2){ //hom var
+        if(true) { // genotype_call == 2){ //hom var
           genotype_component[0] = eval.diploid_choice[1];
         }
-        else if(genotype_call == 0){ //hom ref
+        else { // if(genotype_call == 0){ //hom ref
           genotype_component[1] = eval.diploid_choice[0];
         }
 
@@ -293,11 +293,11 @@ void GlueOutputVariant(Evaluator &eval, VariantCandidate &candidate_variant, con
   //@TODO: fix this frequency to be sensible
   float local_min_allele_freq = smallest_allele_freq; // must choose a qual score relative to some frequency
 
-  eval.MultiAlleleGenotype(local_min_allele_freq,
-      my_decision.eval_genotype.genotype_component,
-      my_decision.eval_genotype.evaluated_genotype_quality,
-      my_decision.eval_genotype.evaluated_variant_quality,
-      parameters.my_eval_control.max_detail_level);
+  //eval.MultiAlleleGenotype(local_min_allele_freq,
+  //    my_decision.eval_genotype.genotype_component,
+  //    my_decision.eval_genotype.evaluated_genotype_quality,
+  //    my_decision.eval_genotype.evaluated_variant_quality,
+  //    parameters.my_eval_control.max_detail_level);
 
   my_decision.eval_genotype.genotype_already_set = true; // because we computed it here
 

@@ -18,7 +18,7 @@ bool SpliceVariantHypotheses (
 
   // Hypotheses: 1) Null; read as called 2) Reference Hypothesis 3-?) Variant Hypotheses
   vector<string> my_hypotheses;
-  vector<bool>           same_as_null_hypothesis; // indicates whether a ref or alt hypothesis equals the read as called
+  vector<bool>   same_as_null_hypothesis; // indicates whether a ref or alt hypothesis equals the read as called
 
   my_hypotheses.resize(eval.allele_identity_vector.size()+2);
   same_as_null_hypothesis.assign(my_hypotheses.size(), false);
@@ -41,8 +41,15 @@ bool SpliceVariantHypotheses (
 
   // do realignment of a small region around variant if desired
   if (eval.doRealignment) {
-    pretty_alignment = SpliceDoRealignement(thread_objects, current_read, local_context.position0,
-        changed_alignment, global_context.DEBUG, ref_reader, chr_idx);
+    pretty_alignment = SpliceDoRealignement(
+      thread_objects,
+      current_read,
+      local_context.position0,
+      changed_alignment,
+      global_context.DEBUG,
+      ref_reader,
+      chr_idx
+    );
     if (pretty_alignment.empty() and global_context.DEBUG > 0)
       cerr << "Realignment returned an empty string in read " << current_read.alignment.Name << endl;
   }
@@ -76,8 +83,7 @@ bool SpliceVariantHypotheses (
         read_idx++;
         pretty_idx++;
       }
-      did_splicing = SpliceAddVariantAlleles(current_read, pretty_alignment, eval,
-          local_context, my_hypotheses, pretty_idx, global_context.DEBUG);
+      did_splicing = SpliceAddVariantAlleles(current_read, pretty_alignment, eval, local_context, my_hypotheses, pretty_idx, global_context.DEBUG);
     } // --- ---
 
     // Have reference bases inside of window but outside of span of reference allele
@@ -158,7 +164,7 @@ bool SpliceVariantHypotheses (
     cout << " into ";
     if (current_read.is_reverse_strand) cout << "reverse ";
     else cout << "forward ";
-    cout << "strand read read " << current_read.alignment.Name << endl;
+    cout << "strand read " << current_read.alignment.Name << endl;
     cout << "- Read as called: " << my_hypotheses[0] << endl;
     cout << "- Reference Hyp.: " << my_hypotheses[1] << endl;
     for (unsigned int i_hyp = 2; i_hyp<my_hypotheses.size(); i_hyp++)
@@ -247,12 +253,9 @@ bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty
   return true;
 }
 
-// -------------------------------------------------------------------
-
 
 
 // -------------------------------------------------------------------
-
 
 string SpliceDoRealignement (PersistingThreadObjects &thread_objects, const Alignment &current_read, long variant_position,
     bool &changed_alignment, int DEBUG, const ReferenceReader &ref_reader, int chr_idx) {
@@ -339,7 +342,7 @@ string SpliceDoRealignement (PersistingThreadObjects &thread_objects, const Alig
     }
   }
   if (DEBUG > 1)
-    cout << "Computed right realignment window as (red, ref, pretty) " << read_right << " " << ref_right << " " << pretty_right << endl;
+    cout << "Computed right realignment window as (read, ref, pretty) " << read_right << " " << ref_right << " " << pretty_right << endl;
   // Put in some sanity checks for alignment boundaries found...
 
 

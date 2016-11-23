@@ -21,49 +21,9 @@
 
 using namespace std;
 
-// what is the set of parameters describing a complete set of latent variables under some state
-class LatentSlate{
-  public:
-    // frequency
-    PosteriorInference cur_posterior;
-    // information by strand
-    //    PosteriorInference fwd_posterior;
-    //    PosteriorInference rev_posterior;
-
-    // // track important latent variables
-    // BasicBiasGenerator bias_generator;
-    // // track filter
-    // BiasChecker bias_checker;
-    //
-    // // and the other important set of latent variables
-    // StrandedSigmaGenerator sigma_generator;
-    //
-    // // and the third set
-    // BasicSkewGenerator skew_generator;
-
-    bool detailed_integral;
-    int max_iterations;
-    int iter_done;
-    vector<float> ll_at_stage;
-    vector<float> start_freq_of_winner;
-
-    void FastExecuteInference(ShortStack &total_theory, bool update_frequency, vector<float> &start_frequency);
-    void LocalExecuteInference(ShortStack &total_theory, bool update_frequency, vector<float> &start_frequency);
-    void FastStep(ShortStack &total_theory, bool update_frequency);
-    void DetailedStep(ShortStack &total_theory, bool update_frequency);
-    void ScanStrandPosterior(ShortStack &total_theory, bool vs_ref, int max_detail_level);
-    void PropagateTuningParameters(EvaluatorTuningParameters &my_params, int num_hyp_no_null);
-    LatentSlate(){
-      max_iterations = 10;
-      detailed_integral = true;
-      iter_done = 0;
-    };
-};
-
 class HypothesisStack{
   public:
     // latent variables under states of the world
-    LatentSlate cur_state;
     ShortStack total_theory;
     EvaluatorTuningParameters my_params;
     bool try_alternatives;
