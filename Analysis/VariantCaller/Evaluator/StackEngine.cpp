@@ -8,12 +8,6 @@ bool compare_best_response(pair<int,float> a, pair<int,float> b){
 }
 
 
-void HypothesisStack::DefaultValues()
-{
-  try_alternatives = true;
-}
-
-
 // tool for combining items at differing log-levels
 float log_sum(float a, float b) {
   float max_ab = max(a, b);

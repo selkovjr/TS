@@ -21,30 +21,6 @@
 
 using namespace std;
 
-class HypothesisStack{
-  public:
-    // latent variables under states of the world
-    bool try_alternatives;
-
-    vector<float> ll_record;
-    vector<vector <float> > try_hyp_freq;
-
-    HypothesisStack(){
-      DefaultValues();
-    }
-    void AllocateFrequencyStarts(int num_hyp_no_null, vector<AlleleIdentity> &allele_identity_vector);
-    void DefaultValues();
-    void PropagateTuningParameters(int num_hyp_no_null);
-
-    // starting to make inferences
-    void RestoreFullInference();
-    void SetAlternateFromMain();
-    void ExecuteExtremeInferences();
-    void TriangulateRestart();
-
-    float ReturnMaxLL();
-};
-
 class PositionInBam;
 
 class Evaluator {
