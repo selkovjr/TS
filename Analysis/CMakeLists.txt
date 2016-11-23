@@ -569,7 +569,7 @@ set(tvcSRCS
   VariantCaller/Evaluator/ClassifyVariant.cpp
   VariantCaller/Evaluator/CrossHypotheses.cpp
   VariantCaller/Evaluator/DiagnosticJSON.cpp
-  VariantCaller/Evaluator/ShortStack.cpp
+  VariantCaller/Evaluator/LocusData.cpp
   VariantCaller/Evaluator/StackEngine.cpp
 
   # TODO: Actually build vcflib as a static library and link to variant caller.

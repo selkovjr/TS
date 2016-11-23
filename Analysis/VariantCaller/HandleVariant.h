@@ -44,7 +44,7 @@
 #include "ExtendParameters.h"
 
 #include "StackEngine.h"
-#include "ShortStack.h"
+#include "LocusData.h"
 #include "DiagnosticJson.h"
 
 

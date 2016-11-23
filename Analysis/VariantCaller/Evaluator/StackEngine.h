@@ -17,14 +17,14 @@
 #include "CrossHypotheses.h"
 #include "ExtendParameters.h"
 #include "ClassifyVariant.h"
-#include "ShortStack.h"
+#include "LocusData.h"
 
 using namespace std;
 
 class HypothesisStack{
   public:
     // latent variables under states of the world
-    ShortStack total_theory;
+    LocusData total_theory;
     EvaluatorTuningParameters my_params;
     bool try_alternatives;
 
