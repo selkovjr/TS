@@ -1,8 +1,8 @@
 /* Copyright (C) 2013 Ion Torrent Systems, Inc. All Rights Reserved */
 
 
-#ifndef CROSSHYPOTHESES_H
-#define CROSSHYPOTHESES_H
+#ifndef TENTATIVE_ALIGNMENT_H
+#define TENTATIVE_ALIGNMENT_H
 
 
 #include <iostream>
@@ -23,7 +23,7 @@
 #define MINIMUM_RELATIVE_OUTLIER_PROBABILITY 0.000001f
 
 // handle auxiliary variables for one read's associated hypothesis evaluation
-class CrossHypotheses{
+class TentativeAlignment {
   public:
     vector<string>         instance_of_read_by_state;       // this read, modified by each state of a variant
     vector<int>            state_spread;
@@ -49,7 +49,7 @@ class CrossHypotheses{
     bool success;
 
     // functions
-    CrossHypotheses(){
+    TentativeAlignment (){
       heavy_tailed = 3;  // t_5 degrees of freedom
       strand_key = 0;
       success = true;
@@ -76,4 +76,4 @@ class CrossHypotheses{
 };
 
 
-#endif // CROSSHYPOTHESES_H
+#endif // TENTATIVE_ALIGNMENT_H

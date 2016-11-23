@@ -14,7 +14,7 @@
 
 #include "api/BamReader.h"
 #include "ExtendedReadInfo.h"
-#include "CrossHypotheses.h"
+#include "TentativeAlignment.h"
 #include "ExtendParameters.h"
 
 using namespace std;
@@ -23,7 +23,7 @@ using namespace std;
 // induced theories of the world
 class LocusData {
 public:
-    vector<CrossHypotheses> my_hypotheses;
+    vector<TentativeAlignment> my_hypotheses;
     vector<int> valid_indexes;
 
     void FindValidIndexes(); // only loop over reads where we successfully filled in variants

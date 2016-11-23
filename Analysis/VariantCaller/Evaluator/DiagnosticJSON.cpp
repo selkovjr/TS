@@ -19,23 +19,6 @@ void DiagnosticJsonReadStack(Json::Value &json, const vector<const Alignment *>&
   }
 }
 
-void DiagnosticJsonCrossHypotheses(Json::Value &json, const CrossHypotheses &my_cross) {
-  // output relevant data from the individual read hypothesis tester
-  json["strand"] = my_cross.strand_key;
-  json["success"] = my_cross.success ? 1 : 0;
-
-  json["heavy"] = my_cross.heavy_tailed;
-
-  // sequence, responsibility (after clustering), etc
-  for (unsigned int i_hyp = 0; i_hyp < my_cross.responsibility.size(); i_hyp++) {
-    json["instancebystate"][i_hyp] = my_cross.instance_of_read_by_state[i_hyp];
-    json["responsibility"][i_hyp] = my_cross.responsibility[i_hyp];
-    json["loglikelihood"][i_hyp] = my_cross.log_likelihood[i_hyp];
-    json["scaledlikelihood"][i_hyp] = my_cross.scaled_likelihood[i_hyp];
-  }
-}
-
-
 void TinyDiagnosticOutput(const vector<const Alignment *>& read_stack, const LocusData &hypothesis_stack,
     const string& variant_contig, int variant_position, const string& ref_allele, const string& var_allele,
     const InputStructures &global_context, const string &out_dir){
@@ -47,7 +30,7 @@ void TinyDiagnosticOutput(const vector<const Alignment *>& read_stack, const Loc
             + ref_allele + "." + var_allele + ".tiny.json";
   // just a little bit of data
   DiagnosticJsonReadStack(diagnostic_json["ReadStack"], read_stack, global_context);
-  // TinyDiagnosticJsonCrossStack(diagnostic_json["CrossHypotheses"], hypothesis_stack);
+  // TinyDiagnosticJsonCrossStack(diagnostic_json["TentativeAlignment"], hypothesis_stack);
   // write it out
   DiagnosticWriteJson(diagnostic_json, outFile);
 }

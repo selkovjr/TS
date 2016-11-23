@@ -32,6 +32,7 @@ void Evaluator::SampleLikelihood (
         *this,
         seq_context,
         thread_objects,
+        // allel_eval.my_hopotheses[i_read],
         changed_alignment,
         global_context,
         ref_reader, chr_idx

@@ -567,10 +567,10 @@ set(tvcSRCS
   VariantCaller/Filter/VariantAssist.cpp
 
   VariantCaller/Evaluator/ClassifyVariant.cpp
-  VariantCaller/Evaluator/CrossHypotheses.cpp
-  VariantCaller/Evaluator/DiagnosticJSON.cpp
   VariantCaller/Evaluator/LocusData.cpp
+  VariantCaller/Evaluator/TentativeAlignment.cpp
   VariantCaller/Evaluator/StackEngine.cpp
+  VariantCaller/Evaluator/DiagnosticJSON.cpp
 
   # TODO: Actually build vcflib as a static library and link to variant caller.
   # TODO2: Resolve bgzf.c collisions between vcflib and bamtools

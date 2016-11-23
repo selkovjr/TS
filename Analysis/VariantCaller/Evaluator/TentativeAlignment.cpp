@@ -1,6 +1,6 @@
 /* Copyright (C) 2013 Ion Torrent Systems, Inc. All Rights Reserved */
 
-#include "CrossHypotheses.h"
+#include "TentativeAlignment.h"
 
 
 //  control degrees of freedom for tradeoff in outlier resistance/sensitivity
@@ -33,7 +33,7 @@ float xTDistOddN(float res, float sigma, float skew, int half_n) {
 }
 
 
-void CrossHypotheses::CleanAllocate(int num_hyp) {
+void TentativeAlignment::CleanAllocate(int num_hyp) {
   // allocate my vectors here
   responsibility.assign(num_hyp, 0.0f);
   log_likelihood.assign(num_hyp, 0.0f);
@@ -45,7 +45,7 @@ void CrossHypotheses::CleanAllocate(int num_hyp) {
   basic_likelihoods.resize(num_hyp);
 }
 
-void CrossHypotheses::FillInPrediction(PersistingThreadObjects &thread_objects, const Alignment& my_read, const InputStructures &global_context) {
+void TentativeAlignment::FillInPrediction(PersistingThreadObjects &thread_objects, const Alignment& my_read, const InputStructures &global_context) {
   // allocate everything here
   CleanAllocate(instance_of_read_by_state.size());
   if (my_read.is_reverse_strand)
@@ -55,7 +55,7 @@ void CrossHypotheses::FillInPrediction(PersistingThreadObjects &thread_objects, 
 }
 
 
-void CrossHypotheses::InitializeDerivedQualities() {
+void TentativeAlignment::InitializeDerivedQualities() {
 
   InitializeResponsibility(); // depends on hypotheses
 
@@ -64,7 +64,7 @@ void CrossHypotheses::InitializeDerivedQualities() {
   ComputeLogLikelihoods();  // depends on test flow(s)
 }
 
-void CrossHypotheses::InitializeResponsibility() {
+void TentativeAlignment::InitializeResponsibility() {
   cerr << "InitializeResponsibility\n";
   responsibility[0] = 1.0f;  // everyone is an outlier until we trust you
   for (unsigned int i_hyp = 1; i_hyp < responsibility.size(); i_hyp++)
@@ -77,7 +77,7 @@ void CrossHypotheses::InitializeResponsibility() {
 // divide the global probabilities into "typical" data points and outliers
 // divide the variant probabilities into each hypothesis (summing to 1)
 // treat the 2 hypothesis case to start with
-void CrossHypotheses::UpdateResponsibility(const vector<float > &hyp_prob, float typical_prob) {
+void TentativeAlignment::UpdateResponsibility(const vector<float > &hyp_prob, float typical_prob) {
   cerr << "UpdateResponsibility()\n";
 
   if (!success){
@@ -102,7 +102,7 @@ void CrossHypotheses::UpdateResponsibility(const vector<float > &hyp_prob, float
   }
 }
 
-float CrossHypotheses::ComputePosteriorLikelihood(const vector<float > &hyp_prob, float typical_prob) {
+float TentativeAlignment::ComputePosteriorLikelihood(const vector<float > &hyp_prob, float typical_prob) {
   cerr << "ComputePosteriorLikelihood()\n";
   //  vector<float> tmp_prob(3);
   tmp_prob_f[0] = (1.0f-typical_prob)*scaled_likelihood[0];   // i'm an outlier
@@ -117,12 +117,12 @@ float CrossHypotheses::ComputePosteriorLikelihood(const vector<float > &hyp_prob
 }
 
 
-void CrossHypotheses::UpdateRelevantLikelihoods() {
+void TentativeAlignment::UpdateRelevantLikelihoods() {
   // ComputeBasicLikelihoods();
   ComputeLogLikelihoods(); // automatically over relevant likelihoods
 }
 
-void CrossHypotheses::ComputeLogLikelihoodsSum() {
+void TentativeAlignment::ComputeLogLikelihoodsSum() {
   for (unsigned int i_hyp=0; i_hyp<log_likelihood.size(); i_hyp++) {
     log_likelihood[i_hyp] = 0.0f;
     // Do real computation here
@@ -132,7 +132,7 @@ void CrossHypotheses::ComputeLogLikelihoodsSum() {
 
 // and again:  project onto the first component when correlation high
 
-void CrossHypotheses::JointLogLikelihood() {
+void TentativeAlignment::JointLogLikelihood() {
   for (unsigned int i_hyp =0; i_hyp<log_likelihood.size(); i_hyp++) {
     // Do real computation here
     float b_likelihood = 1.0f; // my_t.TDistOddN(res_projection,sigma_projection,skew_estimate);
@@ -140,7 +140,7 @@ void CrossHypotheses::JointLogLikelihood() {
   }
 }
 
-void CrossHypotheses::ComputeLogLikelihoods() {
+void TentativeAlignment::ComputeLogLikelihoods() {
   //@TODO: magic numbers bad for thresholds
   // if ((fabs(delta_state.delta_correlation)<0.8f) || !use_correlated_likelihood) // suppress this feature for now
   if (true)
@@ -150,7 +150,7 @@ void CrossHypotheses::ComputeLogLikelihoods() {
   ComputeScaledLikelihood();
 }
 
-void CrossHypotheses::ComputeScaledLikelihood() {
+void TentativeAlignment::ComputeScaledLikelihood() {
   //cout << "ComputeScaledLikelihood" << endl;
   //  scaled_likelihood.resize(log_likelihood.size());
   // doesn't matter who I scale to, as long as we scale together
@@ -169,13 +169,13 @@ void CrossHypotheses::ComputeScaledLikelihood() {
   scaled_likelihood[0] = max(scaled_likelihood[0], MINIMUM_RELATIVE_OUTLIER_PROBABILITY);
 }
 
-float CrossHypotheses::ComputeLLDifference(int a_hyp, int b_hyp) {
+float TentativeAlignment::ComputeLLDifference(int a_hyp, int b_hyp) {
   // difference in likelihoods between hypotheses
   return(fabs(log_likelihood[a_hyp] - log_likelihood[b_hyp]));
 }
 
 
-int CrossHypotheses::MostResponsible(){
+int TentativeAlignment::MostResponsible(){
   int most_r = 0;
   float best_r = responsibility[0];
   for (unsigned int i_hyp = 1; i_hyp < responsibility.size(); i_hyp++){
@@ -203,7 +203,7 @@ int CrossHypotheses::MostResponsible(){
 // Suppose hyp_0: {0-mer, 0-mer}, hyp_1: {1-mer, 1-mer}, and the measurement = {0-mer, 0-mer}
 // With the default value of magic sigma, if outlier_probability < 3.1E-7 then we claim that it is not an outlier.
 // => We need outlier_probability < 3.1E-7 to tolerate 1-mer, 1-mer errors at two flows.
-bool CrossHypotheses::LocalOutlierClassifier(float typical_prob){
+bool TentativeAlignment::LocalOutlierClassifier(float typical_prob){
   //Use CheckParameterLowerUpperBound(...) to prevent extremely low ol_prob instead
   //if(ol_prob < MINIMUM_RELATIVE_OUTLIER_PROBABILITY){
   //    ol_prob = MINIMUM_RELATIVE_OUTLIER_PROBABILITY;

@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "ExtendedReadInfo.h"
-#include "CrossHypotheses.h"
 #include "ExtendParameters.h"
 #include "ClassifyVariant.h"
 #include "LocusData.h"
