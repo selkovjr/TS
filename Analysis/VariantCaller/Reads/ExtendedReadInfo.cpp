@@ -88,10 +88,12 @@ void UnpackOnLoad(Alignment *rai, const InputStructures &global_context)
   }
 
   // Populate read_bases (bases without rev-comp on reverse-mapped reads)
-
   rai->read_bases = rai->alignment.QueryBases;
-  if (rai->is_reverse_strand)
+  rai->read_qual = rai->alignment.Qualities;
+  if (rai->is_reverse_strand) {
     RevComplementInPlace(rai->read_bases);
+    RevInPlace(rai->read_qual);
+  }
   if (rai->read_bases.empty()){
     cerr << "WARNING: Ignoring length zero read " << rai->alignment.Name << endl;
     rai->filtered = true;
