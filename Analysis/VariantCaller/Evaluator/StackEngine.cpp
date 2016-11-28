@@ -25,11 +25,11 @@ void Evaluator::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
   int ref_hyp = 1;
   int alt_hyp = i_allele + 2;  // alt_alleles = 0->n not counting ref >or< null, therefore alt-allele 0 = 2
 
-  for (unsigned int i_read = 0; i_read < allele_eval.my_hypotheses.size(); i_read++) {
-    if (allele_eval.my_hypotheses[i_read].success) {
+  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
+    if (allele_eval.alignments[i_read].success) {
       // measure disruption
 
-      mean_ll_delta += allele_eval.my_hypotheses[i_read].ComputeLLDifference(ref_hyp, alt_hyp);
+      mean_ll_delta += allele_eval.alignments[i_read].ComputeLLDifference(ref_hyp, alt_hyp);
       count++;
     }
   }
@@ -57,8 +57,8 @@ void Evaluator::ApproximateHardClassifierForReads() {
 
   for (unsigned int i_read = 0; i_read < read_stack.size(); ++i_read) {
     // compute read_id_
-    if (allele_eval.my_hypotheses[i_read].success){
-      read_id_[i_read] = allele_eval.my_hypotheses[i_read].MostResponsible() - 1; // -1 = null, 0 = ref , ...
+    if (allele_eval.alignments[i_read].success){
+      read_id_[i_read] = allele_eval.alignments[i_read].MostResponsible() - 1; // -1 = null, 0 = ref , ...
     }
     else{
       cerr << i_read << " is outlier" << endl;
@@ -87,7 +87,7 @@ int Evaluator::DetectBestMultiAllelePair(){
   //@TODO: just get the plane off the ground
   //@TODO: do the top pair by responsibility
   vector< pair<int,float> > best_allele_test;
-  int num_hyp_no_null = allele_eval.my_hypotheses[0].responsibility.size()-1;
+  int num_hyp_no_null = allele_eval.alignments[0].responsibility.size()-1;
   best_allele_test.resize(num_hyp_no_null); // null can never be a winner in "best allele" sweepstakes
 
   for (unsigned int i_alt=0; i_alt<best_allele_test.size(); i_alt++){
@@ -102,7 +102,7 @@ int Evaluator::DetectBestMultiAllelePair(){
   for(unsigned int i_read = 0; i_read < read_id_.size(); ++i_read){
     int my_alt = read_id_[i_read];
     if (my_alt > -1){
-      best_allele_test[my_alt].second += allele_eval.my_hypotheses[i_read].responsibility[my_alt + 1];
+      best_allele_test[my_alt].second += allele_eval.alignments[i_read].responsibility[my_alt + 1];
     } // otherwise count for nothing
   }
 

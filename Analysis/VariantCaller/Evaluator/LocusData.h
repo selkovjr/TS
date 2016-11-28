@@ -23,7 +23,7 @@ using namespace std;
 // induced theories of the world
 class LocusData {
 public:
-    vector<TentativeAlignment> my_hypotheses;
+    vector<TentativeAlignment> alignments;
     vector<int> valid_indexes;
 
     void FindValidIndexes(); // only loop over reads where we successfully filled in variants
