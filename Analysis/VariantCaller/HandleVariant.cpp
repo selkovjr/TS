@@ -21,24 +21,25 @@ void Evaluator::SampleLikelihood (
   unsigned int  num_realigned = 0;
   int  num_hyp_no_null = allele_identity_vector.size() + 1; // num alleles +1 for ref
   // generate null+ref+nr.alt hypotheses per read in the case of do_multiallele_eval
-  allele_eval.my_hypotheses.resize(read_stack.size());
+  allele_eval.alignments.resize(read_stack.size());
 
-  cerr << "evaluating " << allele_eval.my_hypotheses.size() << " hypotheses\n";
-  for (unsigned int i_read = 0; i_read < allele_eval.my_hypotheses.size(); i_read++) {
+  cerr << "evaluating " << allele_eval.alignments.size() << " hypotheses\n";
+  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
     // --- New splicing function ---
-    allele_eval.my_hypotheses[i_read].success =
+    allele_eval.alignments[i_read].success =
       SpliceVariantHypotheses(
         *read_stack[i_read],
         *this,
         seq_context,
         thread_objects,
-        // allel_eval.my_hopotheses[i_read],
+        allele_eval.alignments[i_read].basecall,
+        allele_eval.alignments[i_read].error_prob,
         changed_alignment,
         global_context,
         ref_reader, chr_idx
     );
 
-    if (allele_eval.my_hypotheses[i_read].success){
+    if (allele_eval.alignments[i_read].success){
       num_valid_reads++;
       if (changed_alignment)
         num_realigned++;
@@ -57,13 +58,15 @@ void Evaluator::SampleLikelihood (
     if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold) {
       my_info << "SKIPREALIGNx" << frac_realigned;
       doRealignment = false;
-      for (unsigned int i_read = 0; i_read < allele_eval.my_hypotheses.size(); i_read++) {
-        allele_eval.my_hypotheses[i_read].success =
+      for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
+        allele_eval.alignments[i_read].success =
           SpliceVariantHypotheses(
             *read_stack[i_read],
             *this,
             seq_context,
             thread_objects,
+            allele_eval.alignments[i_read].basecall,
+            allele_eval.alignments[i_read].error_prob,
             changed_alignment,
             global_context,
             ref_reader, chr_idx
