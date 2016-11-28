@@ -106,7 +106,7 @@ void AlleleIdentity::SubCategorizeMNP(const LocalReferenceContext &reference_con
   if ( ! reference_context.context_detected )
     return;
 
-  assert(altAllele.size()==reference_context.reference_allele.size());
+  assert(altAllele.size() == reference_context.reference_allele.size());
 
   //   possible misalign, align by left shift)
   //   Ref:   GGTTAC   (refBaseLeft = G = reference_context.ref_left_hp_base)
@@ -143,7 +143,7 @@ void AlleleIdentity::SubCategorizeMNP(const LocalReferenceContext &reference_con
   if (!leftAlign) {
     //   Ref:   AGTT
     //   Var:   GT   (possible misalign, align by right shift)
-    int end_index = altAllele.size()-1-right_anchor;  // end index of real variant
+    int end_index = altAllele.size() - 1 - right_anchor;  // end index of real variant
     char altBaseRight = altAllele.at(end_index);
     altPos = end_index;
 
@@ -434,7 +434,8 @@ bool AlleleIdentity::getVariantType(
   const TIonMotifSet & ErrorMotifs,
   const ClassifyFilters &filter_variant,
   const ReferenceReader &ref_reader,
-  int chr_idx) {
+  int chr_idx
+) {
 
   altAllele = _altAllele;
   bool is_ok = reference_context.context_detected;
@@ -680,7 +681,7 @@ void Evaluator::SetupAllAlleles(
   seq_context.DetectContext(*variant, global_context.DEBUG, ref_reader, chr_idx);
   allele_identity_vector.resize(variant->alt.size());
 
-  if (global_context.DEBUG > 0 and variant->alt.size()>0) {
+  if (global_context.DEBUG > 0 and variant->alt.size() > 0) {
     cout << "Investigating variant candidate " << seq_context.reference_allele << " -> " << variant->alt[0];
     for (uint8_t i_allele = 1; i_allele < allele_identity_vector.size(); i_allele++)
       cout << ',' << variant->alt[i_allele];
