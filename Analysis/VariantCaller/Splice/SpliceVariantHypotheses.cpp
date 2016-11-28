@@ -20,10 +20,8 @@ bool SpliceVariantHypotheses (
 
   // Hypotheses: 1) Null; read as called 2) Reference Hypothesis 3-?) Variant Hypotheses
   vector<string> alignments;
-  vector<bool>   same_as_null_hypothesis; // indicates whether a ref or alt hypothesis equals the read as called
 
   alignments.resize(eval.allele_identity_vector.size()+2);
-  same_as_null_hypothesis.assign(alignments.size(), false);
 
   // 1) Null hypothesis is read as called
   alignments[0] = current_read.read_bases;
