@@ -26,6 +26,8 @@ bool SpliceVariantHypotheses(
   const Evaluator &eval,
   const LocalReferenceContext &local_context,
   PersistingThreadObjects &thread_objects,
+  string &basecall,
+  double &error_prob,
   bool & changed_alignment,
   const InputStructures
   &global_context,
@@ -37,7 +39,7 @@ bool SpliceVariantHypotheses(
 
 bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty_alignment,
                              const Evaluator &eval,
-                             const LocalReferenceContext &local_context, vector<string> &my_hypotheses,
+                             const LocalReferenceContext &local_context, vector<string> &alignments,
                              unsigned int pretty_idx, int DEBUG);
 
 
