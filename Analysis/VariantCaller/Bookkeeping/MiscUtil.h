@@ -20,6 +20,7 @@ using namespace std;
 
 
 char NucComplement (char nuc);
+void RevInPlace(string& seq);
 void RevComplementInPlace(string& seq);
 void reverseComplement(string s, char *x);
 void ReverseComplement(string &seqContext, string &reverse_complement);

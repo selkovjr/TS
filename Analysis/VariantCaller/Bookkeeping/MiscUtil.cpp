@@ -26,6 +26,22 @@ char NucComplement (char nuc)
   }
 }
 
+void RevInPlace(string& qual) {
+
+  char c;
+  int forward_idx = 0;
+  int backward_idx = qual.size() - 1;
+  while (forward_idx < backward_idx) {
+    c = qual[forward_idx];
+    qual[forward_idx]  = qual[backward_idx];
+    qual[backward_idx] = c;
+    forward_idx++;
+    backward_idx--;
+  }
+  if (forward_idx == backward_idx)
+    qual[forward_idx] = qual[forward_idx];
+}
+
 void RevComplementInPlace(string& seq) {
 
   char c;

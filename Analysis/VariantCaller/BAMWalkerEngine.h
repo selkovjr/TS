@@ -69,6 +69,7 @@ struct Alignment {
     is_reverse_strand = false;
     well_rowcol.clear();
     read_bases.clear();
+    read_qual.clear();
     pretty_aln.clear();
     left_sc = 0;
     right_sc = 0;
@@ -105,6 +106,7 @@ struct Alignment {
   bool                  is_reverse_strand;  //! Indicates whether read is from the forward or reverse strand
   vector<int>           well_rowcol;        //! 2 element int vector 0-based row, col in that order mapping to row,col in chip
   string                read_bases;         //! Read sequence as base called (minus hard but including soft clips)
+  string                read_qual;          //! Basecall qualities for read sequence
   string                pretty_aln;         //! pretty alignment string displaying matches, insertions, deletions
   int                   left_sc;            //! Number of soft clipped bases at the start of the alignment
   int                   right_sc;           //! Number of soft clipped bases at the end of the alignment
