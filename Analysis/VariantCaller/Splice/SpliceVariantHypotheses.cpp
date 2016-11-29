@@ -21,7 +21,7 @@ bool SpliceVariantHypotheses (
   // Hypotheses: 1) Null; read as called 2) Reference Hypothesis 3-?) Variant Hypotheses
   vector<string> alignments;
 
-  alignments.resize(eval.allele_identity_vector.size()+2);
+  alignments.resize(eval.allele_identity_vector.size() + 2);
 
   // 1) Null hypothesis is read as called
   alignments[0] = current_read.read_bases;
@@ -124,23 +124,23 @@ bool SpliceVariantHypotheses (
     }
   }
 
-  // Check for non-ACGT bases in hypotheses
-  bool valid_bases = true;
-  for (unsigned int i_hyp=0; i_hyp<alignments.size(); i_hyp++) {
-    unsigned int iBase = 0;
-    while (iBase < alignments[i_hyp].length() and valid_bases) {
-      if (alignments[i_hyp].at(iBase) == 'A' or alignments[i_hyp].at(iBase) == 'C' or
-          alignments[i_hyp].at(iBase) == 'G' or alignments[i_hyp].at(iBase) == 'T')
-        iBase++;
-      else
-        valid_bases = false;
-    }
-  }
-  if (not valid_bases){
-    cerr << "Non-Fatal ERROR in Splicing for " << local_context.contigName << ":" << local_context.position0 + 1
-      << ": Read Hypotheses for " << current_read.alignment.Name << " contain non-ACGT characters." << endl;
-    did_splicing = false;
-  }
+  // // Check for non-ACGT bases in hypotheses
+  // bool valid_bases = true;
+  // for (unsigned int i_hyp=0; i_hyp<alignments.size(); i_hyp++) {
+  //   unsigned int iBase = 0;
+  //   while (iBase < alignments[i_hyp].length() and valid_bases) {
+  //     if (alignments[i_hyp].at(iBase) == 'A' or alignments[i_hyp].at(iBase) == 'C' or
+  //         alignments[i_hyp].at(iBase) == 'G' or alignments[i_hyp].at(iBase) == 'T')
+  //       iBase++;
+  //     else
+  //       valid_bases = false;
+  //   }
+  // }
+  // if (not valid_bases){
+  //   cerr << "Non-Fatal ERROR in Splicing for " << local_context.contigName << ":" << local_context.position0 + 1
+  //     << ": Read Hypotheses for " << current_read.alignment.Name << " contain non-ACGT characters." << endl;
+  //   did_splicing = false;
+  // }
 
   // --- Fail safe for hypotheses and verbose
   if (!did_splicing) {
@@ -174,11 +174,26 @@ bool SpliceVariantHypotheses (
   }
 
   cerr << "alignments: " << eval.allele_identity_vector.size() << endl;
-  cout << "allele: " << eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele << endl;
-  basecall = eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele[0]; // SNP only!
-  cerr << "basecall: " << basecall << endl;
 
-  cerr << endl;
+  if (alignments[0] == alignments[1]) {
+    cerr << "equal to ref\n";
+    cerr << "  position: " << local_context.position0 - current_read.alignment.Position << endl;
+    if (current_read.is_reverse_strand) {
+      basecall = alignments[0][alignments[0].length() - (local_context.position0 - current_read.alignment.Position)];
+      cerr << "  ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << endl;
+    }
+    else {
+      basecall = alignments[0][local_context.position0 - current_read.alignment.Position];
+      cerr << "  ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << endl;
+    }
+  }
+  else {
+    cerr << "alt\n";
+    cout << "  allele: " << eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele << endl;
+    basecall = eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele[0]; // SNP only!
+    cerr << "  basecall: " << basecall << endl;
+    cerr << endl;
+  }
   cerr << "-----------------------\n";
   return did_splicing;
 };
@@ -233,7 +248,7 @@ bool SpliceAddVariantAlleles(
   alignments[1] += local_context.reference_allele;
 
   for (unsigned int i_hyp = 2; i_hyp < alignments.size(); ++i_hyp) {
-    int my_allele_idx = i_hyp-2;
+    int my_allele_idx = i_hyp - 2;
 
     // Special SNP splicing to not accidentally split HPs in the presence of insertions at start of HP
     if (eval.allele_identity_vector[my_allele_idx].status.isSNP) {
@@ -242,8 +257,8 @@ bool SpliceAddVariantAlleles(
       unsigned int pretty_idx = pretty_idx_orig;
       alignments[i_hyp] += local_context.reference_allele;
       // move left if there are insertions of the same base as the reference hypothesis base
-      while (pretty_idx > 0 and pretty_alignment[pretty_idx-1]=='+' and splice_idx > 0
-          and current_read.alignment.QueryBases[splice_idx-1]==local_context.reference_allele[0]) {
+      while (pretty_idx > 0 and pretty_alignment[pretty_idx - 1] == '+' and splice_idx > 0
+          and current_read.alignment.QueryBases[splice_idx - 1] == local_context.reference_allele[0]) {
         pretty_idx--;
         splice_idx--;
         shifted_position++;
@@ -383,7 +398,7 @@ string SpliceDoRealignement (
   string old_alignment = current_read.pretty_aln.substr(pretty_left, pretty_right - pretty_left);
   thread_objects.realigner.SetSequences(
     current_read.alignment.QueryBases.substr(read_left, read_right-read_left),
-    ref_reader.substr(chr_idx, ref_left, ref_right-ref_left),
+    ref_reader.substr(chr_idx, ref_left, ref_right - ref_left),
     old_alignment,
     true
   );
