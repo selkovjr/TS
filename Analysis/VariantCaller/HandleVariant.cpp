@@ -299,10 +299,6 @@ void GlueOutputVariant(Evaluator &eval, VariantCandidate &candidate_variant, con
   my_decision.tune_sbias = parameters.my_controls.sbias_tune;
   my_decision.SetupFromMultiAllele(eval);
 
-  my_decision.all_summary_stats.AssignStrandToHardClassifiedReads(eval.strand_id_, eval.read_id_);
-
-  my_decision.all_summary_stats.AssignPositionFromEndToHardClassifiedReads(eval.read_id_, eval.dist_to_left_, eval.dist_to_right_);
-
   float smallest_allele_freq = 1.0f;
   for (unsigned int _alt_allele_index = 0; _alt_allele_index < my_decision.allele_identity_vector.size(); _alt_allele_index++) {
     // for each alt allele, do my best
@@ -452,21 +448,21 @@ bool ProcessOneVariant (
 
   cerr << "read stack sizes: " << eval.read_stack_n.size() << ", " << eval.read_stack_t.size() << ", " << eval.read_stack.size() << endl;
   if (eval.read_stack_n.empty() or eval.read_stack_t.empty()) {
+    string reason = "NODATA";
+    string sample_name = "";
     if (eval.read_stack_n.empty()) {
       cerr << "Nonfatal: No reads found in normal sample for " << candidate_variant.variant.sequenceName << "\t" << eval.multiallele_window_start << endl;
-      NullFilterReason(candidate_variant.variant, "normal.1");
-      AddFilterReason(candidate_variant.variant, "NODATA", "normal.1");
-      candidate_variant.variant.samples["normal.1"]["GT"].clear();
-      candidate_variant.variant.samples["normal.1"]["GT"].push_back("./.");
+      sample_name = "normal.1";
     }
     if (eval.read_stack_t.empty()) {
       cerr << "Nonfatal: No reads found in tumor sample for " << candidate_variant.variant.sequenceName << "\t" << eval.multiallele_window_start << endl;
-      NullFilterReason(candidate_variant.variant, "tumor.1");
-      AddFilterReason(candidate_variant.variant, "NODATA", "tumor.1");
-      candidate_variant.variant.samples["tumor.1"]["GT"].clear();
-      candidate_variant.variant.samples["tumor.1"]["GT"].push_back("./.");
+      sample_name = "tumor.1";
     }
+    NullFilterReason(candidate_variant.variant, sample_name);
+    AddFilterReason(candidate_variant.variant, reason, sample_name);
     SetFilteredStatus(candidate_variant.variant, true);
+    candidate_variant.variant.samples[sample_name]["GT"].clear();
+    candidate_variant.variant.samples[sample_name]["GT"].push_back("./.");
     return false;
   }
 
@@ -483,11 +479,6 @@ bool ProcessOneVariant (
   // fill in quantities derived from predictions
   int num_hyp_no_null = eval.allele_identity_vector.size() + 1; // num alleles +1 for ref
   //eval.allele_eval.InitForInference(thread_objects, eval.read_stack, *vc.global_context, num_hyp_no_null, eval.allele_identity_vector);
-
-  // do inference
-  //eval.allele_eval.ExecuteInference();
-  // now we're in the guaranteed state of best index
-  int best_allele = eval.DetectBestMultiAllelePair();
 
   // output to variant
   // GlueOutputVariant(eval, candidate_variant, *vc.parameters, best_allele, sample_index);

@@ -30,10 +30,7 @@ class TentativeAlignment {
     vector<string>         instance_of_read_by_state;       // this read, modified by each state of a variant
     vector<int>            state_spread;
 
-    vector<vector<float> > basic_likelihoods; // likelihood given residuals at each test flow of the observation at that flow != likelihood of read
-
     // size number of hypotheses
-    vector<float> responsibility; // how responsible this read is for a given hypothesis under the MAP: size number of hypotheses (including null=outlier)
     vector<float> log_likelihood; // sum over our test flows: logged to avoid under-flows
     vector<float> scaled_likelihood; // actual sum likelihood over test flows, rescaled to null hypothesis (as called), derived from log_likelihood
     float ll_scale; // local scaling factor for scaled likelihood as can't trust null hypothesis to be near data
@@ -59,14 +56,11 @@ class TentativeAlignment {
     void  CleanAllocate(int num_hyp);
     void  FillInPrediction(PersistingThreadObjects &thread_objects, const Alignment &my_read, const InputStructures &global_context);
     void  InitializeDerivedQualities();
-    void  ComputeBasicLikelihoods();
     void  ComputeLogLikelihoods();
     void  ComputeLogLikelihoodsSum();
     void  JointLogLikelihood();
     void  ComputeScaledLikelihood();
     float ComputePosteriorLikelihood(const vector<float> &hyp_prob, float typical_prob);
-    void  InitializeResponsibility();
-    void  UpdateResponsibility(const vector<float > &hyp_prob, float typical_prob);
     void  UpdateRelevantLikelihoods();
     float ComputeLLDifference(int a_hyp, int b_hyp);
 };

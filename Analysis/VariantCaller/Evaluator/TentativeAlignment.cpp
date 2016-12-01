@@ -35,14 +35,11 @@ float xTDistOddN(float res, float sigma, float skew, int half_n) {
 
 void TentativeAlignment::CleanAllocate(int num_hyp) {
   // allocate my vectors here
-  responsibility.assign(num_hyp, 0.0f);
   log_likelihood.assign(num_hyp, 0.0f);
   scaled_likelihood.assign(num_hyp, 0.0f);
 
   tmp_prob_f.assign(num_hyp, 0.0f);
   tmp_prob_d.assign(num_hyp, 0.0);
-
-  basic_likelihoods.resize(num_hyp);
 }
 
 void TentativeAlignment::FillInPrediction(PersistingThreadObjects &thread_objects, const Alignment& my_read, const InputStructures &global_context) {
@@ -56,50 +53,8 @@ void TentativeAlignment::FillInPrediction(PersistingThreadObjects &thread_object
 
 
 void TentativeAlignment::InitializeDerivedQualities() {
-
-  InitializeResponsibility(); // depends on hypotheses
-
-  // ComputeBasicLikelihoods(); // depends on residuals and sigma
   // compute log-likelihoods
   ComputeLogLikelihoods();  // depends on test flow(s)
-}
-
-void TentativeAlignment::InitializeResponsibility() {
-  cerr << "InitializeResponsibility\n";
-  responsibility[0] = 1.0f;  // everyone is an outlier until we trust you
-  for (unsigned int i_hyp = 1; i_hyp < responsibility.size(); i_hyp++)
-    responsibility[i_hyp] = 0.0f;
-}
-
-
-
-// responsibility depends on the relative global probability of the hypotheses and the likelihoods of the observations under each hypothesis
-// divide the global probabilities into "typical" data points and outliers
-// divide the variant probabilities into each hypothesis (summing to 1)
-// treat the 2 hypothesis case to start with
-void TentativeAlignment::UpdateResponsibility(const vector<float > &hyp_prob, float typical_prob) {
-  cerr << "UpdateResponsibility()\n";
-
-  if (!success){
-    cout << "alert: fail to splice still called" << endl;
-    InitializeResponsibility();
-  }
-  else {
-    //  vector<double> tmp_prob(3);
-    tmp_prob_d[0] = (1.0f - typical_prob) * scaled_likelihood[0];   // i'm an outlier
-    for (unsigned int i_hyp = 1; i_hyp < scaled_likelihood.size(); i_hyp++)
-      tmp_prob_d[i_hyp] = typical_prob * hyp_prob[i_hyp - 1] * scaled_likelihood[i_hyp];
-
-    double ll_denom = 0.0;
-    for (unsigned int i_hyp = 0; i_hyp<scaled_likelihood.size(); i_hyp++){
-      ll_denom += tmp_prob_d[i_hyp];
-    }
-
-    for (unsigned int i_hyp=0; i_hyp<responsibility.size(); i_hyp++) {
-      responsibility[i_hyp] = tmp_prob_d[i_hyp]/ll_denom;
-      cerr << "UpdateResponsibility(): responsibility[" << i_hyp << "] = " << responsibility[i_hyp] << endl;
-    }
-  }
 }
 
 float TentativeAlignment::ComputePosteriorLikelihood(const vector<float > &hyp_prob, float typical_prob) {
@@ -118,7 +73,6 @@ float TentativeAlignment::ComputePosteriorLikelihood(const vector<float > &hyp_p
 
 
 void TentativeAlignment::UpdateRelevantLikelihoods() {
-  // ComputeBasicLikelihoods();
   ComputeLogLikelihoods(); // automatically over relevant likelihoods
 }
 

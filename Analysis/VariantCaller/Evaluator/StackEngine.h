@@ -48,9 +48,6 @@ class Evaluator {
       multiallele_window_start = -1;
       multiallele_window_end = -1;
       doRealignment = false;
-      is_detect_best_multi_allele_pair_done_ = false;
-      is_hard_classification_for_reads_done_ = false;
-      is_hard_classification_for_families_done_ = false;
     };
 
     //! @brief  Create a detailed picture about this variant and all its alleles
@@ -61,7 +58,6 @@ class Evaluator {
     void SampleLikelihood(PersistingThreadObjects &thread_objects, const InputStructures &global_context,
         const ExtendParameters &parameters, const ReferenceReader &ref_reader, int chr_idx);
     void ScanSupportingEvidence(float &mean_ll_delta, int i_allele);
-    int DetectBestMultiAllelePair();
     void ComputePosteriorGenotype(int _alt_allele_index,float local_min_allele_freq, int &genotype_call,
         float &gt_quality_score, float &reject_status_quality_score);
     void MultiAlleleGenotype(float local_min_allele_freq, vector<int> &genotype_component,
@@ -70,26 +66,15 @@ class Evaluator {
 
     friend void GlueOutputVariant(Evaluator &eval, VariantCandidate &candidate_variant, const ExtendParameters &parameters, int _best_allele_index, int sample_index); // I want to access your private members
 
-    // The following private members are used only in the internal steps at
-    // a) int DetectBestMultiAllelePair()
-    // ... (deleted)
   private:
-    bool is_detect_best_multi_allele_pair_done_ = false;
     // Tvc used to compute read_id etc. twice. This is not computationally efficient.
     // Now we do it just once.
     // The following private members are the results of approximate hard classification for reads
-    bool is_hard_classification_for_reads_done_ = false;
     vector<int> read_id_;        // vector of allele ids per read, -1 = outlier, 0 = ref, >0 real allele
     vector<bool> strand_id_;     // vector of forward (true) or reverse (false) per read
-    // for each variant, calculate its' position within the soft clipped read distance to left and distance to right
+    // for each variant, calculate its position within the soft clipped read distance to left and distance to right
     vector<int> dist_to_left_;   // vector of distances from allele position to left soft clip per read
     vector<int> dist_to_right_;  // vector of distances from allele position to left soft clip per read
-
-    // The following private members are the results of approximate hard classification for families
-    bool is_hard_classification_for_families_done_ = false;
-    vector<int> family_id_; // similar to read_id, but it is for family
-    vector<bool> family_strand_id_; // similar to strand_id, but it is for family
-    vector<float> max_family_responsibility_; // maximum family responsibility each the family in family_id
 };
 
 

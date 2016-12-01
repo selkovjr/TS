@@ -42,50 +42,6 @@ void MultiBook::ResetCounter() {
   }
 }
 
-void MultiBook::AssignPositionFromEndToHardClassifiedReads(const vector<int> &read_id, const vector<int> &left, const vector<int> &right)
-{
-  // record position in read for each read with a valid allele
-  to_left.resize(read_id.size());
-  to_right.resize(read_id.size());
-  allele_index.resize(read_id.size());
-
-  unsigned int count = 0;
-  for (unsigned int i_read = 0; i_read < read_id.size(); i_read++) {
-    int _allele_index = read_id[i_read];
-    if (_allele_index > -1){
-      to_right[count] = right[i_read];
-      to_left[count] = left[i_read];
-      allele_index[count] = _allele_index;
-      count++;
-    }
-  }
-  to_left.resize(count);
-  to_right.resize(count);
-  allele_index.resize(count);
-}
-
-void MultiBook::AssignStrandToHardClassifiedReads(const vector<bool> &strand_id, const vector<int> &read_id)
-{
-  // reset counter
-  ResetCounter();
-  // record strand direction for each read with a valid allele
-  for (unsigned int i_read = 0; i_read < read_id.size(); i_read++) {
-    int _allele_index = read_id[i_read];
-    cerr << "AssignStrandToHardClassifiedReads(strand_id: " << strand_id[i_read] << ", read_id: " << read_id[i_read] << "), i_read = " << i_read << "\n";
-    int i_strand = 1;
-    if (strand_id[i_read])
-      i_strand = 0;
-    if (_allele_index > -1){
-      my_book[i_strand][_allele_index] += 1;
-    }
-    if (_allele_index == -1){
-      invalid_reads++;
-    }
-    cerr << "  " << read_id[i_read] << " -> " << i_strand << endl;
-    // otherwise no deal - doesn't count for this alternate at all
-  }
-}
-
 float VariantAssist::median(std::vector<float>& values)
 {
   std::vector<float> v = values;

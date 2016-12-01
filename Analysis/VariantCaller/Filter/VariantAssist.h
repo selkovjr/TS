@@ -62,8 +62,6 @@ public:
   int TotalCount(int strand_key);
   int NumAltAlleles();
   void ResetCounter();
-  void AssignStrandToHardClassifiedReads(const vector<bool> &strand_id, const vector<int> &read_id);
-  void AssignPositionFromEndToHardClassifiedReads(const vector<int> &read_id, const vector<int> &left, const vector<int> &right);
   float PositionBias(int i_alt);
   float GetPositionBiasPval(int i_alt);
   float GetPositionBias(int i_alt);
