@@ -69,11 +69,6 @@ class TentativeAlignment {
     void  UpdateResponsibility(const vector<float > &hyp_prob, float typical_prob);
     void  UpdateRelevantLikelihoods();
     float ComputeLLDifference(int a_hyp, int b_hyp);
-    int   MostResponsible();
-    // HardOutlierClassifier is used to pre-filter out the outliers in a family.
-    // Then it is reasonable to say that a functional family contains no outliers.
-    bool  LocalOutlierClassifier(float typical_prob);
-
 };
 
 

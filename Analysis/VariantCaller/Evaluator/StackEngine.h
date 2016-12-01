@@ -25,7 +25,8 @@ class PositionInBam;
 class Evaluator {
   public:
     // Raw read information
-    vector<const Alignment *> read_stack;    //!< Reads spanning the variant position
+    vector<const Alignment *> read_stack;    // Reads spanning the variant position
+    vector<const Alignment *> read_stack_n;  // Normal sample subset
     // Raw alleles information
     vcf::Variant *         variant;                 //!< VCF record of this variant position
     vector<AlleleIdentity> allele_identity_vector;  //!< Detailed information for each candidate allele
@@ -58,8 +59,6 @@ class Evaluator {
     void StackUpOneVariant(const ExtendParameters &parameters, const PositionInProgress& bam_position, int sample_index);
     void SampleLikelihood(PersistingThreadObjects &thread_objects, const InputStructures &global_context,
         const ExtendParameters &parameters, const ReferenceReader &ref_reader, int chr_idx);
-    void ApproximateHardClassifierForReads();
-    void ApproximateHardClassifierForFamilies(); // calculate the family id for cfDNA
     void ScanSupportingEvidence(float &mean_ll_delta, int i_allele);
     int DetectBestMultiAllelePair();
     void ComputePosteriorGenotype(int _alt_allele_index,float local_min_allele_freq, int &genotype_call,
@@ -72,8 +71,7 @@ class Evaluator {
 
     // The following private members are used only in the internal steps at
     // a) int DetectBestMultiAllelePair()
-    // b) void ApproximateHardClassifierForReads()
-    // c) void ApproximateHardClassifierForFamilies()
+    // ... (deleted)
   private:
     bool is_detect_best_multi_allele_pair_done_ = false;
     // Tvc used to compute read_id etc. twice. This is not computationally efficient.

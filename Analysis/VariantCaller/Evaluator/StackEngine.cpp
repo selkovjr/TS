@@ -37,51 +37,6 @@ void Evaluator::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
   mean_ll_delta = 10.0f * mean_ll_delta / log(10.0f); // phred-scaled
 }
 
-// Hard classify each read using its responsibility
-// read_id_[i] = -1 means the i-th read is classified as an outlier.
-// read_id_[i] = 0 means the i-th read is classified as ref.
-// read_id_[i] = 1 means the i-th read is classified as the variant allele 1, and so on.
-void Evaluator::ApproximateHardClassifierForReads() {
-  cerr << "ApproximateHardClassifierForReads()\n";
-  read_id_.clear();
-  strand_id_.clear();
-  dist_to_left_.clear();
-  dist_to_right_.clear();
-
-  read_id_.assign(read_stack.size(), -1);
-  strand_id_.assign(read_stack.size(), false);
-  dist_to_left_.assign(read_stack.size(), -1);
-  dist_to_right_.assign(read_stack.size(), -1);
-
-  int position0 = variant->position - 1; // variant->position 1-base: vcflib/Variant.h
-
-  for (unsigned int i_read = 0; i_read < read_stack.size(); ++i_read) {
-    // compute read_id_
-    if (allele_eval.alignments[i_read].success){
-      read_id_[i_read] = allele_eval.alignments[i_read].MostResponsible() - 1; // -1 = null, 0 = ref , ...
-    }
-    else{
-      cerr << i_read << " is outlier" << endl;
-      read_id_[i_read] = -1; // failure = outlier
-    }
-
-    // not an outlier
-    if(read_id_[i_read] > -1){
-      //fprintf(stdout, "position0 =%d, read_stack[i_read]->align_start = %d, read_stack[i_read]->align_end = %d, read_stack[i_read]->left_sc = %d, read_stack[i_read]->right_sc = %d\n", (int)position0, (int)read_stack[i_read]->align_start, (int)read_stack[i_read]->align_end, (int)read_stack[i_read]->left_sc, (int)read_stack[i_read]->right_sc);
-      //fprintf(stdout, "dist_to_left[%d] = =%d, dist_to_right[%d] = %d\n", (int)i_read, (int)(position0 - read_stack[i_read]->align_start), (int)i_read, (int)(read_stack[i_read]->align_end - position0));
-      dist_to_left_[i_read] = position0 - read_stack[i_read]->align_start;
-      assert ( dist_to_left_[i_read] >=0 );
-      dist_to_right_[i_read] = read_stack[i_read]->align_end - position0;
-      assert ( dist_to_right_[i_read] >=0 );
-    }
-    //compute strand_id_
-    strand_id_[i_read] = not (read_stack[i_read]->is_reverse_strand);
-  }
-
-  is_hard_classification_for_reads_done_ = true;
-}
-
-
 int Evaluator::DetectBestMultiAllelePair(){
   int best_alt_ndx = 0; // forced choice with ref
   //@TODO: just get the plane off the ground
@@ -95,9 +50,6 @@ int Evaluator::DetectBestMultiAllelePair(){
     best_allele_test[i_alt].second = 0.0f;
   }
 
-  if(not is_hard_classification_for_reads_done_){
-    ApproximateHardClassifierForReads();
-  }
   // take responsibility
   for(unsigned int i_read = 0; i_read < read_id_.size(); ++i_read){
     int my_alt = read_id_[i_read];

@@ -174,16 +174,3 @@ float TentativeAlignment::ComputeLLDifference(int a_hyp, int b_hyp) {
   return(fabs(log_likelihood[a_hyp] - log_likelihood[b_hyp]));
 }
 
-
-int TentativeAlignment::MostResponsible(){
-  int most_r = 0;
-  float best_r = responsibility[0];
-  for (unsigned int i_hyp = 1; i_hyp < responsibility.size(); i_hyp++){
-    if (responsibility[i_hyp] > best_r){
-      best_r = responsibility[i_hyp];
-      most_r = i_hyp;
-    }
-  }
-  return(most_r);
-}
-
