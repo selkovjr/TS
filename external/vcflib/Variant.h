@@ -127,7 +127,7 @@ public:
         }
     }
 
-    bool is_open(void) { 
+    bool is_open(void) {
 	return parsedHeader;
     }
 
@@ -183,10 +183,10 @@ public:
     vector<string> alt;      // a list of all the alternate alleles present at this locus
     vector<string> alleles;  // a list all alleles (ref + alt) at this locus
                              // the indicies are organized such that the genotype codes (0,1,2,.etc.)
-                             // correspond to the correct offest into the allelese vector.
+                             // correspond to the correct offest into the alleles vector.
                              // that is, alleles[0] = ref, alleles[1] = first alternate allele, etc.
     map<string, int> altAlleleIndexes;  // reverse lookup for alleles
-	
+
     map<string, vector<VariantAllele> > parsedAlternates(bool includePreviousBaseForIndels = false,
 							 bool useMNPs = false,
 							 bool useEntropy = false,
@@ -198,7 +198,7 @@ public:
 							 string flankingRefLeft = "",
 							 string flankingRefRight = "");
 
-    
+
 
     map<string, string> extendedAlternates(long int newPosition, long int length);
 
@@ -296,7 +296,7 @@ public:
 
     // constructor
     RuleToken(string token, map<string, VariantFieldType>& variables);
-    RuleToken(void) 
+    RuleToken(void)
         : type(BOOLEAN_VARIABLE)
         , state(false)
     { }
@@ -352,7 +352,7 @@ inline bool isRightParenthesis(const RuleToken& token) {
 }
 
 inline bool isOperand(const RuleToken& token) {
-    return ( token.type == RuleToken::OPERAND || 
+    return ( token.type == RuleToken::OPERAND ||
              token.type == RuleToken::NUMBER ||
              token.type == RuleToken::NUMERIC_VARIABLE ||
              token.type == RuleToken::STRING_VARIABLE ||
