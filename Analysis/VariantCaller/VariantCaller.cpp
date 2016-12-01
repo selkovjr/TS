@@ -445,7 +445,7 @@ void * VariantCallerWorker(void *input)
           }
         } /* multisample */
         else {
-          if (!ProcessOneVariant(thread_objects, vc, *v, *position_ticket, 0)) {
+          if (!ProcessOneVariant(thread_objects, vc, *v, *position_ticket)) {
             AutoFailTheCandidate(v->variant, vc.parameters->my_controls.use_position_bias, v->variant.sampleNames[0]);
           }
         }

@@ -99,7 +99,7 @@ void Evaluator::SampleLikelihood (
     allele_freq[a.first] = 1.0 * a.second / total;
   }
 
-  // Computed the log of sample likelihood
+  // Computed the log likelihood of joint samples
   double snv_likelihood = 0;
   for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
     double p = 0;
@@ -355,15 +355,18 @@ void GlueOutputVariant(Evaluator &eval, VariantCandidate &candidate_variant, con
 }
 
 // Read and process records appropriate for this variant; positions are zero based
-void Evaluator::StackUpOneVariant(const ExtendParameters &parameters, const PositionInProgress& bam_position, int sample_index)
-{
+void Evaluator::StackUpOneVariant(const ExtendParameters &parameters, VariantCandidate &candidate_variant, const PositionInProgress& bam_position) {
 
   // Initialize random number generator for each stack -> ensure reproducibility
   RandSchrange RandGen(parameters.my_controls.RandSeed);
 
   read_stack.clear();  // reset the stack
-  read_stack.reserve(parameters.my_controls.downSampleCoverage);
+  read_stack.reserve(2 * parameters.my_controls.downSampleCoverage);
+  read_stack_n.reserve(parameters.my_controls.downSampleCoverage);
+  read_stack_t.reserve(parameters.my_controls.downSampleCoverage);
   int read_counter = 0;
+  int read_counter_n = 0;
+  int read_counter_t = 0;
 
   for (Alignment* rai = bam_position.begin; rai != bam_position.end; rai = rai->next) {
 
@@ -380,22 +383,49 @@ void Evaluator::StackUpOneVariant(const ExtendParameters &parameters, const Posi
     if (rai->alignment.GetEndPosition() < multiallele_window_end)
       continue;
 
-    if (parameters.multisample) {
-      if (rai->sample_index != sample_index) {
-        continue;
-      }
-    }
+    // Get sample name without the numeric suffix
+    string sample_name = candidate_variant.variant.sampleNames[rai->sample_index];
+    sample_name = sample_name.substr(0, sample_name.find("."));
 
     // Reservoir Sampling
-    if (read_stack.size() < (unsigned int)parameters.my_controls.downSampleCoverage) {
+    if (read_stack.size() < 2 * (unsigned int)parameters.my_controls.downSampleCoverage) {
       read_counter++;
       read_stack.push_back(rai);
-    } else {
+    }
+    else {
       read_counter++;
-      // produces a uniformly distributed test_position between [0, read_counter-1]
+      // produces a uniformly distributed test_position between [0, read_counter - 1]
       unsigned int test_position = ((double)RandGen.Rand() / ((double)RandGen.RandMax + 1.0)) * (double)read_counter;
       if (test_position < (unsigned int)parameters.my_controls.downSampleCoverage)
         read_stack[test_position] = rai;
+    }
+
+    if (sample_name == "tumor") {
+      if (read_stack_t.size() < (unsigned int)parameters.my_controls.downSampleCoverage) {
+        read_counter_t++;
+        read_stack_t.push_back(rai);
+      }
+      else {
+        read_counter_t++;
+        // produces a uniformly distributed test_position between [0, read_counter - 1]
+        unsigned int test_position = ((double)RandGen.Rand() / ((double)RandGen.RandMax + 1.0)) * (double)read_counter;
+        if (test_position < (unsigned int)parameters.my_controls.downSampleCoverage)
+          read_stack_t[test_position] = rai;
+      }
+    }
+
+    if (sample_name == "normal") {
+      if (read_stack_n.size() < (unsigned int)parameters.my_controls.downSampleCoverage) {
+        read_counter_n++;
+        read_stack_n.push_back(rai);
+      }
+      else {
+        read_counter_n++;
+        // produces a uniformly distributed test_position between [0, read_counter - 1]
+        unsigned int test_position = ((double)RandGen.Rand() / ((double)RandGen.RandMax + 1.0)) * (double)read_counter;
+        if (test_position < (unsigned int)parameters.my_controls.downSampleCoverage)
+          read_stack_n[test_position] = rai;
+      }
     }
   }
 }
@@ -404,11 +434,10 @@ bool ProcessOneVariant (
   PersistingThreadObjects &thread_objects,
   VariantCallerContext& vc,
   VariantCandidate &candidate_variant,
-  const PositionInProgress& bam_position,
-  int sample_index
+  const PositionInProgress& bam_position
 ) {
   string sample_name = "";
-  if (sample_index >= 0) {sample_name = candidate_variant.variant.sampleNames[sample_index];}
+  //if (sample_index >= 0) {sample_name = candidate_variant.variant.sampleNames[sample_index];}
 
   cerr << "processing " << sample_name << "\n";
 
@@ -419,16 +448,25 @@ bool ProcessOneVariant (
   eval.FilterAllAlleles(vc.parameters->my_controls.filter_variant, candidate_variant.variant_specific_params); // put filtering here in case we want to skip below entries
 
   // We read in one stack per multi-allele variant
-  eval.StackUpOneVariant(*vc.parameters, bam_position, sample_index);
+  eval.StackUpOneVariant(*vc.parameters, candidate_variant, bam_position);
 
-  if (eval.read_stack.empty()) {
-    cerr << "Nonfatal: No reads found for " << candidate_variant.variant.sequenceName << "\t" << eval.multiallele_window_start << endl;
-    NullFilterReason(candidate_variant.variant, sample_name);
-    string my_reason = "NODATA";
-    AddFilterReason(candidate_variant.variant, my_reason, sample_name);
+  cerr << "read stack sizes: " << eval.read_stack_n.size() << ", " << eval.read_stack_t.size() << ", " << eval.read_stack.size() << endl;
+  if (eval.read_stack_n.empty() or eval.read_stack_t.empty()) {
+    if (eval.read_stack_n.empty()) {
+      cerr << "Nonfatal: No reads found in normal sample for " << candidate_variant.variant.sequenceName << "\t" << eval.multiallele_window_start << endl;
+      NullFilterReason(candidate_variant.variant, "normal.1");
+      AddFilterReason(candidate_variant.variant, "NODATA", "normal.1");
+      candidate_variant.variant.samples["normal.1"]["GT"].clear();
+      candidate_variant.variant.samples["normal.1"]["GT"].push_back("./.");
+    }
+    if (eval.read_stack_t.empty()) {
+      cerr << "Nonfatal: No reads found in tumor sample for " << candidate_variant.variant.sequenceName << "\t" << eval.multiallele_window_start << endl;
+      NullFilterReason(candidate_variant.variant, "tumor.1");
+      AddFilterReason(candidate_variant.variant, "NODATA", "tumor.1");
+      candidate_variant.variant.samples["tumor.1"]["GT"].clear();
+      candidate_variant.variant.samples["tumor.1"]["GT"].push_back("./.");
+    }
     SetFilteredStatus(candidate_variant.variant, true);
-    candidate_variant.variant.samples[sample_name]["GT"].clear();
-    candidate_variant.variant.samples[sample_name]["GT"].push_back("./.");
     return false;
   }
 
@@ -437,7 +475,7 @@ bool ProcessOneVariant (
   // try only ref vs alt allele here
   // leave ensemble in ref vs alt state
 
-  // Estimate single-sample likelihood
+  // Estimate joint variant likelihood (the product of single-sample likelihoods obtained by piling reads from both samples)
   eval.SampleLikelihood(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx);
   cerr << candidate_variant.variant << endl;
   return true;
@@ -452,7 +490,7 @@ bool ProcessOneVariant (
   int best_allele = eval.DetectBestMultiAllelePair();
 
   // output to variant
-  GlueOutputVariant(eval, candidate_variant, *vc.parameters, best_allele, sample_index);
+  // GlueOutputVariant(eval, candidate_variant, *vc.parameters, best_allele, sample_index);
 
   // output the inference results (MUQUAL, MUGT, MUGQ, etc.) if I turn on multi_min_allele_freq
   if (true or vc.parameters->program_flow.is_multi_min_allele_freq) {

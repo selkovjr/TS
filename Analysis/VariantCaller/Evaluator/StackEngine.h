@@ -27,6 +27,7 @@ class Evaluator {
     // Raw read information
     vector<const Alignment *> read_stack;    // Reads spanning the variant position
     vector<const Alignment *> read_stack_n;  // Normal sample subset
+    vector<const Alignment *> read_stack_t;  // Tumor sample subset
     // Raw alleles information
     vcf::Variant *         variant;                 //!< VCF record of this variant position
     vector<AlleleIdentity> allele_identity_vector;  //!< Detailed information for each candidate allele
@@ -56,7 +57,7 @@ class Evaluator {
     void SetupAllAlleles(const ExtendParameters &parameters, const InputStructures &global_context,
         const ReferenceReader &ref_reader, int chr_idx);
     void FilterAllAlleles(const ClassifyFilters &filter_variant, const vector<VariantSpecificParams>& variant_specific_params);
-    void StackUpOneVariant(const ExtendParameters &parameters, const PositionInProgress& bam_position, int sample_index);
+    void StackUpOneVariant(const ExtendParameters &parameters, VariantCandidate &candidate_variant, const PositionInProgress& bam_position);
     void SampleLikelihood(PersistingThreadObjects &thread_objects, const InputStructures &global_context,
         const ExtendParameters &parameters, const ReferenceReader &ref_reader, int chr_idx);
     void ScanSupportingEvidence(float &mean_ll_delta, int i_allele);

@@ -60,8 +60,7 @@ bool ProcessOneVariant (
   PersistingThreadObjects &thread_objects,
   VariantCallerContext& vc,
   VariantCandidate &current_variant,
-  const PositionInProgress& bam_position,
-  int sample_index = -1
+  const PositionInProgress& bam_position
 );
 
 #endif //HANDLEVRAIANTGEN_H
