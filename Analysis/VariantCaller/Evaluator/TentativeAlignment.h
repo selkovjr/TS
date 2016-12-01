@@ -27,7 +27,6 @@ class TentativeAlignment {
   public:
     string basecall;
     double error_prob;
-    vector<string>         instance_of_read_by_state;       // this read, modified by each state of a variant
     vector<int>            state_spread;
 
     // size number of hypotheses
@@ -35,20 +34,15 @@ class TentativeAlignment {
     vector<float> scaled_likelihood; // actual sum likelihood over test flows, rescaled to null hypothesis (as called), derived from log_likelihood
     float ll_scale; // local scaling factor for scaled likelihood as can't trust null hypothesis to be near data
 
-    // intermediate allocations
-    vector<float> tmp_prob_f;
-    vector<double> tmp_prob_d;
-
     // useful hidden variables
     int strand_key;
-
-    int heavy_tailed;
+    int sample_id;
 
     bool success;
 
     // functions
     TentativeAlignment (){
-      heavy_tailed = 3;  // t_5 degrees of freedom
+      sample_id = -1;
       strand_key = 0;
       success = true;
       ll_scale = 0.0f;
@@ -60,7 +54,6 @@ class TentativeAlignment {
     void  ComputeLogLikelihoodsSum();
     void  JointLogLikelihood();
     void  ComputeScaledLikelihood();
-    float ComputePosteriorLikelihood(const vector<float> &hyp_prob, float typical_prob);
     void  UpdateRelevantLikelihoods();
     float ComputeLLDifference(int a_hyp, int b_hyp);
 };

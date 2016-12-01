@@ -33,18 +33,8 @@ float xTDistOddN(float res, float sigma, float skew, int half_n) {
 }
 
 
-void TentativeAlignment::CleanAllocate(int num_hyp) {
-  // allocate my vectors here
-  log_likelihood.assign(num_hyp, 0.0f);
-  scaled_likelihood.assign(num_hyp, 0.0f);
-
-  tmp_prob_f.assign(num_hyp, 0.0f);
-  tmp_prob_d.assign(num_hyp, 0.0);
-}
-
 void TentativeAlignment::FillInPrediction(PersistingThreadObjects &thread_objects, const Alignment& my_read, const InputStructures &global_context) {
-  // allocate everything here
-  CleanAllocate(instance_of_read_by_state.size());
+  //cerr << "filling in data for " << my_read.name << endl;
   if (my_read.is_reverse_strand)
     strand_key = 1;
   else
@@ -55,20 +45,6 @@ void TentativeAlignment::FillInPrediction(PersistingThreadObjects &thread_object
 void TentativeAlignment::InitializeDerivedQualities() {
   // compute log-likelihoods
   ComputeLogLikelihoods();  // depends on test flow(s)
-}
-
-float TentativeAlignment::ComputePosteriorLikelihood(const vector<float > &hyp_prob, float typical_prob) {
-  cerr << "ComputePosteriorLikelihood()\n";
-  //  vector<float> tmp_prob(3);
-  tmp_prob_f[0] = (1.0f-typical_prob)*scaled_likelihood[0];   // i'm an outlier
-  for (unsigned int i_hyp=1; i_hyp<scaled_likelihood.size(); i_hyp++){
-    tmp_prob_f[i_hyp] = typical_prob * hyp_prob[i_hyp-1] * scaled_likelihood[i_hyp];
-  }
-  float ll_denom = 0.0f;
-  for (unsigned int i_hyp=0; i_hyp<scaled_likelihood.size(); i_hyp++) {
-    ll_denom += tmp_prob_f[i_hyp];
-  }
-  return(log(ll_denom)+ll_scale);  // log-likelihood under current distribution, including common value of log-likelihood-scale
 }
 
 
