@@ -79,6 +79,47 @@ void Evaluator::SampleLikelihood (
     info_fields.push_back(my_info.str());
   }
   cerr << my_info.str() << endl;
+
+  // Tabulate frequencies
+  std::map <string, long> allele_count;
+  std::map <string, double> allele_freq;
+  long total = 0;
+  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
+    const string basecall = allele_eval.alignments[i_read].basecall;
+    if (allele_count.count(basecall)) {
+      allele_count[basecall] += 1;
+    }
+    else {
+      allele_count[basecall] = 1;
+    }
+    total += 1;
+  }
+
+  for ( const auto &a: allele_count ) {
+    allele_freq[a.first] = 1.0 * a.second / total;
+  }
+
+  // Computed the log of sample likelihood
+  double snv_likelihood = 0;
+  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
+    double p = 0;
+    const string basecall = allele_eval.alignments[i_read].basecall;
+    double e = allele_eval.alignments[i_read].error_prob;
+    cerr << basecall << endl;
+    for (const string &true_base: {"A", "C", "G", "T"}) {
+      double p_b_given_a = basecall == true_base ? 1 - e : e / 3;
+      cerr << "  P(" << basecall << "|" << true_base << ") = " << p_b_given_a << endl;
+      p += p_b_given_a * allele_freq[basecall];
+    }
+    snv_likelihood += log10(p);
+  }
+
+  cerr << "total: " << total << endl;
+  for ( const auto &a: allele_count ) {
+    cerr << a.first << " -> " << a.second << " (" << allele_freq[a.first] << ")\n";
+  }
+
+  cerr << "sample likelihood: " << snv_likelihood << endl;
 }
 
 
@@ -258,11 +299,6 @@ void GlueOutputVariant(Evaluator &eval, VariantCandidate &candidate_variant, con
   my_decision.tune_sbias = parameters.my_controls.sbias_tune;
   my_decision.SetupFromMultiAllele(eval);
 
-  // pretend we can classify reads across multiple alleles
-  if(not eval.is_hard_classification_for_reads_done_){
-    eval.ApproximateHardClassifierForReads();
-  }
-
   my_decision.all_summary_stats.AssignStrandToHardClassifiedReads(eval.strand_id_, eval.read_id_);
 
   my_decision.all_summary_stats.AssignPositionFromEndToHardClassifiedReads(eval.read_id_, eval.dist_to_left_, eval.dist_to_right_);
@@ -374,6 +410,8 @@ bool ProcessOneVariant (
   string sample_name = "";
   if (sample_index >= 0) {sample_name = candidate_variant.variant.sampleNames[sample_index];}
 
+  cerr << "processing " << sample_name << "\n";
+
   int chr_idx = vc.ref_reader->chr_idx(candidate_variant.variant.sequenceName.c_str());
 
   Evaluator eval(candidate_variant.variant);
@@ -401,7 +439,8 @@ bool ProcessOneVariant (
 
   // Estimate single-sample likelihood
   eval.SampleLikelihood(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx);
-  exit(0);
+  cerr << candidate_variant.variant << endl;
+  return true;
 
   // fill in quantities derived from predictions
   int num_hyp_no_null = eval.allele_identity_vector.size() + 1; // num alleles +1 for ref

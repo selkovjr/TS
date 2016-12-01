@@ -28,7 +28,7 @@ bool SpliceVariantHypotheses(
   PersistingThreadObjects &thread_objects,
   string &basecall,
   double &error_prob,
-  bool & changed_alignment,
+  bool &changed_alignment,
   const InputStructures
   &global_context,
   const ReferenceReader
@@ -37,10 +37,15 @@ bool SpliceVariantHypotheses(
 );
 
 
-bool SpliceAddVariantAlleles(const Alignment &current_read, const string& pretty_alignment,
-                             const Evaluator &eval,
-                             const LocalReferenceContext &local_context, vector<string> &alignments,
-                             unsigned int pretty_idx, int DEBUG);
+bool SpliceAddVariantAlleles(
+  const Alignment &current_read,
+  const string& pretty_alignment,
+  const Evaluator &eval,
+  const LocalReferenceContext &local_context,
+  vector<string> &alignments,
+  vector<string> &qualities,
+  unsigned int pretty_idx, int DEBUG
+);
 
 
 void IncrementAlignmentIndices(const char aln_symbol, int &ref_idx, int &read_idx);
