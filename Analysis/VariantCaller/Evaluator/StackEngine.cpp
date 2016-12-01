@@ -29,7 +29,7 @@ void Evaluator::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
     if (allele_eval.alignments[i_read].success) {
       // measure disruption
 
-      mean_ll_delta += allele_eval.alignments[i_read].ComputeLLDifference(ref_hyp, alt_hyp);
+      //mean_ll_delta += allele_eval.alignments[i_read].ComputeLLDifference(ref_hyp, alt_hyp);
       count++;
     }
   }

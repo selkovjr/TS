@@ -27,35 +27,19 @@ class TentativeAlignment {
   public:
     string basecall;
     double error_prob;
-    vector<int>            state_spread;
-
-    // size number of hypotheses
-    vector<float> log_likelihood; // sum over our test flows: logged to avoid under-flows
-    vector<float> scaled_likelihood; // actual sum likelihood over test flows, rescaled to null hypothesis (as called), derived from log_likelihood
-    float ll_scale; // local scaling factor for scaled likelihood as can't trust null hypothesis to be near data
 
     // useful hidden variables
     int strand_key;
-    int sample_id;
+    int sample_index;
 
     bool success;
 
     // functions
     TentativeAlignment (){
-      sample_id = -1;
+      sample_index = -1;
       strand_key = 0;
       success = true;
-      ll_scale = 0.0f;
     };
-    void  CleanAllocate(int num_hyp);
-    void  FillInPrediction(PersistingThreadObjects &thread_objects, const Alignment &my_read, const InputStructures &global_context);
-    void  InitializeDerivedQualities();
-    void  ComputeLogLikelihoods();
-    void  ComputeLogLikelihoodsSum();
-    void  JointLogLikelihood();
-    void  ComputeScaledLikelihood();
-    void  UpdateRelevantLikelihoods();
-    float ComputeLLDifference(int a_hyp, int b_hyp);
 };
 
 

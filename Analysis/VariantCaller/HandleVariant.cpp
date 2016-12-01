@@ -14,7 +14,8 @@ void Evaluator::SampleLikelihood (
   const InputStructures &global_context,
   const ExtendParameters &parameters,
   const ReferenceReader &ref_reader,
-  int chr_idx
+  int chr_idx,
+  VariantCandidate &candidate_variant
 ) {
   bool changed_alignment;
   unsigned int  num_valid_reads = 0;
@@ -81,23 +82,7 @@ void Evaluator::SampleLikelihood (
   cerr << my_info.str() << endl;
 
   // Tabulate frequencies
-  std::map <string, long> allele_count;
-  std::map <string, double> allele_freq;
-  long total = 0;
-  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
-    const string basecall = allele_eval.alignments[i_read].basecall;
-    if (allele_count.count(basecall)) {
-      allele_count[basecall] += 1;
-    }
-    else {
-      allele_count[basecall] = 1;
-    }
-    total += 1;
-  }
-
-  for ( const auto &a: allele_count ) {
-    allele_freq[a.first] = 1.0 * a.second / total;
-  }
+  allele_eval.TabulateFrequencies(candidate_variant, read_stack);
 
   // Computed the log likelihood of joint samples
   double snv_likelihood = 0;
@@ -109,14 +94,21 @@ void Evaluator::SampleLikelihood (
     for (const string &true_base: {"A", "C", "G", "T"}) {
       double p_b_given_a = basecall == true_base ? 1 - e : e / 3;
       cerr << "  P(" << basecall << "|" << true_base << ") = " << p_b_given_a << endl;
-      p += p_b_given_a * allele_freq[basecall];
+      cerr << "  f = " << allele_eval.freq(basecall) << endl;
+      p += p_b_given_a * allele_eval.freq(basecall);
     }
     snv_likelihood += log10(p);
   }
 
-  cerr << "total: " << total << endl;
-  for ( const auto &a: allele_count ) {
-    cerr << a.first << " -> " << a.second << " (" << allele_freq[a.first] << ")\n";
+  cerr << "total: " << allele_eval.alignments.size() << endl;
+  for ( const auto &a: allele_eval.tumor_allele_count ) {
+    cerr << "tumor " << a.first << " -> " << a.second << " (" << allele_eval.freq(a.first, "tumor") << ")\n";
+  }
+  for ( const auto &a: allele_eval.normal_allele_count ) {
+    cerr << "normal " << a.first << " -> " << a.second << " (" << allele_eval.freq(a.first, "normal") << ")\n";
+  }
+  for (const string &base: {"A", "C", "G", "T"}) {
+    cerr << base << " -> " << allele_eval.freq(base) << endl;
   }
 
   cerr << "sample likelihood: " << snv_likelihood << endl;
@@ -472,7 +464,7 @@ bool ProcessOneVariant (
   // leave ensemble in ref vs alt state
 
   // Estimate joint variant likelihood (the product of single-sample likelihoods obtained by piling reads from both samples)
-  eval.SampleLikelihood(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx);
+  eval.SampleLikelihood(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx, candidate_variant);
   cerr << candidate_variant.variant << endl;
   return true;
 
