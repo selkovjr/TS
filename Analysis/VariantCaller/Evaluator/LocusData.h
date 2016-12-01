@@ -27,7 +27,6 @@ public:
     vector<int> valid_indexes;
 
     void FindValidIndexes(); // only loop over reads where we successfully filled in variants
-    void FillInPredictionsAndTestFlows(PersistingThreadObjects &thread_objects, vector<const Alignment *>& read_stack, const InputStructures &global_context);
     void ResetQualities();
     unsigned int DetailLevel(void);
 };

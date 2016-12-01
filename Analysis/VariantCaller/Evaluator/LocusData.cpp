@@ -2,19 +2,6 @@
 
 #include "LocusData.h"
 
-
-
-
-// fill in predictions for each hypothesis and initialze test flows
-void LocusData::FillInPredictionsAndTestFlows(PersistingThreadObjects &thread_objects, vector<const Alignment *>& read_stack,
-    const InputStructures &global_context)
-{
-  //ion::FlowOrder flow_order(my_data.flow_order, my_data.flow_order.length());
-  for (unsigned int i_read = 0; i_read < alignments.size(); i_read++) {
-    alignments[i_read].FillInPrediction(thread_objects, *read_stack[i_read], global_context);
-  }
-}
-
 void LocusData::ResetQualities() {
   // ! does not reset test flows or delta (correctly)
   for (unsigned int i_read = 0; i_read < alignments.size(); i_read++) {
