@@ -26,7 +26,9 @@
 class TentativeAlignment {
   public:
     string basecall;
+    int qscore;
     double error_prob;
+    int pos_in_read;
 
     // useful hidden variables
     int strand_key;

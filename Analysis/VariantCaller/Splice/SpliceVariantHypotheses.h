@@ -27,7 +27,9 @@ bool SpliceVariantHypotheses(
   const LocalReferenceContext &local_context,
   PersistingThreadObjects &thread_objects,
   string &basecall,
+  int &qscore,
   double &error_prob,
+  int &position,
   bool &changed_alignment,
   const InputStructures
   &global_context,

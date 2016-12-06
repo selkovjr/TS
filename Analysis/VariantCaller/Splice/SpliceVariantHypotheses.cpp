@@ -15,7 +15,9 @@ bool SpliceVariantHypotheses (
   const LocalReferenceContext &local_context,
   PersistingThreadObjects &thread_objects,
   string &basecall,
+  int &qscore,
   double &error_prob,
+  int &position,
   bool &changed_alignment,
   const InputStructures &global_context,
   const ReferenceReader &ref_reader,
@@ -195,7 +197,6 @@ bool SpliceVariantHypotheses (
 
   cerr << "alignments: " << eval.allele_identity_vector.size() << endl;
 
-  int position;
   char qual;
   if (alignments[0] == alignments[1]) {
     cerr << "equal to ref\n";
@@ -203,6 +204,7 @@ bool SpliceVariantHypotheses (
       position = alignments[0].length() - (local_context.position0 - current_read.alignment.Position) - 1;
       basecall = alignments[0][position];
       qual = qualities[0][position];
+      RevComplementInPlace(basecall);
       cerr << "  ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
     }
     else {
@@ -230,6 +232,7 @@ bool SpliceVariantHypotheses (
     }
   }
   cerr << "-----------------------\n";
+  qscore = qual - 33;
   error_prob = prob(qual);
   return did_splicing;
 };
