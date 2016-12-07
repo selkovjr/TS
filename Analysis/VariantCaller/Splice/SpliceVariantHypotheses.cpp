@@ -34,7 +34,6 @@ bool SpliceVariantHypotheses (
   // 1) Null hypothesis is read as called
   alignments[0] = current_read.read_bases;
   qualities[0] = current_read.read_qual;
-  cerr << "qual: " << current_read.read_qual << endl;
 
   // Initialize hypotheses variables for splicing
   for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
@@ -125,7 +124,7 @@ bool SpliceVariantHypotheses (
   if (ref_idx < (int)(local_context.position0 + local_context.reference_allele.length())) {
     did_splicing = false;
     if (global_context.DEBUG > 0)
-      cout << "Warning in Splicing: Reference allele "<< local_context.reference_allele << " did not fit into read " << current_read.alignment.Name << endl;
+      cerr << "Warning in Splicing: Reference allele "<< local_context.reference_allele << " did not fit into read " << current_read.alignment.Name << endl;
   }
 
   if (did_splicing) {
@@ -139,8 +138,10 @@ bool SpliceVariantHypotheses (
         RevInPlace(qualities[i_hyp]);
       }
 
-      cerr << "hypothesis[" << i_hyp << "]: " << alignments[i_hyp] << endl;
-      cerr << " qualities[" << i_hyp << "]: " << qualities[i_hyp] << endl;
+      if (global_context.DEBUG > 0) {
+        cerr << "hypothesis[" << i_hyp << "]: " << alignments[i_hyp] << endl;
+        cerr << " qualities[" << i_hyp << "]: " << qualities[i_hyp] << endl;
+      }
     }
   }
 
@@ -169,69 +170,71 @@ bool SpliceVariantHypotheses (
       qualities[i_hyp] = qualities[0];
     }
     if (global_context.DEBUG > 1) {
-      cout << "Failed to splice " << local_context.reference_allele << "->";
+      cerr << "Failed to splice " << local_context.reference_allele << "->";
       for (unsigned int i_alt = 0; i_alt < eval.allele_identity_vector.size(); i_alt++) {
-        cout << eval.allele_identity_vector[i_alt].altAllele;
+        cerr << eval.allele_identity_vector[i_alt].altAllele;
         if (i_alt < eval.allele_identity_vector.size() - 1)
-          cout << ",";
+          cerr << ",";
       }
-      cout << " into read " << current_read.alignment.Name << endl;
+      cerr << " into read " << current_read.alignment.Name << endl;
     }
   }
   else if (global_context.DEBUG > 1 and alignments[0] != alignments[1]) {
-    cout << "Spliced " << local_context.reference_allele << " -> ";
+    cerr << "Spliced " << local_context.reference_allele << " -> ";
     for (unsigned int i_alt = 0; i_alt < eval.allele_identity_vector.size(); i_alt++) {
-      cout << eval.allele_identity_vector[i_alt].altAllele;
+      cerr << eval.allele_identity_vector[i_alt].altAllele;
       if (i_alt < eval.allele_identity_vector.size() - 1)
-        cout << ",";
+        cerr << ",";
     }
-    cout << " into ";
-    if (current_read.is_reverse_strand) cout << "reverse ";
-    else cout << "forward ";
-    cout << "strand read " << current_read.alignment.Name << endl;
-    cout << "- Read as called: " << alignments[0] << endl;
-    cout << "- Reference Hyp.: " << alignments[1] << endl;
+    cerr << " into ";
+    if (current_read.is_reverse_strand) cerr << "reverse ";
+    else cerr << "forward ";
+    cerr << "strand read " << current_read.alignment.Name << endl;
+    cerr << "- Read as called: " << alignments[0] << endl;
+    cerr << "- Reference Hyp.: " << alignments[1] << endl;
     for (unsigned int i_hyp = 2; i_hyp < alignments.size(); i_hyp++)
-      cout << "- Variant Hyp. " << (i_hyp - 1) << ": " << alignments[i_hyp] << endl;
+      cerr << "- Variant Hyp. " << (i_hyp - 1) << ": " << alignments[i_hyp] << endl;
   }
 
-  cerr << "alignments: " << eval.allele_identity_vector.size() << endl;
+  if (global_context.DEBUG > 1) cerr << "alignments: " << eval.allele_identity_vector.size() << endl;
 
   char qual;
   if (alignments[0] == alignments[1]) {
-    cerr << "equal to ref\n";
+    if (global_context.DEBUG > 1) cerr << "equal to ref\n";
     if (current_read.is_reverse_strand) {
       position = alignments[0].length() - (local_context.position0 - current_read.alignment.Position) - 1;
       basecall = alignments[0][position];
       qual = qualities[0][position];
       RevComplementInPlace(basecall);
-      cerr << "  ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
+      if (global_context.DEBUG > 1) cerr << "  ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
     }
     else {
       position = local_context.position0 - current_read.alignment.Position;
       basecall = alignments[0][position];
       qual = qualities[0][position];
-      cerr << "  ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
+      if (global_context.DEBUG > 1) cerr << "  ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
     }
   }
   else {
-    cerr << "alt\n";
-    cout << "  allele: " << eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele << endl;
+    if (global_context.DEBUG > 1) {
+      cerr << "alt\n";
+      cerr << "  allele: " << eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele << endl;
+    }
     if (current_read.is_reverse_strand) {
       position = alignments[0].length() - (local_context.position0 - current_read.alignment.Position) - 1;
       basecall = alignments[0][position];
       qual = qualities[0][position];
       RevComplementInPlace(basecall);
-      cerr << "  ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
+      if (global_context.DEBUG > 1) cerr << "  ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
     }
     else {
       position = local_context.position0 - current_read.alignment.Position;
       basecall = alignments[0][position];
       qual = qualities[0][position];
-      cerr << "  ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
+      if (global_context.DEBUG > 1) cerr << "  ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
     }
   }
-  cerr << "-----------------------\n";
+  if (global_context.DEBUG > 1) cerr << "-----------------------\n";
   qscore = qual - 33;
   error_prob = prob(qual);
   return did_splicing;
@@ -307,10 +310,10 @@ bool SpliceAddVariantAlleles(
       }
       if (DEBUG > 1 and shifted_position > 0) {
         // printouts
-        cout << "Shifted splice position by " << shifted_position << " in " << current_read.alignment.Name
+        cerr << "Shifted splice position by " << shifted_position << " in " << current_read.alignment.Name
           << " " << local_context.position0 << local_context.reference_allele
           << "->" << eval.allele_identity_vector[my_allele_idx].altAllele << endl;
-        cout << alignments[i_hyp] << endl;
+        cerr << alignments[i_hyp] << endl;
       }
       alignments[i_hyp][splice_idx] = eval.allele_identity_vector[my_allele_idx].altAllele[0];
       if (current_read.is_reverse_strand) {
@@ -357,7 +360,7 @@ string SpliceDoRealignement (
     pretty_idx++;
   }
   if (DEBUG > 1)
-    cout << "Computed variant position as (read, ref, pretty) " << read_idx << " " << ref_idx << " " << pretty_idx << endl;
+    cerr << "Computed variant position as (read, ref, pretty) " << read_idx << " " << ref_idx << " " << pretty_idx << endl;
 
   if (pretty_idx >= current_read.pretty_aln.length()
       or ref_idx  >= ref_reader.chr_size(chr_idx)
@@ -394,7 +397,7 @@ string SpliceDoRealignement (
     }
   }
   if (DEBUG > 1)
-    cout << "Computed left realignment window as (read, ref, pretty) " << read_left << " " << ref_left << " " << pretty_left << endl;
+    cerr << "Computed left realignment window as (read, ref, pretty) " << read_left << " " << ref_left << " " << pretty_left << endl;
 
 
   // Looking at alignment to the right to find right place to cut sequence
@@ -424,7 +427,7 @@ string SpliceDoRealignement (
     }
   }
   if (DEBUG > 1)
-    cout << "Computed right realignment window as (read, ref, pretty) " << read_right << " " << ref_right << " " << pretty_right << endl;
+    cerr << "Computed right realignment window as (read, ref, pretty) " << read_right << " " << ref_right << " " << pretty_right << endl;
   // Put in some sanity checks for alignment boundaries found...
 
 
@@ -436,11 +439,11 @@ string SpliceDoRealignement (
   // printouts
   if (DEBUG > 1) {
     thread_objects.realigner.verbose_ = true;
-    cout << "Realigned " << current_read.alignment.Name << " from " << endl;
+    cerr << "Realigned " << current_read.alignment.Name << " from " << endl;
   }
   if (read_left >= read_right and ref_left >= ref_right) {
     if (DEBUG > 1)
-      cout << "ERROR: realignment window has zero size! " << endl;
+      cerr << "ERROR: realignment window has zero size! " << endl;
     return new_alignment;
   }
 
@@ -454,7 +457,7 @@ string SpliceDoRealignement (
 
   if (!thread_objects.realigner.computeSWalignment(new_cigar_data, new_md_data, start_position_shift)) {
     if (DEBUG > 1)
-      cout << "ERROR: realignment failed! " << endl;
+      cerr << "ERROR: realignment failed! " << endl;
     return new_alignment;
   }
 
@@ -467,7 +470,7 @@ string SpliceDoRealignement (
     new_alignment.replace(pretty_left, (pretty_right - pretty_left), thread_objects.realigner.pretty_aln());
     changed_alignment = true;
   }
-  if (changed_alignment) {
+  if (DEBUG > 1 and changed_alignment) {
     cerr << "new alignment: " << new_alignment << endl;
     cerr << "new_cigar_data: ";
     for (vector<CigarOp>::iterator iter = new_cigar_data.begin(); (iter != new_cigar_data.end()); ++iter) {

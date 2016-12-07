@@ -539,6 +539,7 @@ include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Splice")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Filter")
 include_directories("${PROJECT_SOURCE_DIR}/realignment")
 include_directories("${PROJECT_SOURCE_DIR}/Calibration")
+include_directories("/data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib")
 
 set(tvcSRCS
   VariantCaller/IndelAssembly/IndelAssembly.cpp
@@ -594,6 +595,55 @@ set(tvcSRCS
   realignment/Realigner.cpp
   ${ION_TS_EXTERNAL}/jsoncpp-src-amalgated0.6.0-rc1/jsoncpp.cpp
   ${PROJECT_BINARY_DIR}/IonVersion.cpp
+
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/bam.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/bam_aux.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/bam_import.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/bam_index.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/bam_pileup.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/bgzf.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/faidx.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/kstring.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/razf.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/sam.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/redist/samtools-0.1.18_no_tview/sam_header.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_common/adjust_joint_eprob.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_common/blt_shared.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_common/hapscore.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_common/position_loghood_minfunc.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_common/position_nonref_2allele_test.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_common/position_snp_call_pprob_digt.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_common/ref_context.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_common/snp_pos_info.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_common/sparse_function_1d.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/bam_streamer.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/blt_exception.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/compat_util.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/log.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/parse_util.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/pos_range.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/qscore_cache.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/ranksum.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/seq_util.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/align_path.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/calibration_models.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/chrom_depth_map.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/cmodel.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/gvcf_aggregator.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/gvcf_block_site_record.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/gvcf_header.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/gvcf_locus_info.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/indel_data.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/indel_util.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/pos_basecall_buffer.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/starling_align_limit.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/starling_indel_call_pprob_digt.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/starling_indel_report_info.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/starling_ref_seq.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/starling_common/starling_shared.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/strelka/position_somatic_snv_strand_grid.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/strelka/somatic_indel_grid.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/strelka/strelka_shared.o
 )
 
 if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
