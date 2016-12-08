@@ -48,7 +48,7 @@ void * VariantCallerWorker(void *input);
 int main(int argc, char* argv[])
 {
 
-  printf("tvcgen %s-%s (%s) - Torrent Variant Caller (hacked)\n\n",
+  printf("tvc-strelka %s-%s (%s) - Torrent Variant Caller hosting Strelka somatic caller\n\n",
          IonVersion::GetVersion().c_str(), IonVersion::GetRelease().c_str(), IonVersion::GetGitHash().c_str());
 
   // stolen from "Analysis" to silence error messages from Armadillo library

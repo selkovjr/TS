@@ -307,9 +307,10 @@ void Evaluator::Strelka (
 
   opt.bam_seq_name = candidate_variant.variant.sequenceName;
 
-  opt.user_report_range.begin_pos = 24447295;
+  // Strelka's realignment window for SNPs is 20 bases on either side
+  opt.user_report_range.begin_pos = max(0, multiallele_window_start - 20);
   opt.user_report_range.is_begin_pos = true;
-  opt.user_report_range.end_pos = 24448227;
+  opt.user_report_range.end_pos = multiallele_window_end + 20;
   opt.user_report_range.is_end_pos = true;
   opt.user_genome_size = parameters.my_controls.genome_size;
   opt.is_user_genome_size = true;
