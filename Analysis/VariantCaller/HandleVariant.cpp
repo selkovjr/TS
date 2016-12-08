@@ -18,12 +18,12 @@
 #include "blt_util/bam_seq.hh"
 #include "blt_util/depth_stream_stat_range.hh"
 #include "blt_util/seq_util.hh"
+#include "starling_common/gvcf_aggregator.hh"
 #include "starling_common/gvcf_locus_info.hh"
 #include "starling_common/pos_basecall_buffer.hh"
 #include "starling_common/starling_ref_seq.hh" // get_starling_ref_seq()
-//#include "starling_common/starling_pos_processor_base.hh"
 #include "strelka/strelka_shared.hh" // for strelka_options
-#include "starling_common/gvcf_aggregator.hh"
+//#include "starling_common/starling_pos_processor_base.hh"
 
 std::auto_ptr<gvcf_aggregator> _gvcfer;
 
@@ -299,17 +299,19 @@ void Evaluator::Strelka (
   int chr_idx,
   VariantCandidate &candidate_variant
 ) {
+
   // Initialize priors and other options
   strelka_options opt;
   opt.samtools_ref_seq_file = "/data1/selkov_workdir/data/reference/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa";
-  opt.bam_seq_name = "1";
-  //opt.is_bam_seq_name = true;
   opt.is_samtools_ref_set = true;
+
+  opt.bam_seq_name = candidate_variant.variant.sequenceName;
+
   opt.user_report_range.begin_pos = 24447295;
   opt.user_report_range.is_begin_pos = true;
   opt.user_report_range.end_pos = 24448227;
   opt.user_report_range.is_end_pos = true;
-  opt.user_genome_size = 355762014;
+  opt.user_genome_size = parameters.my_controls.genome_size;
   opt.is_user_genome_size = true;
   opt.shared_site_error_rate = 5.0e-7;
   opt.is_counts = true;
@@ -318,8 +320,6 @@ void Evaluator::Strelka (
   opt.is_compute_VQSRmetrics = true;
   bool _is_variant_windows(opt.variant_windows.size());
   std::set<pos_t> _variant_print_pos;
-
-  cerr << "theta: " << opt.bsnp_diploid_theta << endl;
 
   reference_contig_segment ref;
   get_starling_ref_seq(opt, ref);
@@ -646,7 +646,6 @@ void Evaluator::Strelka (
     // hpol filter
     _site_info.hpol = get_snp_hpol_size(ref_pos, ref);
 
-    cerr << "pi.n_mapq: " << pi.n_mapq << endl;
     cerr << "HPLEN: " << _site_info.hpol << " MQ: " << _site_info.MQ << " ReadPosRankSum: " << _site_info.ReadPosRankSum << " MQRankSum: " << _site_info.MQRankSum << " BaseQRankSum: " << _site_info.BaseQRankSum << endl;
   }
 
@@ -659,7 +658,7 @@ void Evaluator::Strelka (
     }
 #endif
 
-    //Add site gvcf
+    // Add site gvcf
     if (opt.is_gvcf_output()) {
       _site_info.init(ref_pos, pi.get_ref_base(), good_pi, opt.used_allele_count_min_qscore);
       _gvcfer->add_site(_site_info);

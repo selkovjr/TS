@@ -34,8 +34,6 @@ void VariantCallerHelp() {
   printf("     --force-sample-name                STRING      force all read groups to have this sample name [off]\n");
   printf("  -t,--target-file                      FILE        only process targets in this bed file [optional]\n");
   printf("  -D,--downsample-to-coverage           INT         limit the number of reads examined to evaluate a candidate (does not apply to candidate generation) [2000]\n");
-  printf("     --model-file                       FILE        HP recalibration model input file.\n");
-  printf("     --recal-model-hp-thres             INT         Lower threshold for HP recalibration.\n");
   printf("\n");
 
   printf("Outputs:\n");
@@ -69,10 +67,8 @@ void VariantCallerHelp() {
   printf("     --use-input-allele-only            on/off      only consider provided alleles for locations in input-vcf [off]\n");
   printf("\n");
 
-  printf("Variant candidate scoring options:\n");
-  printf("     --outlier-probability              FLOAT       probability for outlier reads [0.01]\n");
-  printf("     --heavy-tailed                     INT         degrees of freedom in t-dist modeling signal residual heavy tail [3]\n");
-  printf("     --suppress-recalibration           on/off      Suppress homopolymer recalibration [on].\n");
+  printf("Variant candidate scoring options (Strelka):\n");
+  printf("     --genome-size                      INT         total number of non-ambiguous bases in the reference genome (informs the estimate of genomic prior) [required]\n");
   printf("     --do-snp-realignment               on/off      Realign reads in the vicinity of candidate snp variants [on].\n");
   printf("     --do-mnp-realignment               on/off      Realign reads in the vicinity of candidate mnp variants [do-snp-realignment].\n");
   printf("     --realignment-threshold            FLOAT       Max. allowed fraction of reads where realignment causes an alignment change [1.0].\n");
@@ -172,6 +168,8 @@ void VariantCallerHelp() {
 
 
 ControlCallAndFilters::ControlCallAndFilters() {
+  genome_size = 0;
+
   // all defaults handled by sub-filters
   data_quality_stringency = 4.0f;  // phred-score for this variant per read
   read_rejection_threshold = 0.5f; // half the reads gone, filter this
@@ -188,6 +186,7 @@ ControlCallAndFilters::ControlCallAndFilters() {
   sbias_tune = 0.5f;
   downSampleCoverage = 2000;
   RandSeed = 631;
+
   // wanted by downstream
   suppress_reference_genotypes = true;
   suppress_nocall_genotypes = true;
@@ -231,8 +230,7 @@ double GetParamsDbl(Json::Value& json, const string& key, double default_value) 
 }
 
 
-int RetrieveParameterInt(OptArgs &opts, Json::Value& json, char short_name, const string& long_name_hyphens, int default_value)
-{
+int RetrieveParameterInt(OptArgs &opts, Json::Value& json, char short_name, const string& long_name_hyphens, int default_value) {
   string long_name_underscores = long_name_hyphens;
   for (unsigned int i = 0; i < long_name_underscores.size(); ++i)
     if (long_name_underscores[i] == '-')
@@ -258,8 +256,33 @@ int RetrieveParameterInt(OptArgs &opts, Json::Value& json, char short_name, cons
   return value;
 }
 
-double RetrieveParameterDouble(OptArgs &opts, Json::Value& json, char short_name, const string& long_name_hyphens, double default_value)
-{
+unsigned long RetrieveParameterLong(OptArgs &opts, Json::Value& json, char short_name, const string& long_name_hyphens, unsigned long default_value) {
+  string long_name_underscores = long_name_hyphens;
+  for (unsigned int i = 0; i < long_name_underscores.size(); ++i)
+    if (long_name_underscores[i] == '-')
+      long_name_underscores[i] = '_';
+
+  unsigned long value = default_value;
+  string source = "builtin default";
+
+  if (json.isMember(long_name_underscores)) {
+    if (json[long_name_underscores].isString())
+      value = atol(json[long_name_underscores].asCString());
+    else
+      value = json[long_name_underscores].asUInt64();
+    source = "parameters json file";
+  }
+
+  if (opts.HasOption(short_name, long_name_hyphens)) {
+    value = opts.GetFirstLong(short_name, long_name_hyphens, value);
+    source = "command line option";
+  }
+
+  cout << setw(35) << long_name_hyphens << " = " << setw(10) << value << " (long integer, " << source << ")" << endl;
+  return value;
+}
+
+double RetrieveParameterDouble(OptArgs &opts, Json::Value& json, char short_name, const string& long_name_hyphens, double default_value) {
   string long_name_underscores = long_name_hyphens;
   for (unsigned int i = 0; i < long_name_underscores.size(); ++i)
     if (long_name_underscores[i] == '-')
@@ -286,8 +309,7 @@ double RetrieveParameterDouble(OptArgs &opts, Json::Value& json, char short_name
 }
 
 
-bool RetrieveParameterBool(OptArgs &opts, Json::Value& json, char short_name, const string& long_name_hyphens, bool default_value)
-{
+bool RetrieveParameterBool(OptArgs &opts, Json::Value& json, char short_name, const string& long_name_hyphens, bool default_value) {
   string long_name_underscores = long_name_hyphens;
   for (unsigned int i = 0; i < long_name_underscores.size(); ++i)
     if (long_name_underscores[i] == '-')
@@ -314,12 +336,11 @@ bool RetrieveParameterBool(OptArgs &opts, Json::Value& json, char short_name, co
 }
 
 void ConvertToUpper(string &s){
-    for(unsigned int i = 0; i<s.size(); ++i)
-        s[i] = toupper(s[i]);
+  for(unsigned int i = 0; i<s.size(); ++i)
+    s[i] = toupper(s[i]);
 }
 
-string RetrieveParameterString(OptArgs &opts, Json::Value& json, char short_name, const string& long_name_hyphens, const string& default_value)
-{
+string RetrieveParameterString(OptArgs &opts, Json::Value& json, char short_name, const string& long_name_hyphens, const string& default_value) {
   string long_name_underscores = long_name_hyphens;
   for (unsigned int i = 0; i < long_name_underscores.size(); ++i)
     if (long_name_underscores[i] == '-')
@@ -539,6 +560,9 @@ void ClassifyFilters::CheckParameterLimits() {
 void ControlCallAndFilters::CheckParameterLimits() {
 
   filter_variant.CheckParameterLimits();
+
+  CheckParameterLowerBound<long>      ("genome-size",  genome_size, 1);
+
   CheckParameterLowerBound<float>     ("data-quality-stringency",  data_quality_stringency,  0.0f);
   CheckParameterLowerUpperBound<float>("read-rejection-threshold", read_rejection_threshold, 0.0f, 1.0f);
   CheckParameterLowerUpperBound<int>  ("downsample-to-coverage",   downSampleCoverage,       20, 100000);
@@ -591,6 +615,14 @@ void ControlCallAndFilters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
 
   filter_variant.SetOpts(opts, tvc_params);
   RandSeed = 631;    // Not exposed to user at this point
+
+  genome_size                       = RetrieveParameterLong(opts, tvc_params, '-', "genome-size", 0);
+  if (genome_size < 1) {
+    cerr << "Fatal ERROR: genome size not specified via --genome-size" << endl;
+    exit(1);
+  }
+
+  data_quality_stringency               = RetrieveParameterDouble(opts, tvc_params, '-', "data-quality-stringency",4.0f);
 
   // catchall filter parameter to be used to filter any generic predictive model of quality
   data_quality_stringency               = RetrieveParameterDouble(opts, tvc_params, '-', "data-quality-stringency",4.0f);
@@ -795,11 +827,10 @@ void ExtendParameters::SetupFileIO(OptArgs &opts, Json::Value& tvc_params) {
   postprocessed_bam                     = opts.GetFirstString('-', "postprocessed-bam", "");
   sampleName                            = opts.GetFirstString('g', "sample-name", "");
   force_sample_name                     = opts.GetFirstString('-', "force-sample-name", "");
-
 }
 
-// ------------------------------------------------------------
 
+// ------------------------------------------------------------
 void ExtendParameters::SetFreeBayesParameters(OptArgs &opts, Json::Value& fb_params) {
   // FreeBayes parameters
   // primarily used in candidate generation
@@ -827,7 +858,7 @@ void ExtendParameters::SetFreeBayesParameters(OptArgs &opts, Json::Value& fb_par
   minAltFraction                        = RetrieveParameterDouble(opts, fb_params, '-', "gen-min-alt-allele-freq", my_controls.filter_snps.min_allele_freq);
   minCoverage                           = RetrieveParameterInt   (opts, fb_params, '-', "gen-min-coverage", my_controls.filter_snps.min_cov);
   minIndelAltFraction                   = RetrieveParameterDouble(opts, fb_params, '-', "gen-min-indel-alt-allele-freq", my_controls.filter_hp_indel.min_allele_freq);
-  //set up debug levels
+  // set up debug levels
 
   if (program_flow.DEBUG > 0)
     debug = true;
@@ -842,8 +873,8 @@ void ExtendParameters::SetFreeBayesParameters(OptArgs &opts, Json::Value& fb_par
   }
 }
 
-// ------------------------------------------------------------
 
+// ------------------------------------------------------------
 void ExtendParameters::ParametersFromJSON(OptArgs &opts, Json::Value &tvc_params, Json::Value &freebayes_params, Json::Value &params_meta) {
   string parameters_file                = opts.GetFirstString('-', "parameters-file", "");
   Json::Value parameters_json(Json::objectValue);
@@ -867,8 +898,8 @@ void ExtendParameters::ParametersFromJSON(OptArgs &opts, Json::Value &tvc_params
   }
 }
 
-// ------------------------------------------------------------
 
+// ------------------------------------------------------------
 void ExtendParameters::CheckParameterLimits() {
   // Check in the order they were set
   my_controls.CheckParameterLimits();
@@ -948,10 +979,6 @@ ExtendParameters::ExtendParameters(int argc, char** argv)
 
   my_controls.SetOpts(opts, tvc_params);
   program_flow.SetOpts(opts, tvc_params);
-
-  // Dummy lines for HP recalibration
-  recal_model_file_name = opts.GetFirstString ('-', "model-file", "");
-  recalModelHPThres = opts.GetFirstInt('-', "recal-model-hp-thres", 4);
 
   SetFreeBayesParameters(opts, freebayes_params);
   bool overrideLimits          = RetrieveParameterBool  (opts, tvc_params, '-', "override-limits", false);

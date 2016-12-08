@@ -82,6 +82,7 @@ class ClassifyFilters {
 
 class ControlCallAndFilters {
   public:
+    long genome_size; // The input value for Strelka's attempt to rationalize genomic priors via Drake's rule
 
     // values relating the decision tree for calling/genotyping
     // i.e controlling no-call/call decisions
@@ -111,7 +112,7 @@ class ControlCallAndFilters {
     ClassifyFilters filter_variant;
 
     // tuning parameter for xbias
-  //  float xbias_tune;
+    //  float xbias_tune;
     float sbias_tune;
 
     BasicFilters filter_snps;
@@ -199,9 +200,6 @@ public:
 
   string sampleName;
   string force_sample_name;
-
-  string recal_model_file_name;
-  int recalModelHPThres;
 
   string              params_meta_name;
   string              params_meta_details;

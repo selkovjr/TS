@@ -15,9 +15,9 @@ OptArgument::OptArgument() {
 }
 
 
-/** 
+/**
  * Read any arguments up to a bare '--' after which all arguments
- * will be ignored. Original data in argc and argv are left unchanged. 
+ * will be ignored. Original data in argc and argv are left unchanged.
  */
 void OptArgs::ParseCmdLine(int argc, const char *argv[]) {
   if (argc == 0) {
@@ -46,9 +46,9 @@ void OptArgs::ParseCmdLine(int argc, const char *argv[]) {
 }
 
 
-/** 
+/**
  * Check if a given option was provided
- */ 
+ */
 bool OptArgs::HasOption(char shortOption, const std::string &longOption) {
 
   std::string shortString = std::string(1, shortOption);
@@ -67,7 +67,7 @@ bool OptArgs::HasOption(char shortOption, const std::string &longOption) {
 void OptArgs::GetOption(std::string &value, const std::string &defaultValue,
 			char shortOption, const std::string &longOption) {
   OptArgument *opt = GetOptArgument(shortOption, longOption, defaultValue);
-  // 
+  //
   if (opt->mValues.size() == 0) {
     Abort("No argument specified for option: " + longOption);
   }
@@ -77,13 +77,13 @@ void OptArgs::GetOption(std::string &value, const std::string &defaultValue,
 
 /**
  * Get a boolean option value for the givent short/long key
- */ 
+ */
 void OptArgs::GetOption(bool &value, const std::string &defaultValue,
 			char shortOption, const std::string &longOption) {
   OptArgument *opt = GetOptArgument(shortOption, longOption, defaultValue);
 
-  if (opt->mValues.size() == 0 || 
-      opt->mValues[0] == "TRUE" || 
+  if (opt->mValues.size() == 0 ||
+      opt->mValues[0] == "TRUE" ||
       opt->mValues[0] == "true" ||
       opt->mValues[0] == "on" ||
       opt->mValues[0] == "ON") {
@@ -103,7 +103,7 @@ void OptArgs::GetOption(bool &value, const std::string &defaultValue,
 
 /**
  * Get a double option value for the givent short/long key
- */ 
+ */
 void OptArgs::GetOption(double &value, const std::string &defaultValue,
 			char shortOption, const std::string &longOption) {
   OptArgument *opt = GetOptArgument(shortOption, longOption, defaultValue);
@@ -183,7 +183,7 @@ void OptArgs::GetOption(std::vector<unsigned int> &value, const std::string &def
     if (errno != 0 || *end != '\0') {
       Abort("Error converting: " + words[i] + " to an unsigned int for option: " + longOption);
     }
-    errno = err;    
+    errno = err;
   }
 }
 
@@ -202,7 +202,7 @@ void OptArgs::GetOption(std::vector<std::string> &value, const std::string &defa
 
 /**
  * Get a int option value for the given short/long key
- */ 
+ */
 void OptArgs::GetOption(int &value, const std::string &defaultValue,
 			char shortOption, const std::string &longOption) {
   OptArgument *opt = GetOptArgument(shortOption, longOption, defaultValue);
@@ -212,7 +212,7 @@ void OptArgs::GetOption(int &value, const std::string &defaultValue,
   char *end = NULL;
   int err = errno;
   errno = 0;
-  value = strtol(opt->mValues[0].c_str(), &end, 10); 
+  value = strtol(opt->mValues[0].c_str(), &end, 10);
   if (errno != 0 || *end != '\0') {
     Abort("Error converting: " + opt->mValues[0] + " to an integer for option: " + longOption);
   }
@@ -221,7 +221,7 @@ void OptArgs::GetOption(int &value, const std::string &defaultValue,
 
 /**
  * Get an unsigned int option value for the given short/long key
- */ 
+ */
 void OptArgs::GetOption(unsigned int &value, const std::string &defaultValue,
 			char shortOption, const std::string &longOption) {
   OptArgument *opt = GetOptArgument(shortOption, longOption, defaultValue);
@@ -231,7 +231,7 @@ void OptArgs::GetOption(unsigned int &value, const std::string &defaultValue,
   char *end = NULL;
   int err = errno;
   errno = 0;
-  value = strtoul(opt->mValues[0].c_str(), &end, 10); 
+  value = strtoul(opt->mValues[0].c_str(), &end, 10);
   if (errno != 0 || *end != '\0') {
     Abort("Error converting: " + opt->mValues[0] + " to an unsigned integer for option: " + longOption);
   }
@@ -373,6 +373,33 @@ int OptArgs::GetFirstInt(char shortOption, const std::string &longOption, int de
     Abort("Error converting: " + opt->mValues[0] + " to an integer for option: " + longOption);
   }
   errno = err;
+  return value;
+}
+
+
+
+/**
+ * Get a int option value for the given short/long key
+ * If the option appears multiple times, use the earliest occurrence
+ */
+unsigned long OptArgs::GetFirstLong(char shortOption, const std::string &longOption, unsigned long defaultInt)
+{
+  char defaultValue[64];
+  snprintf(defaultValue, 64, "%lu", defaultInt);
+  OptArgument *opt = GetOptArgument(shortOption, longOption, defaultValue);
+  if (opt->mValues.size() == 0) {
+    Abort("No argument specified for option: " + longOption);
+  }
+  char *end = NULL;
+  int err = errno;
+  errno = 0;
+
+  unsigned long value = strtol(opt->mValues[0].c_str(), &end, 10);
+  if (errno != 0 || *end != '\0') {
+    Abort("Error converting: " + opt->mValues[0] + " to an integer for option: " + longOption);
+  }
+  errno = err;
+
   return value;
 }
 
@@ -623,7 +650,7 @@ void OptArgs::GetUncheckedOptions(std::vector<std::string> &unchecked) {
 }
 
 /**
- * Print the options specified on the command line. 
+ * Print the options specified on the command line.
  */
 void OptArgs::PrintOptions(std::ostream &out) {
   std::map<std::string, OptArgument>::iterator it;
@@ -644,7 +671,7 @@ void OptArgs::PrintOptions(std::ostream &out) {
   }
 }
 
-/** 
+/**
  * Get non-argument/option command line tokens
  */
 void OptArgs::GetLeftoverArguments(std::vector<std::string> &leftover) {
@@ -674,9 +701,9 @@ bool OptArgs::IsOption(const std::string &name) const {
 /**
  * Parse out a long option from the command line arguments, incrementing the index into
  * argv as necessary
- */ 
+ */
 void OptArgs::HandleLongOption(std::string &option, int &index, int argc, const char *argv[]) {
-      
+
   // Pull off any leading '-' or '--'
   size_t start = option.find_first_not_of('-');
   if (start > 2) {
@@ -720,7 +747,7 @@ void OptArgs::HandleLongOption(std::string &option, int &index, int argc, const 
  * Parse out some short options from the command line
  * arguments, incrementing the index into argv as
  * necessary
- */ 
+ */
 void OptArgs::HandleShortOption(std::string &option, int &index, int argc, const char *argv[]) {
   size_t start = option.find_first_not_of('-');
   if (start != 1) {
