@@ -116,7 +116,6 @@ bool SpliceVariantHypotheses (
     }
 
     IncrementAlignmentIndices(pretty_alignment[pretty_idx], ref_idx, read_idx);
-
   } // end of for loop over extended pretty alignment
 
   // Check whether the whole reference allele fit
@@ -179,6 +178,7 @@ bool SpliceVariantHypotheses (
       cerr << " into read " << current_read.alignment.Name << endl;
     }
   }
+
   else if (global_context.DEBUG > 1 and alignments[0] != alignments[1]) {
     cerr << "Spliced " << local_context.reference_allele << " -> ";
     for (unsigned int i_alt = 0; i_alt < eval.allele_identity_vector.size(); i_alt++) {
@@ -199,40 +199,35 @@ bool SpliceVariantHypotheses (
   if (global_context.DEBUG > 1) cerr << "alignments: " << eval.allele_identity_vector.size() << endl;
 
   char qual;
-  if (alignments[0] == alignments[1]) {
-    if (global_context.DEBUG > 1) cerr << "equal to ref\n";
-    if (current_read.is_reverse_strand) {
-      position = alignments[0].length() - (local_context.position0 - current_read.alignment.Position) - 1;
+  if (global_context.DEBUG > 1) {
+    cerr << "equal to ref\n";
+    cerr << "  allele: " << eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele << endl;
+  }
+
+  if (current_read.is_reverse_strand) {
+    position = alignments[0].length() - (local_context.position0 - current_read.alignment.Position) - 1;
+    if (position >= 0 and position < (int)alignments[0].length()) {
       basecall = alignments[0][position];
       qual = qualities[0][position];
-      RevComplementInPlace(basecall);
-      if (global_context.DEBUG > 1) cerr << "  ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
     }
     else {
-      position = local_context.position0 - current_read.alignment.Position;
-      basecall = alignments[0][position];
-      qual = qualities[0][position];
-      if (global_context.DEBUG > 1) cerr << "  ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
+      basecall = "N";
+      qual = ' ';
     }
+    RevComplementInPlace(basecall);
+    if (global_context.DEBUG > 1) cerr << "  (1) ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
   }
   else {
-    if (global_context.DEBUG > 1) {
-      cerr << "alt\n";
-      cerr << "  allele: " << eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele << endl;
-    }
-    if (current_read.is_reverse_strand) {
-      position = alignments[0].length() - (local_context.position0 - current_read.alignment.Position) - 1;
+    position = local_context.position0 - current_read.alignment.Position;
+    if (position >= 0 and position < (int)alignments[0].length()) {
       basecall = alignments[0][position];
       qual = qualities[0][position];
-      RevComplementInPlace(basecall);
-      if (global_context.DEBUG > 1) cerr << "  ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
     }
     else {
-      position = local_context.position0 - current_read.alignment.Position;
-      basecall = alignments[0][position];
-      qual = qualities[0][position];
-      if (global_context.DEBUG > 1) cerr << "  ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
+      basecall = "N";
+      qual = ' ';
     }
+    if (global_context.DEBUG > 1) cerr << "  (2) ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
   }
   if (global_context.DEBUG > 1) cerr << "-----------------------\n";
   qscore = qual - 33;
@@ -289,7 +284,8 @@ bool SpliceAddVariantAlleles(
 
   // Splice reference Hypothesis
   alignments[1] += local_context.reference_allele;
-  qualities[1] += string(local_context.reference_allele.length(), 0xb0);
+  // qualities[1] += string(local_context.reference_allele.length(), 0xb0); // to make gaps visible while debugging
+  qualities[1] += string(local_context.reference_allele.length(), '0'); // without a good reason
 
   for (unsigned int i_hyp = 2; i_hyp < alignments.size(); ++i_hyp) {
     int my_allele_idx = i_hyp - 2;
@@ -317,6 +313,7 @@ bool SpliceAddVariantAlleles(
       }
       alignments[i_hyp][splice_idx] = eval.allele_identity_vector[my_allele_idx].altAllele[0];
       if (current_read.is_reverse_strand) {
+        qualities[i_hyp][splice_idx] = current_read.read_qual[current_read.read_qual.length() - splice_idx - 1];
         qualities[i_hyp][splice_idx] = current_read.read_qual[current_read.read_qual.length() - splice_idx - 1];
       }
       else {
