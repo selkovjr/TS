@@ -35,7 +35,7 @@ static void write_snp_prefix_info_file (
   const unsigned n_unused_calls,
   std::ostream& os
 ) {
-  os << seq_name << "\t"
+  os << "nonref_2allele_test\t" << seq_name << "\t"
     << output_pos << "\t"
     << n_used_calls << "\t"
     << n_unused_calls << "\t"
@@ -312,9 +312,12 @@ void Evaluator::Strelka (
   opt.user_report_range.is_begin_pos = true;
   opt.user_report_range.end_pos = multiallele_window_end + 20;
   opt.user_report_range.is_end_pos = true;
+
   opt.user_genome_size = parameters.my_controls.genome_size;
   opt.is_user_genome_size = true;
+
   opt.shared_site_error_rate = 5.0e-7;
+
   opt.is_counts = true;
   opt.is_compute_hapscore = true;
   opt.is_compute_VQSRmetrics = true;
@@ -404,8 +407,6 @@ void Evaluator::Strelka (
   int sample_no = 1;
   bool is_tier1 = true;
   long ref_pos = candidate_variant.variant.position;
-  std::cerr << "------ process_pos_snp_single_sample_impl() ======================= " << sample_no << ", " << ref_pos << " =======================\n";
-  std::cerr << "------ process_pos_snp_single_sample_impl() sample_info& sif(sample(sample_no));\n";
 
   // sample_info &sif(sample(sample_no));
   const unsigned knownref_report_size(get_ref_seq_known_size(ref, dopt.report_range));
@@ -422,11 +423,11 @@ void Evaluator::Strelka (
 
     Alignment al = *read_stack[i_read];
     const string basecall = allele_eval.alignments[i_read].basecall;
+    if (basecall == "N") continue;
+
     // double e = allele_eval.alignments[i_read].error_prob;
     int qscore = allele_eval.alignments[i_read].qscore;
     int read_pos = allele_eval.alignments[i_read].pos_in_read;
-
-    cerr << sample_name << " " << al.alignment.Name << " " << basecall << " " << (al.is_reverse_strand ? "R" : "F") << endl;
 
     const uint8_t call_id(bam_seq_code_to_id(get_bam_seq_code(basecall.c_str()[0])));
 
@@ -437,7 +438,7 @@ void Evaluator::Strelka (
     //   end_trimmed_read_len = read_size - fwd_strand_begin_skip;
     // }
 
-    const base_call bc = base_call(
+    const base_call bc = base_call (
       call_id,
       qscore,
       !al.is_reverse_strand, // best_al.is_fwd_strand
@@ -492,7 +493,6 @@ void Evaluator::Strelka (
   const unsigned n_calls(pi.calls.size());
   const unsigned n_spandel(pi.n_spandel); // number of spanning deletions
   const unsigned n_submapped(pi.n_submapped); // reads failing variant calling mapping thresholds
-  cerr << "------ process_pos_snp_single_sample_impl() processing " << n_calls << " basecalls\n";
 
   const pos_t output_pos(ref_pos + 1);
 
@@ -505,7 +505,6 @@ void Evaluator::Strelka (
                                           // mismatch density filter and other quality filters have been applied
 
   // Initialize with filtered calls
-  std::cerr << "------ process_pos_snp_single_sample_impl() Initialize good_pi\n";
   good_pi.clear();
   good_pi.set_ref_base(pi.get_ref_base());
   for (unsigned i(0); i < n_calls; ++i) {
@@ -537,19 +536,11 @@ void Evaluator::Strelka (
 
   if (pi.calls.empty()) return;
 
-  cerr << "------ process_pos_snp_single_sample_impl() sample: " << sample_no << "; calling adjust_joint_eprob(good_pi)\n";
-  for (const base_call& bc: good_pi.calls) {
+  for (const base_call &bc: good_pi.calls) {
     assert(bc.base_id != BASE_ID::ANY);
   }
   dependent_prob_cache dpcache;
   adjust_joint_eprob(opt, dpcache, good_pi, sif.epd.dependent_eprob, false /* _is_dependent_eprob */);
-  if (sif.epd.dependent_eprob.size()) {
-    cerr << "------ process_pos_snp_single_sample_impl() ";
-    for (const float& p: sif.epd.dependent_eprob) {
-      cerr << " " << p;
-    }
-    cerr << "\n";
-  }
 
   const extended_pos_info good_epi(good_pi, sif.epd.dependent_eprob);
 
@@ -593,6 +584,7 @@ void Evaluator::Strelka (
 #endif
   if (true or opt.is_bsnp_diploid()) {
     dopt.pdcaller().position_snp_call_pprob_digt(opt, good_epi, _site_info.dgt, opt.is_all_sites());
+    cerr << "dgt: " << _site_info.dgt << endl;
   }
 #if 0
   if (opt.is_bsnp_monoploid) {
@@ -692,9 +684,9 @@ void Evaluator::Strelka (
       cerr << "nrc.is_snp: " << nrc.is_snp << endl;
       // std::ostream& bos(*_client_io.nonref_test_osptr());
       std::ostream& bos(cout);
-      write_snp_prefix_info_file(opt.bam_seq_name,output_pos, pi.get_ref_base(),_site_info.n_used_calls,_site_info.n_unused_calls,bos);
+      write_snp_prefix_info_file(opt.bam_seq_name, output_pos, pi.get_ref_base(), _site_info.n_used_calls, _site_info.n_unused_calls, bos);
       bos << "\t";
-      write_nonref_2allele_test(opt,good_pi,nrc,bos);
+      write_nonref_2allele_test(opt, good_pi, nrc, bos);
 #if 0
       write_nonref_test(opt,good_pi,nrc,bos);
 #endif
@@ -712,7 +704,7 @@ void Evaluator::Strelka (
         std::ostream& bos(cout);
         write_snp_prefix_info_file(opt.bam_seq_name,output_pos, pi.get_ref_base(),_site_info.n_used_calls,_site_info.n_unused_calls,bos);
         bos << "\t";
-        write_diploid_genotype_snp(opt,good_pi,_site_info.dgt,bos,_site_info.hpol);
+        write_diploid_genotype_snp(opt, good_pi, _site_info.dgt, bos, _site_info.hpol);
         bos << "\n";
       }
 
@@ -733,6 +725,11 @@ void Evaluator::Strelka (
 #endif
 
     is_reported_event = true;
+    candidate_variant.variant.filter = "PASS";
+    candidate_variant.variant.isFiltered = false;
+    candidate_variant.variant.isHotSpot = false;
+    candidate_variant.variant.quality = 0.0f;
+    candidate_variant.variant.info["HRUN"].push_back(convertToString(_site_info.hpol));
   }
 
 #if 0
@@ -749,7 +746,8 @@ void Evaluator::Strelka (
       << "is_snp: " << is_snp << "\n"
       << pi << "\n";
   }
-  std::cerr << "------ process_pos_snp_single_sample_impl() --------------------------- END ---------------------------\n";
+
+//  print_delayed_results(STAGE::POST_CALL, pos);
 }
 
 
@@ -1060,11 +1058,6 @@ bool ProcessOneVariant (
   VariantCandidate &candidate_variant,
   const PositionInProgress& bam_position
 ) {
-  string sample_name = "";
-  //if (sample_index >= 0) {sample_name = candidate_variant.variant.sampleNames[sample_index];}
-
-  cerr << "processing " << sample_name << "\n";
-
   int chr_idx = vc.ref_reader->chr_idx(candidate_variant.variant.sequenceName.c_str());
 
   Evaluator eval(candidate_variant.variant);
