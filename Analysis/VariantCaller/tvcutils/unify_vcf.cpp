@@ -49,27 +49,27 @@ void build_index(const string &path_in) {
   std::map<string, int> chr_order;
   string chr_key = "";
   string line_key = "";
-  if (fin.is_open())
-  {
-    while (getline(fin, line))
-    {
-      if ((line.length() > 0) and (line[0] == '#')) {header.push_back(line);}
+  if (fin.is_open()) {
+    while (getline(fin, line)) {
+      if ((line.length() > 0) and (line[0] == '#')) {
+        header.push_back(line);
+      }
       else {
         vector<string> strs;
         boost::split(strs, line, boost::is_any_of("\t"));
         if (strs.size() > 1) {
           string chr = strs[0];
-		  std::map<string, int>::iterator iter = chr_order.find(chr);
-		  if (iter == chr_order.end()) {order++; chr_order[chr] = order;}
-		  sprintf(buffer, "%d", chr_order[chr]);
-		  chr_key = buffer;
-		  while (chr_key.length() < 3) {chr_key = "0" + chr_key;}
+          std::map<string, int>::iterator iter = chr_order.find(chr);
+          if (iter == chr_order.end()) {order++; chr_order[chr] = order;}
+          sprintf(buffer, "%d", chr_order[chr]);
+          chr_key = buffer;
+          while (chr_key.length() < 3) {chr_key = "0" + chr_key;}
           string position = strs[1];
-		  while (position.length() < 9) {position = "0" + position;}
-		  line_key = "";
-		  line_key.reserve(line.length());
-		  for (unsigned int index = 2; (index < strs.size()); ++index) {"\t" + line_key += strs[index];}
-		  string key = chr_key + ":" + position + line_key;
+          while (position.length() < 9) {position = "0" + position;}
+          line_key = "";
+          line_key.reserve(line.length());
+          for (unsigned int index = 2; (index < strs.size()); ++index) {"\t" + line_key += strs[index];}
+          string key = chr_key + ":" + position + line_key;
           lines[key] = line;
         }
       }
@@ -79,7 +79,7 @@ void build_index(const string &path_in) {
   ofstream fout;
   fout.open(path.c_str());
   for (vector<string>::iterator iter = header.begin(); (iter != header.end()); ++iter) {
-	  fout << *iter << endl;
+    fout << *iter << endl;
   }
   for (map<string, string>::iterator iter = lines.begin(); (iter != lines.end()); ++iter) {
     fout << iter->second << endl;
@@ -89,7 +89,7 @@ void build_index(const string &path_in) {
   bgzf_stream* gvcf_out;
   gvcf_out = new bgzf_stream(path_gz);
   for (vector<string>::iterator iter = header.begin(); (iter != header.end()); ++iter) {
-	  *gvcf_out << *iter << "\n";
+    *gvcf_out << *iter << "\n";
   }
   for (map<string, string>::iterator iter = lines.begin(); (iter != lines.end()); ++iter) {
     *gvcf_out << iter->second << "\n";
@@ -248,24 +248,33 @@ void PriorityQueue::left_align_variant(vcf::Variant* variant) {
 }
 
 // VcfOrederedMerger methods implementations
-VcfOrderedMerger::VcfOrderedMerger(string& novel_tvc,
-                                   string& assembly_tvc,
-                                   string& hotspot_tvc,
-                                   string& output_tvc,
-                                   string& path_to_json,
-                                   string& input_depth,
-                                   string& gvcf_output,
-                                   const ReferenceReader& r,
-                                   TargetsManager& tm,
-                                   size_t w = 1, size_t min_dp = 0, bool la = false)
-                                   : depth_in(NULL), gvcf_out(NULL), reference_reader(r), targets_manager(tm),
-                                   left_align_enabled(la),
-                                   window_size(w), minimum_depth(min_dp),
-                                   novel_queue(novel_tvc, *this, r, w, la, true),
-                                   assembly_queue(assembly_tvc, *this, r, w, la, true),
-                                   hotspot_queue(hotspot_tvc, *this, r, w, la),
-                                   bgz_out(output_tvc.c_str()),
-                                   current_cov_info(NULL) {
+VcfOrderedMerger::VcfOrderedMerger(
+  string& novel_tvc,
+  string& assembly_tvc,
+  string& hotspot_tvc,
+  string& output_tvc,
+  string& path_to_json,
+  string& input_depth,
+  string& gvcf_output,
+  const ReferenceReader& r,
+  TargetsManager& tm,
+  size_t w = 1,
+  size_t min_dp = 0,
+  bool la = false
+):
+  depth_in(NULL),
+  gvcf_out(NULL),
+  reference_reader(r),
+  targets_manager(tm),
+  left_align_enabled(la),
+  window_size(w),
+  minimum_depth(min_dp),
+  novel_queue(novel_tvc, *this, r, w, la, true),
+  assembly_queue(assembly_tvc, *this, r, w, la, true),
+  hotspot_queue(hotspot_tvc, *this, r, w, la),
+  bgz_out(output_tvc.c_str()),
+  current_cov_info(NULL)
+{
   if (!input_depth.empty()) {
     depth_in = (istream *)((input_depth == DEFAULT_STDIN_PARAM) ? &cin : new ifstream(input_depth.c_str()));
     gvcf_out = new ofstream(gvcf_output.c_str());
@@ -329,7 +338,7 @@ void VcfOrderedMerger::perform() {
   }
   while (hotspot_queue.has_value()) {
     blacklist_check(hotspot_queue.current());
-	hotspot_queue.next();
+  hotspot_queue.next();
   }
   while (current_target != targets_manager.merged.end()) {
     gvcf_finish_region();
@@ -397,7 +406,8 @@ vcf::Variant* VcfOrderedMerger::merge_overlapping_variants() {
     // Logging novel and indel merge
     cout << UNIFY_VARIANTS " Advanced merge of IndelAssembly variant " << assembly_queue.current()->sequenceName
          << ":" << assembly_queue.current()->position << endl;
-  } else {
+  }
+  else {
     // Logging skipping event
     cout << UNIFY_VARIANTS " Skipping IndelAssembly variant " << assembly_queue.current()->sequenceName
          << ":" << assembly_queue.current()->position << endl;
@@ -699,15 +709,15 @@ void VcfOrderedMerger::process_annotation(vcf::Variant* current) {
       if (cmp == 1) break;
       if (cmp == 0) {
         merge_annotation_into_vcf(current, &(*iter));
-		break;
+    break;
       }
       //blacklist_check(&(*iter));
-    }	
+    }
   }
   if (hotspots_.size() > 100) {hotspots_.erase(hotspots_.begin());}
   if (hotspot_queue.has_value()) do {
     cmp = variant_cmp(current, hotspot_queue.current());
-	hotspots_.push_back(*hotspot_queue.current());
+  hotspots_.push_back(*hotspot_queue.current());
     if (cmp == 1) return;
     if (cmp == 0) {
       merge_annotation_into_vcf(current, hotspot_queue.current());
@@ -727,9 +737,9 @@ void VcfOrderedMerger::blacklist_check(vcf::Variant* hotspot) {
       if (dot != bstr->second.end())
         is_chimera = false;
     } else is_chimera = false;
-	if (!is_chimera)
-		cout << UNIFY_VARIANTS << " Hotspot annotation " << hotspot->sequenceName << ":"
-			<< hotspot->position << " not found in merged variant file.\n";
+  if (!is_chimera)
+    cout << UNIFY_VARIANTS << " Hotspot annotation " << hotspot->sequenceName << ":"
+      << hotspot->position << " not found in merged variant file.\n";
 }
 
 void PriorityQueue::open_vcf_file(vcf::VariantCallFile& vcf, string filename, bool parse_samples) {
