@@ -23,7 +23,7 @@ using namespace std;
 // induced theories of the world
 class LocusData {
 public:
-    vector<TentativeAlignment> alignments;
+    vector<TentativeAlignment> pileup;
     double depth;
     double tumor_depth;
     double normal_depth;

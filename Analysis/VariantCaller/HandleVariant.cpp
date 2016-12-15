@@ -27,18 +27,6 @@
 
 std::auto_ptr<gvcf_aggregator> _gvcfer;
 
-/// get max-min bounds in which reads can be realigned:
-static known_pos_range get_realignment_range(const pos_t pos, const stage_data& sdata) {
-  const unsigned head_offset(sdata.get_stage_id_shift(STAGE::HEAD));
-  const unsigned buffer_offset(sdata.get_stage_id_shift(STAGE::READ_BUFFER));
-  const unsigned post_offset(sdata.get_stage_id_shift(STAGE::POST_ALIGN));
-  assert(buffer_offset>head_offset);
-  assert(post_offset>buffer_offset);
-
-  const pos_t min_pos(std::max(static_cast<pos_t>(0), pos-static_cast<pos_t>(post_offset-buffer_offset)));
-  const pos_t max_pos(pos+1+(buffer_offset-head_offset));
-  return known_pos_range(min_pos, max_pos);
-}
 
 static void write_snp_prefix_info_file (
   const std::string& seq_name,
@@ -164,28 +152,28 @@ void Evaluator::SampleLikelihood (
   unsigned int  num_realigned = 0;
   int  num_hyp_no_null = allele_identity_vector.size() + 1; // num alleles +1 for ref
   // generate null+ref+nr.alt hypotheses per read in the case of do_multiallele_eval
-  allele_eval.alignments.resize(read_stack.size());
+  allele_eval.pileup.resize(read_stack.size());
 
-  cerr << "evaluating " << allele_eval.alignments.size() << " hypotheses\n";
-  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
+  cerr << "evaluating " << allele_eval.pileup.size() << " hypotheses\n";
+  for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
     // --- New splicing function ---
-    allele_eval.alignments[i_read].success =
+    allele_eval.pileup[i_read].success =
       SpliceVariantHypotheses(
         *read_stack[i_read],
         *this,
         seq_context,
         thread_objects,
-        allele_eval.alignments[i_read].basecall,
-        allele_eval.alignments[i_read].qscore,
-        allele_eval.alignments[i_read].error_prob,
-        allele_eval.alignments[i_read].pos_in_read,
+        allele_eval.pileup[i_read].basecall,
+        allele_eval.pileup[i_read].qscore,
+        allele_eval.pileup[i_read].error_prob,
+        allele_eval.pileup[i_read].pos_in_read,
         changed_alignment,
         global_context,
         ref_reader,
         chr_idx
     );
 
-    if (allele_eval.alignments[i_read].success){
+    if (allele_eval.pileup[i_read].success){
       num_valid_reads++;
       if (changed_alignment)
         num_realigned++;
@@ -204,17 +192,17 @@ void Evaluator::SampleLikelihood (
     if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold) {
       my_info << "SKIPREALIGNx" << frac_realigned;
       doRealignment = false;
-      for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
-        allele_eval.alignments[i_read].success =
+      for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
+        allele_eval.pileup[i_read].success =
           SpliceVariantHypotheses(
             *read_stack[i_read],
             *this,
             seq_context,
             thread_objects,
-            allele_eval.alignments[i_read].basecall,
-            allele_eval.alignments[i_read].qscore,
-            allele_eval.alignments[i_read].error_prob,
-            allele_eval.alignments[i_read].pos_in_read,
+            allele_eval.pileup[i_read].basecall,
+            allele_eval.pileup[i_read].qscore,
+            allele_eval.pileup[i_read].error_prob,
+            allele_eval.pileup[i_read].pos_in_read,
             changed_alignment,
             global_context,
             ref_reader,
@@ -234,11 +222,11 @@ void Evaluator::SampleLikelihood (
 
   // Compute the log likelihood of joint samples
   double snv_likelihood = 0;
-  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
+  for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
     double p = 0;
-    const string basecall = allele_eval.alignments[i_read].basecall;
-    double e = allele_eval.alignments[i_read].error_prob;
-    cerr << allele_eval.alignments[i_read].sample_index << ": " << basecall << endl;
+    const string basecall = allele_eval.pileup[i_read].basecall;
+    double e = allele_eval.pileup[i_read].error_prob;
+    cerr << allele_eval.pileup[i_read].sample_index << ": " << basecall << endl;
     for (const string &true_base: {"A", "C", "G", "T"}) {
       double p_b_given_a = basecall == true_base ? 1 - e : e / 3;
       cerr << "  P(" << basecall << "|" << true_base << ") = " << p_b_given_a << endl;
@@ -250,15 +238,15 @@ void Evaluator::SampleLikelihood (
 
   // Compute the log likelihood of normal sample
   double snv_likelihood_n = 0;
-  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
-    string sample_name = candidate_variant.variant.sampleNames[allele_eval.alignments[i_read].sample_index];
+  for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
+    string sample_name = candidate_variant.variant.sampleNames[allele_eval.pileup[i_read].sample_index];
     sample_name = sample_name.substr(0, sample_name.find("."));
     if (sample_name != "normal") continue;
 
     double p = 0;
-    const string basecall = allele_eval.alignments[i_read].basecall;
-    double e = allele_eval.alignments[i_read].error_prob;
-    cerr << allele_eval.alignments[i_read].sample_index << ": " << basecall << endl;
+    const string basecall = allele_eval.pileup[i_read].basecall;
+    double e = allele_eval.pileup[i_read].error_prob;
+    cerr << allele_eval.pileup[i_read].sample_index << ": " << basecall << endl;
     for (const string &true_base: {"A", "C", "G", "T"}) {
       double p_b_given_a = basecall == true_base ? 1 - e : e / 3;
       cerr << "  P(" << basecall << "|" << true_base << ") = " << p_b_given_a << endl;
@@ -270,15 +258,15 @@ void Evaluator::SampleLikelihood (
 
   // Compute the log likelihood of tumor sample
   double snv_likelihood_t = 0;
-  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
-    string sample_name = candidate_variant.variant.sampleNames[allele_eval.alignments[i_read].sample_index];
+  for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
+    string sample_name = candidate_variant.variant.sampleNames[allele_eval.pileup[i_read].sample_index];
     sample_name = sample_name.substr(0, sample_name.find("."));
     if (sample_name != "tumor") continue;
 
     double p = 0;
-    const string basecall = allele_eval.alignments[i_read].basecall;
-    double e = allele_eval.alignments[i_read].error_prob;
-    cerr << allele_eval.alignments[i_read].sample_index << ": " << basecall << endl;
+    const string basecall = allele_eval.pileup[i_read].basecall;
+    double e = allele_eval.pileup[i_read].error_prob;
+    cerr << allele_eval.pileup[i_read].sample_index << ": " << basecall << endl;
     for (const string &true_base: {"A", "C", "G", "T"}) {
       double p_b_given_a = basecall == true_base ? 1 - e : e / 3;
       cerr << "  P(" << basecall << "|" << true_base << ") = " << p_b_given_a << endl;
@@ -288,7 +276,7 @@ void Evaluator::SampleLikelihood (
     snv_likelihood_t += log10(p);
   }
 
-  cerr << "total: " << allele_eval.alignments.size() << endl;
+  cerr << "total: " << allele_eval.pileup.size() << endl;
   for ( const auto &a: allele_eval.tumor_allele_count ) {
     cerr << "tumor " << a.first << " -> " << a.second << " (" << allele_eval.freq(a.first, "tumor") << ")\n";
   }
@@ -351,28 +339,28 @@ void Evaluator::Strelka (
   unsigned int  num_realigned = 0;
   int  num_hyp_no_null = allele_identity_vector.size() + 1; // num alleles +1 for ref
   // generate null+ref+nr.alt hypotheses per read in the case of do_multiallele_eval
-  allele_eval.alignments.resize(read_stack.size());
+  allele_eval.pileup.resize(read_stack.size());
 
-  cerr << "evaluating " << allele_eval.alignments.size() << " hypotheses\n";
-  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
+  cerr << "evaluating " << allele_eval.pileup.size() << " hypotheses\n";
+  for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
     // --- New splicing function ---
-    allele_eval.alignments[i_read].success =
+    allele_eval.pileup[i_read].success =
       SpliceVariantHypotheses(
         *read_stack[i_read],
         *this,
         seq_context,
         thread_objects,
-        allele_eval.alignments[i_read].basecall,
-        allele_eval.alignments[i_read].qscore,
-        allele_eval.alignments[i_read].error_prob,
-        allele_eval.alignments[i_read].pos_in_read,
+        allele_eval.pileup[i_read].basecall,
+        allele_eval.pileup[i_read].qscore,
+        allele_eval.pileup[i_read].error_prob,
+        allele_eval.pileup[i_read].pos_in_read,
         changed_alignment,
         global_context,
         ref_reader,
         chr_idx
     );
 
-    if (allele_eval.alignments[i_read].success){
+    if (allele_eval.pileup[i_read].success){
       num_valid_reads++;
       if (changed_alignment)
         num_realigned++;
@@ -391,17 +379,17 @@ void Evaluator::Strelka (
     if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold) {
       my_info << "SKIPREALIGNx" << frac_realigned;
       doRealignment = false;
-      for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
-        allele_eval.alignments[i_read].success =
+      for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
+        allele_eval.pileup[i_read].success =
           SpliceVariantHypotheses(
             *read_stack[i_read],
             *this,
             seq_context,
             thread_objects,
-            allele_eval.alignments[i_read].basecall,
-            allele_eval.alignments[i_read].qscore,
-            allele_eval.alignments[i_read].error_prob,
-            allele_eval.alignments[i_read].pos_in_read,
+            allele_eval.pileup[i_read].basecall,
+            allele_eval.pileup[i_read].qscore,
+            allele_eval.pileup[i_read].error_prob,
+            allele_eval.pileup[i_read].pos_in_read,
             changed_alignment,
             global_context,
             ref_reader,
@@ -430,20 +418,20 @@ void Evaluator::Strelka (
   // Data structure defining parameters for a single site to be used for writing in gvcf_aggregator
   site_info _site_info = *(new site_info());  // a caching term used for gvcf
 
-  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
-    allele_eval.alignments[i_read].sample_index = read_stack[i_read]->sample_index; // this should be done while making the initial pileup
-    string sample_name = candidate_variant.variant.sampleNames[allele_eval.alignments[i_read].sample_index];
+  for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
+    allele_eval.pileup[i_read].sample_index = read_stack[i_read]->sample_index; // this should be done while making the initial pileup
+    string sample_name = candidate_variant.variant.sampleNames[allele_eval.pileup[i_read].sample_index];
     sample_name = sample_name.substr(0, sample_name.find("."));
     if (sample_name != "tumor") continue;
 
     Alignment al = *read_stack[i_read];
-    const string basecall = allele_eval.alignments[i_read].basecall;
+    const string basecall = allele_eval.pileup[i_read].basecall;
     // cerr << "basecall: " << basecall << endl;
     if (basecall == "N") continue;
 
-    // double e = allele_eval.alignments[i_read].error_prob;
-    int qscore = allele_eval.alignments[i_read].qscore;
-    int read_pos = allele_eval.alignments[i_read].pos_in_read;
+    // double e = allele_eval.pileup[i_read].error_prob;
+    int qscore = allele_eval.pileup[i_read].qscore;
+    int read_pos = allele_eval.pileup[i_read].pos_in_read;
 
     const uint8_t call_id(bam_seq_code_to_id(get_bam_seq_code(basecall.c_str()[0])));
 

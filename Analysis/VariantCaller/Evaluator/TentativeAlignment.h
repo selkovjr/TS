@@ -1,6 +1,3 @@
-/* Copyright (C) 2013 Ion Torrent Systems, Inc. All Rights Reserved */
-
-
 #ifndef TENTATIVE_ALIGNMENT_H
 #define TENTATIVE_ALIGNMENT_H
 

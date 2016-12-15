@@ -6,11 +6,11 @@ void LocusData::TabulateFrequencies(VariantCandidate &candidate_variant, vector<
   depth = 0;
   normal_depth = 0;
   tumor_depth = 0;
-  for (unsigned int i_read = 0; i_read < alignments.size(); i_read++) {
+  for (unsigned int i_read = 0; i_read < pileup.size(); i_read++) {
     depth++;
     string sample_name = candidate_variant.variant.sampleNames[read_stack[i_read]->sample_index];
     sample_name = sample_name.substr(0, sample_name.find("."));
-    const string basecall = alignments[i_read].basecall;
+    const string basecall = pileup[i_read].basecall;
 
     if (allele_count.count(basecall)) {
       allele_count[basecall] += 1;
@@ -39,7 +39,7 @@ void LocusData::TabulateFrequencies(VariantCandidate &candidate_variant, vector<
       }
     }
 
-    alignments[i_read].sample_index = read_stack[i_read]->sample_index;
+    pileup[i_read].sample_index = read_stack[i_read]->sample_index;
   }
 
   for ( const auto &a: allele_count ) {
@@ -86,14 +86,14 @@ double LocusData::freq(string allele, string sample_name) {
 void LocusData::FindValidIndexes() {
   valid_indexes.resize(0);
   // only loop over reads where variant construction worked correctly
-  for (unsigned int i_read = 0; i_read < alignments.size(); i_read++) {
-    if (alignments[i_read].success) {
+  for (unsigned int i_read = 0; i_read < pileup.size(); i_read++) {
+    if (pileup[i_read].success) {
       valid_indexes.push_back(i_read);
     }
   }
 }
 
 unsigned int LocusData::DetailLevel(void){
-  return alignments.size();
+  return pileup.size();
 }
 

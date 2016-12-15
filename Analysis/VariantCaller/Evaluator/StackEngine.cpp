@@ -25,11 +25,11 @@ void Evaluator::ScanSupportingEvidence(float &mean_ll_delta,  int i_allele) {
   int ref_hyp = 1;
   int alt_hyp = i_allele + 2;  // alt_alleles = 0->n not counting ref >or< null, therefore alt-allele 0 = 2
 
-  for (unsigned int i_read = 0; i_read < allele_eval.alignments.size(); i_read++) {
-    if (allele_eval.alignments[i_read].success) {
+  for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
+    if (allele_eval.pileup[i_read].success) {
       // measure disruption
 
-      //mean_ll_delta += allele_eval.alignments[i_read].ComputeLLDifference(ref_hyp, alt_hyp);
+      //mean_ll_delta += allele_eval.pileup[i_read].ComputeLLDifference(ref_hyp, alt_hyp);
       count++;
     }
   }
