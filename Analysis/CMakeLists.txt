@@ -525,7 +525,7 @@ target_link_libraries(BaseCaller ion-analysis pthread ${ION_BAMTOOLS_LIBS} dl)
 install(TARGETS BaseCaller DESTINATION bin)
 
 
-## Standalone Variant Caller, named tvc
+## Standalone Variant Caller, named tvc-strelka
 set(ION_VCFLIB_DIR    ${ION_TS_EXTERNAL}/vcflib)
 set(ION_FREEBAYES_DIR ${ION_TS_EXTERNAL}/freebayes)
 
@@ -622,6 +622,7 @@ set(tvcSRCS
   /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/log.o
   /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/parse_util.o
   /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/pos_range.o
+  /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/prob_util.o
   /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/qscore_cache.o
   /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/ranksum.o
   /data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib/blt_util/seq_util.o
@@ -651,10 +652,10 @@ if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
         BaseCaller/TreephaserSSE.cpp)
 endif()
 
-add_executable(tvc ${tvcSRCS})
-target_link_libraries(tvc ${ION_BAMTOOLS_LIBS} ${EXTRA_LIBS} z file-io pthread)
-add_dependencies(tvc IONVERSION bamtools armadillo_proj htslib_proj)
-install(TARGETS tvc DESTINATION bin)
+add_executable(tvc-strelka ${tvcSRCS})
+target_link_libraries(tvc-strelka ${ION_BAMTOOLS_LIBS} ${EXTRA_LIBS} z file-io pthread)
+add_dependencies(tvc-strelka IONVERSION bamtools armadillo_proj htslib_proj)
+install(TARGETS tvc-strelka DESTINATION bin)
 
 
 # bbctools

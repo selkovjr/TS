@@ -27,6 +27,19 @@
 
 std::auto_ptr<gvcf_aggregator> _gvcfer;
 
+/// get max-min bounds in which reads can be realigned:
+static known_pos_range get_realignment_range(const pos_t pos, const stage_data& sdata) {
+  const unsigned head_offset(sdata.get_stage_id_shift(STAGE::HEAD));
+  const unsigned buffer_offset(sdata.get_stage_id_shift(STAGE::READ_BUFFER));
+  const unsigned post_offset(sdata.get_stage_id_shift(STAGE::POST_ALIGN));
+  assert(buffer_offset>head_offset);
+  assert(post_offset>buffer_offset);
+
+  const pos_t min_pos(std::max(static_cast<pos_t>(0), pos-static_cast<pos_t>(post_offset-buffer_offset)));
+  const pos_t max_pos(pos+1+(buffer_offset-head_offset));
+  return known_pos_range(min_pos, max_pos);
+}
+
 static void write_snp_prefix_info_file (
   const std::string& seq_name,
   const pos_t output_pos,
@@ -131,12 +144,13 @@ static void report_counts(const snp_pos_info& pi, const unsigned n_unused_calls,
   }
 
   os << "counts\t" << output_pos << '\t';
-  for (unsigned i(0); i<N_BASE; ++i) {
+  for (unsigned i(0); i < N_BASE; ++i) {
     os << base_count[i] << '\t';
   }
   os << n_unused_calls << '\n';
 }
 
+/*
 void Evaluator::SampleLikelihood (
   PersistingThreadObjects &thread_objects,
   const InputStructures &global_context,
@@ -289,6 +303,7 @@ void Evaluator::SampleLikelihood (
   cerr << "normal sample likelihood: " << snv_likelihood_n << endl;
   cerr << "tumor sample likelihood: " << snv_likelihood_t << endl;
 }
+*/
 
 
 void Evaluator::Strelka (
@@ -423,6 +438,7 @@ void Evaluator::Strelka (
 
     Alignment al = *read_stack[i_read];
     const string basecall = allele_eval.alignments[i_read].basecall;
+    // cerr << "basecall: " << basecall << endl;
     if (basecall == "N") continue;
 
     // double e = allele_eval.alignments[i_read].error_prob;
@@ -543,6 +559,7 @@ void Evaluator::Strelka (
   adjust_joint_eprob(opt, dpcache, good_pi, sif.epd.dependent_eprob, false /* _is_dependent_eprob */);
 
   const extended_pos_info good_epi(good_pi, sif.epd.dependent_eprob);
+  cerr << "used calls: " << _site_info.n_used_calls << ", unused: " << _site_info.n_unused_calls << endl;
 
   // get fraction of filtered bases:
 #if 0

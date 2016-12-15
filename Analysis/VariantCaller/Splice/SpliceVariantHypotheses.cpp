@@ -204,31 +204,45 @@ bool SpliceVariantHypotheses (
     cerr << "  allele: " << eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele << endl;
   }
 
-  if (current_read.is_reverse_strand) {
-    position = alignments[0].length() - (local_context.position0 - current_read.alignment.Position) - 1;
-    if (position >= 0 and position < (int)alignments[0].length()) {
-      basecall = alignments[0][position];
-      qual = qualities[0][position];
+  // The contained position tests are probably redundant. This test should be inclusive.
+  if (local_context.position0 >= current_read.align_start and local_context.position0 <= current_read.align_end) {
+    if (current_read.is_reverse_strand) {
+      position = alignments[0].length() - (local_context.position0 - current_read.alignment.Position) - 1;
+      if (position >= 0 and position < (int)alignments[0].length()) {
+        basecall = alignments[0][position];
+        qual = qualities[0][position];
+      }
+      else {
+        basecall = "N";
+        qual = ' ';
+      }
+      RevComplementInPlace(basecall);
+      if (global_context.DEBUG > 1) cerr << "  (1) ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
     }
     else {
-      basecall = "N";
-      qual = ' ';
+      position = local_context.position0 - current_read.alignment.Position;
+      if (position >= 0 and position < (int)alignments[0].length()) {
+        basecall = alignments[0][position];
+        qual = qualities[0][position];
+      }
+      else {
+        basecall = "N";
+        qual = ' ';
+      }
+      if (global_context.DEBUG > 1) cerr << "  (2) ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
     }
-    RevComplementInPlace(basecall);
-    if (global_context.DEBUG > 1) cerr << "  (1) ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
   }
   else {
-    position = local_context.position0 - current_read.alignment.Position;
-    if (position >= 0 and position < (int)alignments[0].length()) {
-      basecall = alignments[0][position];
-      qual = qualities[0][position];
-    }
-    else {
-      basecall = "N";
-      qual = ' ';
-    }
-    if (global_context.DEBUG > 1) cerr << "  (2) ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
+    basecall = "N";
+    qual = ' ';
   }
+
+  string buf(alignments[0]);
+  if (current_read.is_reverse_strand) {
+    RevComplementInPlace(buf);
+  }
+  cerr << (current_read.is_reverse_strand ? "(R)" : "(F)") << " " << current_read.alignment.Position << ": " << string(current_read.alignment.Position - 326385, ' ') << buf << endl;
+
   if (global_context.DEBUG > 1) cerr << "-----------------------\n";
   qscore = qual - 33;
   error_prob = prob(qual);

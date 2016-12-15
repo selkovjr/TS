@@ -658,6 +658,7 @@ void DecisionTreeData::AddCountInformationTags(vcf::Variant & candidate_variant,
   // hrun fill in
   ClearVal(candidate_variant, "HRUN");
   for (unsigned int ia=0; ia<allele_identity_vector.size(); ia++){
+    candidate_variant.info["HRUN"].pop_back();
     candidate_variant.info["HRUN"].push_back(convertToString(allele_identity_vector[ia].ref_hp_length));
   }
 }
