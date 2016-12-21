@@ -70,131 +70,131 @@ bool SpliceVariantHypotheses (
     changed_alignment = false;
   }
 
-  // Now fill in 2) and 3)
+  // // Now fill in 2) and 3)
 
-  for (unsigned int pretty_idx = 0; pretty_idx < pretty_alignment.length(); pretty_idx++) {
+  // for (unsigned int pretty_idx = 0; pretty_idx < pretty_alignment.length(); pretty_idx++) {
 
-    bool outside_of_window = ref_idx < eval.multiallele_window_start or ref_idx >= eval.multiallele_window_end;
-    bool outside_ref_allele = (long)ref_idx < local_context.position0 or ref_idx >= (int)(local_context.position0 + local_context.reference_allele.length());
+  //   bool outside_of_window = ref_idx < eval.multiallele_window_start or ref_idx >= eval.multiallele_window_end;
+  //   bool outside_ref_allele = (long)ref_idx < local_context.position0 or ref_idx >= (int)(local_context.position0 + local_context.reference_allele.length());
 
-    // Basic sanity checks
-    if (read_idx >= read_idx_max
-        or  ref_idx > ref_reader.chr_size(chr_idx)
-        or (ref_idx == ref_reader.chr_size(chr_idx) and pretty_alignment[pretty_idx] != '+')) {
-      did_splicing = false;
-      break;
-    }
+  //   // Basic sanity checks
+  //   if (read_idx >= read_idx_max
+  //       or  ref_idx > ref_reader.chr_size(chr_idx)
+  //       or (ref_idx == ref_reader.chr_size(chr_idx) and pretty_alignment[pretty_idx] != '+')) {
+  //     did_splicing = false;
+  //     break;
+  //   }
 
-    // --- Splice ---
-    if (ref_idx == local_context.position0 and !did_splicing and !outside_of_window) {
-      // Add insertions before variant window
-      while (pretty_idx < pretty_alignment.length() and pretty_alignment[pretty_idx] == '+') {
-        for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
-          alignments[i_hyp].push_back(current_read.alignment.QueryBases[read_idx]);
-          qualities[i_hyp].push_back(current_read.alignment.Qualities[read_idx]);
-        }
-        read_idx++;
-        pretty_idx++;
-      }
-      did_splicing = SpliceAddVariantAlleles(current_read, pretty_alignment, eval, local_context, alignments, qualities, pretty_idx, global_context.DEBUG);
-    } // --- ---
+  //   // --- Splice ---
+  //   if (ref_idx == local_context.position0 and !did_splicing and !outside_of_window) {
+  //     // Add insertions before variant window
+  //     while (pretty_idx < pretty_alignment.length() and pretty_alignment[pretty_idx] == '+') {
+  //       for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
+  //         alignments[i_hyp].push_back(current_read.alignment.QueryBases[read_idx]);
+  //         qualities[i_hyp].push_back(current_read.alignment.Qualities[read_idx]);
+  //       }
+  //       read_idx++;
+  //       pretty_idx++;
+  //     }
+  //     did_splicing = SpliceAddVariantAlleles(current_read, pretty_alignment, eval, local_context, alignments, qualities, pretty_idx, global_context.DEBUG);
+  //   } // --- ---
 
-    // Have reference bases inside of window but outside of span of reference allele
-    if (outside_ref_allele and !outside_of_window and pretty_alignment[pretty_idx] != '+') {
-      for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
-        alignments[i_hyp].push_back(ref_reader.base(chr_idx, ref_idx));
-        qualities[i_hyp].push_back(' ');
-      }
-    }
+  //   // Have reference bases inside of window but outside of span of reference allele
+  //   if (outside_ref_allele and !outside_of_window and pretty_alignment[pretty_idx] != '+') {
+  //     for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
+  //       alignments[i_hyp].push_back(ref_reader.base(chr_idx, ref_idx));
+  //       qualities[i_hyp].push_back(' ');
+  //     }
+  //   }
 
-    // Have read bases as called outside of variant window
-    if (outside_of_window and pretty_alignment[pretty_idx] != '-') {
-      for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
-        alignments[i_hyp].push_back(current_read.alignment.QueryBases[read_idx]);
-        qualities[i_hyp].push_back(current_read.alignment.Qualities[read_idx]);
-      }
-    }
+  //   // Have read bases as called outside of variant window
+  //   if (outside_of_window and pretty_alignment[pretty_idx] != '-') {
+  //     for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
+  //       alignments[i_hyp].push_back(current_read.alignment.QueryBases[read_idx]);
+  //       qualities[i_hyp].push_back(current_read.alignment.Qualities[read_idx]);
+  //     }
+  //   }
 
-    IncrementAlignmentIndices(pretty_alignment[pretty_idx], ref_idx, read_idx);
-  } // end of for loop over extended pretty alignment
+  //   IncrementAlignmentIndices(pretty_alignment[pretty_idx], ref_idx, read_idx);
+  // } // end of for loop over extended pretty alignment
 
-  // Check whether the whole reference allele fit
-  // It seems that with primer trimming ion TVC, many a read throw this warning
-  if (ref_idx < (int)(local_context.position0 + local_context.reference_allele.length())) {
-    did_splicing = false;
-    if (global_context.DEBUG > 0)
-      cerr << "Warning in Splicing: Reference allele "<< local_context.reference_allele << " did not fit into read " << current_read.alignment.Name << endl;
-  }
+  // // Check whether the whole reference allele fit
+  // // It seems that with primer trimming ion TVC, many a read throw this warning
+  // if (ref_idx < (int)(local_context.position0 + local_context.reference_allele.length())) {
+  //   did_splicing = false;
+  //   if (global_context.DEBUG > 0)
+  //     cerr << "Warning in Splicing: Reference allele "<< local_context.reference_allele << " did not fit into read " << current_read.alignment.Name << endl;
+  // }
 
-  if (did_splicing) {
-    // --- Add soft clipped bases to the right of the alignment and reverse complement ---
-    for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
-      alignments[i_hyp] += current_read.alignment.QueryBases.substr(current_read.alignment.QueryBases.length() - current_read.right_sc, current_read.right_sc);
-      qualities[i_hyp] += current_read.alignment.Qualities.substr(current_read.alignment.QueryBases.length() - current_read.right_sc, current_read.right_sc);
+  // if (did_splicing) {
+  //   // --- Add soft clipped bases to the right of the alignment and reverse complement ---
+  //   for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
+  //     alignments[i_hyp] += current_read.alignment.QueryBases.substr(current_read.alignment.QueryBases.length() - current_read.right_sc, current_read.right_sc);
+  //     qualities[i_hyp] += current_read.alignment.Qualities.substr(current_read.alignment.QueryBases.length() - current_read.right_sc, current_read.right_sc);
 
-      if (current_read.is_reverse_strand) {
-        RevComplementInPlace(alignments[i_hyp]);
-        RevInPlace(qualities[i_hyp]);
-      }
+  //     if (current_read.is_reverse_strand) {
+  //       RevComplementInPlace(alignments[i_hyp]);
+  //       RevInPlace(qualities[i_hyp]);
+  //     }
 
-      if (global_context.DEBUG > 0) {
-        cerr << "hypothesis[" << i_hyp << "]: " << alignments[i_hyp] << endl;
-        cerr << " qualities[" << i_hyp << "]: " << qualities[i_hyp] << endl;
-      }
-    }
-  }
-
-  // // Check for non-ACGT bases in hypotheses
-  // bool valid_bases = true;
-  // for (unsigned int i_hyp=0; i_hyp<alignments.size(); i_hyp++) {
-  //   unsigned int iBase = 0;
-  //   while (iBase < alignments[i_hyp].length() and valid_bases) {
-  //     if (alignments[i_hyp].at(iBase) == 'A' or alignments[i_hyp].at(iBase) == 'C' or
-  //         alignments[i_hyp].at(iBase) == 'G' or alignments[i_hyp].at(iBase) == 'T')
-  //       iBase++;
-  //     else
-  //       valid_bases = false;
+  //     if (global_context.DEBUG > 0) {
+  //       cerr << "hypothesis[" << i_hyp << "]: " << alignments[i_hyp] << endl;
+  //       cerr << " qualities[" << i_hyp << "]: " << qualities[i_hyp] << endl;
+  //     }
   //   }
   // }
-  // if (not valid_bases){
-  //   cerr << "Non-Fatal ERROR in Splicing for " << local_context.contigName << ":" << local_context.position0 + 1
-  //     << ": Read Hypotheses for " << current_read.alignment.Name << " contain non-ACGT characters." << endl;
-  //   did_splicing = false;
+
+  // // // Check for non-ACGT bases in hypotheses
+  // // bool valid_bases = true;
+  // // for (unsigned int i_hyp=0; i_hyp<alignments.size(); i_hyp++) {
+  // //   unsigned int iBase = 0;
+  // //   while (iBase < alignments[i_hyp].length() and valid_bases) {
+  // //     if (alignments[i_hyp].at(iBase) == 'A' or alignments[i_hyp].at(iBase) == 'C' or
+  // //         alignments[i_hyp].at(iBase) == 'G' or alignments[i_hyp].at(iBase) == 'T')
+  // //       iBase++;
+  // //     else
+  // //       valid_bases = false;
+  // //   }
+  // // }
+  // // if (not valid_bases){
+  // //   cerr << "Non-Fatal ERROR in Splicing for " << local_context.contigName << ":" << local_context.position0 + 1
+  // //     << ": Read Hypotheses for " << current_read.alignment.Name << " contain non-ACGT characters." << endl;
+  // //   did_splicing = false;
+  // // }
+
+  // // --- Fail safe for hypotheses and verbose
+  // if (!did_splicing) {
+  //   for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
+  //     alignments[i_hyp] = alignments[0];
+  //     qualities[i_hyp] = qualities[0];
+  //   }
+  //   if (global_context.DEBUG > 1) {
+  //     cerr << "Failed to splice " << local_context.reference_allele << "->";
+  //     for (unsigned int i_alt = 0; i_alt < eval.allele_identity_vector.size(); i_alt++) {
+  //       cerr << eval.allele_identity_vector[i_alt].altAllele;
+  //       if (i_alt < eval.allele_identity_vector.size() - 1)
+  //         cerr << ",";
+  //     }
+  //     cerr << " into read " << current_read.alignment.Name << endl;
+  //   }
   // }
 
-  // --- Fail safe for hypotheses and verbose
-  if (!did_splicing) {
-    for (unsigned int i_hyp = 1; i_hyp < alignments.size(); i_hyp++) {
-      alignments[i_hyp] = alignments[0];
-      qualities[i_hyp] = qualities[0];
-    }
-    if (global_context.DEBUG > 1) {
-      cerr << "Failed to splice " << local_context.reference_allele << "->";
-      for (unsigned int i_alt = 0; i_alt < eval.allele_identity_vector.size(); i_alt++) {
-        cerr << eval.allele_identity_vector[i_alt].altAllele;
-        if (i_alt < eval.allele_identity_vector.size() - 1)
-          cerr << ",";
-      }
-      cerr << " into read " << current_read.alignment.Name << endl;
-    }
-  }
-
-  else if (global_context.DEBUG > 1 and alignments[0] != alignments[1]) {
-    cerr << "Spliced " << local_context.reference_allele << " -> ";
-    for (unsigned int i_alt = 0; i_alt < eval.allele_identity_vector.size(); i_alt++) {
-      cerr << eval.allele_identity_vector[i_alt].altAllele;
-      if (i_alt < eval.allele_identity_vector.size() - 1)
-        cerr << ",";
-    }
-    cerr << " into ";
-    if (current_read.is_reverse_strand) cerr << "reverse ";
-    else cerr << "forward ";
-    cerr << "strand read " << current_read.alignment.Name << endl;
-    cerr << "- Read as called: " << alignments[0] << endl;
-    cerr << "- Reference Hyp.: " << alignments[1] << endl;
-    for (unsigned int i_hyp = 2; i_hyp < alignments.size(); i_hyp++)
-      cerr << "- Variant Hyp. " << (i_hyp - 1) << ": " << alignments[i_hyp] << endl;
-  }
+  // else if (global_context.DEBUG > 1 and alignments[0] != alignments[1]) {
+  //   cerr << "Spliced " << local_context.reference_allele << " -> ";
+  //   for (unsigned int i_alt = 0; i_alt < eval.allele_identity_vector.size(); i_alt++) {
+  //     cerr << eval.allele_identity_vector[i_alt].altAllele;
+  //     if (i_alt < eval.allele_identity_vector.size() - 1)
+  //       cerr << ",";
+  //   }
+  //   cerr << " into ";
+  //   if (current_read.is_reverse_strand) cerr << "reverse ";
+  //   else cerr << "forward ";
+  //   cerr << "strand read " << current_read.alignment.Name << endl;
+  //   cerr << "- Read as called: " << alignments[0] << endl;
+  //   cerr << "- Reference Hyp.: " << alignments[1] << endl;
+  //   for (unsigned int i_hyp = 2; i_hyp < alignments.size(); i_hyp++)
+  //     cerr << "- Variant Hyp. " << (i_hyp - 1) << ": " << alignments[i_hyp] << endl;
+  // }
 
   if (global_context.DEBUG > 1) cerr << "alignments: " << eval.allele_identity_vector.size() << endl;
 
@@ -204,46 +204,46 @@ bool SpliceVariantHypotheses (
     cerr << "  allele: " << eval.allele_identity_vector[eval.allele_identity_vector.size() - 1].altAllele << endl;
   }
 
-  // The contained position tests are probably redundant. This test should be inclusive.
+  string read_buf;
+  string qual_buf;
+  if (current_read.is_reverse_strand) {
+    read_buf = alignments[0].substr(current_read.right_sc, alignments[0].length() - current_read.left_sc);
+    qual_buf = qualities[0].substr(current_read.right_sc, alignments[0].length() - current_read.left_sc);
+    RevComplementInPlace(read_buf);
+    RevInPlace(qual_buf);
+  }
+  else {
+    read_buf = alignments[0].substr(current_read.left_sc, alignments[0].length() - current_read.right_sc);
+    qual_buf = qualities[0].substr(current_read.left_sc, alignments[0].length() - current_read.right_sc);
+  }
+
+  for (unsigned int pretty_idx = 0; pretty_idx < pretty_alignment.length(); pretty_idx++) {
+    if (pretty_alignment[pretty_idx] == '-') {
+      read_buf.insert(pretty_idx, "N");
+      qual_buf.insert(pretty_idx, "N");
+    }
+    if (pretty_alignment[pretty_idx] == '+') {
+      read_buf.erase(pretty_idx, 1);
+      qual_buf.erase(pretty_idx, 1);
+    }
+  }
+
+  // not sure whether this test is necessary
   if (local_context.position0 >= current_read.align_start and local_context.position0 <= current_read.align_end) {
-    if (current_read.is_reverse_strand) {
-      position = alignments[0].length() - (local_context.position0 - current_read.alignment.Position) - 1;
-      if (position >= 0 and position < (int)alignments[0].length()) {
-        basecall = alignments[0][position];
-        qual = qualities[0][position];
-      }
-      else {
-        basecall = "N";
-        qual = ' ';
-      }
-      RevComplementInPlace(basecall);
-      if (global_context.DEBUG > 1) cerr << "  (1) ref allele (reverse): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
-    }
-    else {
-      position = local_context.position0 - current_read.alignment.Position;
-      if (position >= 0 and position < (int)alignments[0].length()) {
-        basecall = alignments[0][position];
-        qual = qualities[0][position];
-      }
-      else {
-        basecall = "N";
-        qual = ' ';
-      }
-      if (global_context.DEBUG > 1) cerr << "  (2) ref allele (forward): " << local_context.reference_allele << ",  basecall: " << basecall << ", qual: " << qual << " = " << prob(qual) << endl;
-    }
+    position = local_context.position0 - current_read.align_start;
+    basecall = read_buf[position];
+    qual = qual_buf[position];
   }
   else {
     basecall = "N";
     qual = ' ';
   }
 
-  string buf(alignments[0]);
-  if (current_read.is_reverse_strand) {
-    RevComplementInPlace(buf);
-  }
-  cerr << (current_read.is_reverse_strand ? "(R)" : "(F)") << " " << current_read.alignment.Position << ": " << string(current_read.alignment.Position - 326385, ' ') << buf << endl;
+#if 0
+  cerr << (current_read.is_reverse_strand ? "(R)" : "(F)") << " " << current_read.alignment.Position << ": " << string(current_read.alignment.Position - 326385, ' ') << read_buf << " (" << current_read.left_sc << ", " << current_read.right_sc << ")\n";
+  cerr <<  string(current_read.alignment.Position - 326385 + 12, ' ') << pretty_alignment << endl;
+#endif
 
-  if (global_context.DEBUG > 1) cerr << "-----------------------\n";
   qscore = qual - 33;
   error_prob = prob(qual);
   return did_splicing;
