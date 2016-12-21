@@ -25,6 +25,15 @@
 #include "strelka/strelka_shared.hh" // for strelka_options
 //#include "starling_common/starling_pos_processor_base.hh"
 
+void pileup_read_segment(
+  const ExtendParameters &parameters,
+  const ReferenceReader &ref_reader,
+  int chr_idx,
+  // const read_segment& rseg,
+  const unsigned sample_no,
+  VariantCandidate &candidate_variant
+);
+
 std::auto_ptr<gvcf_aggregator> _gvcfer;
 
 
@@ -321,8 +330,10 @@ void Evaluator::Strelka (
 
   opt.shared_site_error_rate = 5.0e-7;
 
+  opt.nonref_test_filename= "nonref_test";
+
   opt.is_counts = true;
-  opt.is_compute_hapscore = true;
+  opt.is_compute_hapscore = false;
   opt.is_compute_VQSRmetrics = true;
   opt.is_compute_VQSRmetrics = true;
   bool _is_variant_windows(opt.variant_windows.size());
@@ -407,9 +418,18 @@ void Evaluator::Strelka (
   // Fill in position info for strelka. The following section is roughly
   // equivalent to a portion of pileup_read_segment() for ps.type == MATCH.
   //
-  int sample_no = 1;
+
+  const unsigned sample_no = 1;
   bool is_tier1 = true;
   long ref_pos = candidate_variant.variant.position;
+  pileup_read_segment(
+    parameters,
+    ref_reader,
+    chr_idx,
+    // const read_segment& rseg,
+    sample_no,
+    candidate_variant
+  );
 
   // sample_info &sif(sample(sample_no));
   const unsigned knownref_report_size(get_ref_seq_known_size(ref, dopt.report_range));
@@ -568,18 +588,13 @@ void Evaluator::Strelka (
     report_counts(good_pi, _site_info.n_unused_calls, output_pos, cout);
   }
 
-  if (opt.is_nonref_test() || opt.is_nonref_sites() || true) {
+  if (opt.is_nonref_test() || opt.is_nonref_sites()) {
     position_nonref_2allele_test(good_pi, opt, opt.is_nonref_sites(), nrc);
 #if 0
     static const bool is_mle_freq(false);
 
-    position_nonref_test(good_pi,
-        opt.nonref_variant_rate,
-        opt.min_nonref_freq,
-        is_mle_freq,
-        nrc);
+    position_nonref_test(good_pi, opt.nonref_variant_rate, opt.min_nonref_freq, is_mle_freq, nrc);
 #endif
-
   }
 
 #if 0
@@ -587,7 +602,7 @@ void Evaluator::Strelka (
     position_snp_call_lrt(opt.lsnp_alpha, good_pi, lsc);
   }
 #endif
-  if (true or opt.is_bsnp_diploid()) {
+  if (opt.is_bsnp_diploid()) { // this forces the call on a candidate
     dopt.pdcaller().position_snp_call_pprob_digt(opt, good_epi, _site_info.dgt, opt.is_all_sites());
     cerr << "dgt: " << _site_info.dgt << endl;
   }
