@@ -537,6 +537,7 @@ include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Bookkeeping")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Reads")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Splice")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Filter")
+include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Strelka")
 include_directories("${PROJECT_SOURCE_DIR}/realignment")
 include_directories("${PROJECT_SOURCE_DIR}/Calibration")
 include_directories("/data1/selkov_workdir/src/strelka_workflow-1.0.15/strelka/src/lib")
@@ -572,6 +573,8 @@ set(tvcSRCS
   VariantCaller/Evaluator/TentativeAlignment.cpp
   VariantCaller/Evaluator/StackEngine.cpp
   VariantCaller/Evaluator/DiagnosticJSON.cpp
+
+  VariantCaller/Strelka/strelka_pos_processor.cpp
 
   # TODO: Actually build vcflib as a static library and link to variant caller.
   # TODO2: Resolve bgzf.c collisions between vcflib and bamtools

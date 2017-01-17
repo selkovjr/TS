@@ -241,7 +241,8 @@ bool SpliceVariantHypotheses (
   if (current_read.is_reverse_strand) {
     RevComplementInPlace(buf);
   }
-  cerr << (current_read.is_reverse_strand ? "(R)" : "(F)") << " " << current_read.alignment.Position << ": " << string(current_read.alignment.Position - 326385, ' ') << buf << endl;
+  // This is a rough-and-ready pileup viewer. Mind the fixed offset from current_read.alignment.Position -- it can result in extremely long lines
+  // cerr << (current_read.is_reverse_strand ? "(R)" : "(F)") << " " << current_read.alignment.Position << ": " << string(current_read.alignment.Position - 326385, ' ') << buf << endl;
 
   if (global_context.DEBUG > 1) cerr << "-----------------------\n";
   qscore = qual - 33;
