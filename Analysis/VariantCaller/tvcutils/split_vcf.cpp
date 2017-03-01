@@ -52,7 +52,8 @@ void SplitVcfHelp()
 bool validate_filename(const string& input_file, string& out_file) {
   size_t pos = input_file.rfind("/");
   if (pos == string::npos) {pos = 0;}
-  out_file = input_file.substr(pos + 1, input_file.size() - 4 - pos - 1); 
+  out_file = input_file.substr(pos, input_file.size() - 4 - pos);
+  cerr << "out_file:  " << out_file << "\n";
   string suffix = input_file.substr(input_file.size() - 4, input_file.size());
   std::transform(suffix.begin(), suffix.end(), suffix.begin(), ::tolower);
   if (suffix != ".vcf") {
@@ -182,7 +183,7 @@ void close(FILE *input, vector<ofstream *>& out_files) {
   fclose(input);
   for (vector<ofstream *>::iterator iter = out_files.begin(); (iter != out_files.end()); ++iter) {
     if ((*iter) != NULL) {
-      if ((*iter)->is_open()) {(*iter)->close();} 
+      if ((*iter)->is_open()) {(*iter)->close();}
       delete *iter; *iter = NULL;
     }
   }
@@ -218,23 +219,23 @@ void check_sample(FILE *input, vector<ofstream *>& out_files, string& qual_field
         if (*tag_iter == "GQ") {
             qual_field = values[tag_index];
         }
-        if ((*tag_iter == "AO") or 
-            (*tag_iter == "DP") or 
+        if ((*tag_iter == "AO") or
+            (*tag_iter == "DP") or
             (*tag_iter == "MDP") or
             (*tag_iter == "MAO") or
             (*tag_iter == "MRO") or
             (*tag_iter == "MAF") or
-            (*tag_iter == "FAO") or 
-            (*tag_iter == "FDP") or 
-            (*tag_iter == "FRO") or 
-            (*tag_iter == "FSAF") or 
-            (*tag_iter == "FSAR") or 
-            (*tag_iter == "FSRF") or 
-            (*tag_iter == "FSRR") or 
-            (*tag_iter == "RO") or 
-            (*tag_iter == "SAF") or 
-            (*tag_iter == "SAR") or 
-            (*tag_iter == "SRF") or 
+            (*tag_iter == "FAO") or
+            (*tag_iter == "FDP") or
+            (*tag_iter == "FRO") or
+            (*tag_iter == "FSAF") or
+            (*tag_iter == "FSAR") or
+            (*tag_iter == "FSRF") or
+            (*tag_iter == "FSRR") or
+            (*tag_iter == "RO") or
+            (*tag_iter == "SAF") or
+            (*tag_iter == "SAR") or
+            (*tag_iter == "SRF") or
             (*tag_iter == "SRR")) {
             for (vector<string>::iterator info_iter = info.begin(); (info_iter != info.end()); ++info_iter) {
                 if (info_iter->find(*tag_iter + "=") == 0) {
@@ -244,9 +245,9 @@ void check_sample(FILE *input, vector<ofstream *>& out_files, string& qual_field
         }
         tag_index++;
     }
-    if (!gt_found) {
-        cerr << "ERROR: input-vcf missing sample specific genotype tag.\n"; close(input, out_files); exit(1);
-    }
+    // if (!gt_found) {
+    //     cerr << "ERROR: input-vcf missing sample specific genotype tag.\n"; close(input, out_files); exit(1);
+    // }
     if (!fr_found) {
         //cerr << "ERROR: input-vcf missing sample specific filter reason tag.\n"; close(input, out_files); exit(1);
     }
@@ -266,7 +267,7 @@ void check_sample(FILE *input, vector<ofstream *>& out_files, string& qual_field
 bool split_vcf(string& input_file, const string& out_dir) {
   if (mkpath(out_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0) {
     cerr << "ERROR: Cannot create output path	" << out_dir << "\n";
-    return false;		
+    return false;
   }
   string out_file;
   if (not validate_filename(input_file, out_file)) {return false;}
