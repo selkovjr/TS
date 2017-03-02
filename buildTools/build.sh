@@ -11,8 +11,6 @@ MODULES=${MODULES-"
   Analysis
   torrentR
   torrentPy
-  dbReports
-  pipeline
   publishers
   tsconfig
   RSM

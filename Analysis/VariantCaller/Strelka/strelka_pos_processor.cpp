@@ -164,6 +164,8 @@ void pileup_read_segment (
     pileup[i_read].sample_index = read_stack[i_read]->sample_index; // this should be done while making the initial pileup
     string sample_name = candidate_variant.variant.sampleNames[pileup[i_read].sample_index];
     sample_name = sample_name.substr(0, sample_name.find("."));
+    cerr << "sample name: " << sample_name << endl;
+    if (sample_name != "tumor") cerr << "skipping normal sample\n" << endl;
     if (sample_name != "tumor") continue;
 
     Alignment al = *read_stack[i_read];

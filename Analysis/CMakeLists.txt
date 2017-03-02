@@ -1261,10 +1261,6 @@ install(DIRECTORY "${PROJECT_BINARY_DIR}/../picard-1.130/" DESTINATION "/opt/pic
 
 add_subdirectory (MapLab)
 
-if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
-  add_subdirectory(TMAP)
-endif()
-
 include(../buildTools/cmake/CMakeLists.cpack.txt)
 #% nice to automate this
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libatlas3gf-base,

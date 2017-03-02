@@ -928,7 +928,7 @@ ExtendParameters::ExtendParameters(int argc, char** argv)
   outputFile = "";
 
   // operation parameters
-  useDuplicateReads = false;      // -E --use-duplicate-reads
+  useDuplicateReads = true;      // -E --use-duplicate-reads
   useBestNAlleles = 0;         // -n --use-best-n-alleles
   allowIndels = true;            // -i --no-indels
   allowMNPs = true;            // -X --no-mnps

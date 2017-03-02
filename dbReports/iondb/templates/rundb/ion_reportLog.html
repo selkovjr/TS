@@ -1,8 +1,0 @@
-<div id="modal-error-messages"></div>
-<br />
-{% for s in log %}
-<ul class="unstyled">
-    {% for st in s %}<li>{{ st }}</li>{% endfor %}
-</ul>
-{% if forloop.revcounter != 1 %}<hr>{% endif %}
-{% endfor %}

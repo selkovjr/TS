@@ -239,15 +239,19 @@ bool SpliceVariantHypotheses (
     qual = ' ';
   }
 
-#if 0
-  // This is a rough-and-ready pileup viewer. Mind the fixed offset from current_read.alignment.Position -- it can result in extremely long lines
-  cerr << (current_read.is_reverse_strand ? "(R)" : "(F)") << " " << current_read.alignment.Position << ": " << string(current_read.alignment.Position - 326385, ' ') << read_buf << " (" << current_read.left_sc << ", " << current_read.right_sc << ")\n";
-  cerr <<  string(current_read.alignment.Position - 326385 + 12, ' ') << pretty_alignment << endl;
+#if 1
+  // This is a rough-and-ready pileup viewer. Mind the fixed offset from
+  // current_read.alignment.Position -- it can result in extremely long lines
+  // if set too far upstream or std::length_error if set downstream of the
+  // leftmost read start.
+  cerr << (current_read.is_reverse_strand ? "(R)" : "(F)") << " " << current_read.alignment.Position << ": " << string(current_read.alignment.Position - 7723408, ' ') << read_buf << " (" << current_read.left_sc << ", " << current_read.right_sc << ")\n";
+  cerr <<  string(current_read.alignment.Position - 7723408 + 13, ' ') << pretty_alignment << endl;
 #endif
 
   qscore = qual - 33;
   error_prob = prob(qual);
-  return did_splicing;
+  // return did_splicing;
+  return true;
 };
 
 // -------------------------------------------------------------------

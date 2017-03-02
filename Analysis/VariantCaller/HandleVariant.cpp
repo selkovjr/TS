@@ -688,6 +688,7 @@ void Evaluator::StackUpOneVariant(const ExtendParameters &parameters, VariantCan
     sample_name = sample_name.substr(0, sample_name.find("."));
 
     // Reservoir Sampling
+#ifdef ENABLE_RESERVOIR_SAMPLING
     if (read_stack.size() < 2 * (unsigned int)parameters.my_controls.downSampleCoverage) {
       read_counter++;
       read_stack.push_back(rai);
@@ -727,6 +728,20 @@ void Evaluator::StackUpOneVariant(const ExtendParameters &parameters, VariantCan
           read_stack_n[test_position] = rai;
       }
     }
+#else
+    read_counter++;
+    read_stack.push_back(rai);
+    if (sample_name == "tumor") {
+      read_counter_t++;
+      read_stack_t.push_back(rai);
+      cerr << "tumor:  " << rai->alignment.Name << endl;
+    }
+    if (sample_name == "normal") {
+      read_counter_n++;
+      read_stack_n.push_back(rai);
+      cerr << "normal: " << rai->alignment.Name << endl;
+    }
+#endif
   }
 }
 
@@ -766,6 +781,7 @@ bool ProcessOneVariant (
   }
 
   eval.Strelka(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx, candidate_variant);
+  cerr << "candidate variant (after Strelka call)\n";
   cerr << candidate_variant.variant << endl;
   return true;
 
@@ -775,6 +791,7 @@ bool ProcessOneVariant (
 
   // Estimate joint variant likelihood (the product of single-sample likelihoods obtained by piling reads from both samples)
   eval.SampleLikelihood(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx, candidate_variant);
+  cerr << "candidate variant\n";
   cerr << candidate_variant.variant << endl;
   return true;
 

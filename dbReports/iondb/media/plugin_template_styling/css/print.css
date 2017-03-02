@@ -1,7 +1,0 @@
-#tech {
-    display: none;
-}
-
-.section, .collapsed .sectioncontent, div.subcontent {
-    display: block !important;
-}
