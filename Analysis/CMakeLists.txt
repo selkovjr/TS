@@ -7,9 +7,6 @@ enable_testing()
 include(CheckCCompilerFlag)
 check_c_compiler_flag( -malign-double HAS_ALIGN_DOUBLE )
 
-# This inconspicuous line holds the key to IR integration of tvc, tmap, and bamrealignment:
-#set(CMAKE_EXE_LINKER_FLAGS -static)
-
 set(CMAKE_CXX_FLAGS -g3)
 
 
@@ -525,7 +522,7 @@ target_link_libraries(BaseCaller ion-analysis pthread ${ION_BAMTOOLS_LIBS} dl)
 install(TARGETS BaseCaller DESTINATION bin)
 
 
-## Standalone Variant Caller, named tvc-strelka
+## BAM walker derived from Torrent Variant Caller, tvc
 set(ION_VCFLIB_DIR    ${ION_TS_EXTERNAL}/vcflib)
 set(ION_FREEBAYES_DIR ${ION_TS_EXTERNAL}/freebayes)
 
@@ -655,11 +652,10 @@ if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
         BaseCaller/TreephaserSSE.cpp)
 endif()
 
-add_executable(tvc-strelka ${tvcSRCS})
-target_link_libraries(tvc-strelka ${ION_BAMTOOLS_LIBS} ${EXTRA_LIBS} z file-io pthread)
-add_dependencies(tvc-strelka IONVERSION bamtools armadillo_proj htslib_proj)
-install(TARGETS tvc-strelka DESTINATION bin)
-
+add_executable(bamwalker ${tvcSRCS})
+target_link_libraries(bamwalker ${ION_BAMTOOLS_LIBS} ${EXTRA_LIBS} z file-io pthread)
+add_dependencies(bamwalker IONVERSION bamtools armadillo_proj htslib_proj)
+install(TARGETS bamwalker DESTINATION bin)
 
 # bbctools
 set(bbctools_src

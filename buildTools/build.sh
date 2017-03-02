@@ -11,7 +11,6 @@ MODULES=${MODULES-"
   Analysis
   torrentR
   torrentPy
-  publishers
   tsconfig
   RSM
   tsvm

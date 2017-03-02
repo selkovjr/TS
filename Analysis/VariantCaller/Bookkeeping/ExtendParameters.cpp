@@ -67,13 +67,6 @@ void VariantCallerHelp() {
   printf("     --use-input-allele-only            on/off      only consider provided alleles for locations in input-vcf [off]\n");
   printf("\n");
 
-  printf("Variant candidate scoring options (Strelka):\n");
-  printf("     --genome-size                      INT         total number of non-ambiguous bases in the reference genome (informs the estimate of genomic prior) [required]\n");
-  printf("     --do-snp-realignment               on/off      Realign reads in the vicinity of candidate snp variants [on].\n");
-  printf("     --do-mnp-realignment               on/off      Realign reads in the vicinity of candidate mnp variants [do-snp-realignment].\n");
-  printf("     --realignment-threshold            FLOAT       Max. allowed fraction of reads where realignment causes an alignment change [1.0].\n");
-  printf("\n");
-
   printf("Advanced variant candidate scoring options:\n");
   printf("     --prediction-precision             FLOAT       prior weight in bias estimator [30.0]\n");
   printf("     --shift-likelihood-penalty         FLOAT       penalize log-likelihood for solutions involving large systematic bias [0.3]\n");
@@ -168,7 +161,6 @@ void VariantCallerHelp() {
 
 
 ControlCallAndFilters::ControlCallAndFilters() {
-  genome_size = 0;
 
   // all defaults handled by sub-filters
   data_quality_stringency = 4.0f;  // phred-score for this variant per read
@@ -561,8 +553,6 @@ void ControlCallAndFilters::CheckParameterLimits() {
 
   filter_variant.CheckParameterLimits();
 
-  CheckParameterLowerBound<long>      ("genome-size",  genome_size, 1);
-
   CheckParameterLowerBound<float>     ("data-quality-stringency",  data_quality_stringency,  0.0f);
   CheckParameterLowerUpperBound<float>("read-rejection-threshold", read_rejection_threshold, 0.0f, 1.0f);
   CheckParameterLowerUpperBound<int>  ("downsample-to-coverage",   downSampleCoverage,       20, 100000);
@@ -615,12 +605,6 @@ void ControlCallAndFilters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
 
   filter_variant.SetOpts(opts, tvc_params);
   RandSeed = 631;    // Not exposed to user at this point
-
-  genome_size                       = RetrieveParameterLong(opts, tvc_params, '-', "genome-size", 0);
-  if (genome_size < 1) {
-    cerr << "Fatal ERROR: genome size not specified via --genome-size" << endl;
-    exit(1);
-  }
 
   data_quality_stringency               = RetrieveParameterDouble(opts, tvc_params, '-', "data-quality-stringency",4.0f);
 

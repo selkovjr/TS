@@ -48,7 +48,7 @@ void * VariantCallerWorker(void *input);
 int main(int argc, char* argv[])
 {
 
-  printf("tvc-strelka %s-%s (%s) - Torrent Variant Caller hosting Strelka somatic caller\n\n",
+  printf("bamwalker %s-%s (%s) - Torrent Variant Caller (hacked)\n\n",
          IonVersion::GetVersion().c_str(), IonVersion::GetRelease().c_str(), IonVersion::GetGitHash().c_str());
 
   // stolen from "Analysis" to silence error messages from Armadillo library
@@ -245,7 +245,7 @@ void * VariantCallerWorker(void *input)
   MetricsAccumulator& metrics_accumulator = vc.metrics_manager->NewAccumulator();
   pthread_mutex_unlock(&vc.bam_walker_mutex);
 
-  while (true /*more_positions*/) {
+  while (more_positions) {
 
     // Opportunistic read removal
 
@@ -397,10 +397,11 @@ void * VariantCallerWorker(void *input)
       more_positions = vc.bam_walker->AdvancePosition(haplotype_length, next_hotspot_chr, next_hotspot_position);
     else
       more_positions = vc.bam_walker->AdvancePosition(haplotype_length);
+    cerr << "more_positions: " << more_positions << "\n";
     pthread_mutex_unlock(&vc.bam_walker_mutex);
 
     if (not variant_candidates.empty()) {
-      // cerr << " Got candidates!" << endl;
+      cerr << " Got candidates!" << endl;
 
       int vcf_writer_slot = vc.vcf_writer->ReserveSlot();
       vc.candidate_counter += variant_candidates.size();

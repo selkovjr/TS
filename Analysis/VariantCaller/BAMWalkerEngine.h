@@ -127,7 +127,7 @@ struct PositionInProgress {
   long                  pos;                //! Position within chromosome
   long                  target_end;         //! End of current target region
   Alignment *           begin;              //! First read covering this position
-  Alignment *           end;                //! Last read coverint this position
+  Alignment *           end;                //! Last read covering this position
   time_t                start_time;
 };
 

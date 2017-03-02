@@ -8,136 +8,7 @@
 #include "SpliceVariantHypotheses.h"
 #include "DecisionTreeData.h"
 
-#define starling_streams_base int
 
-#include "blt_common/adjust_joint_eprob.hh"
-#include "blt_common/nonref_test_call.hh"
-#include "blt_common/position_nonref_2allele_test.hh"
-#include "blt_common/ref_context.hh"
-#include "blt_common/snp_pos_info.hh"
-#include "blt_util/bam_seq.hh"
-#include "blt_util/depth_stream_stat_range.hh"
-#include "blt_util/seq_util.hh"
-#include "starling_common/gvcf_aggregator.hh"
-#include "starling_common/gvcf_locus_info.hh"
-#include "starling_common/pos_basecall_buffer.hh"
-#include "starling_common/starling_ref_seq.hh" // get_starling_ref_seq()
-#include "strelka/strelka_shared.hh" // for strelka_options
-//#include "starling_common/starling_pos_processor_base.hh"
-
-#include "strelka_pos_processor.h"
-
-static void write_snp_prefix_info_file (
-  const std::string& seq_name,
-  const pos_t output_pos,
-  const char ref,
-  const unsigned n_used_calls,
-  const unsigned n_unused_calls,
-  std::ostream& os
-) {
-  os << "nonref_2allele_test\t" << seq_name << "\t"
-    << output_pos << "\t"
-    << n_used_calls << "\t"
-    << n_unused_calls << "\t"
-    << ref;
-}
-
-static void write_bsnp_diploid_allele (
-  const blt_options& client_opt,
-  // const blt_streams& client_io,
-  const std::string& seq_name,
-  const pos_t output_pos,
-  const char ref,
-  const unsigned n_used_calls,
-  const unsigned n_unused_calls,
-  const snp_pos_info& good_pi,
-  const diploid_genotype& dgt,
-  const unsigned hpol = 0
-) {
-  // std::ostream& os(*client_io.bsnp_diploid_allele_osptr());
-  std::ostream& os(cout);
-
-  os << "diploid_genotype_allele\t";
-  write_snp_prefix_info_file(seq_name, output_pos, ref, n_used_calls, n_unused_calls, os);
-  os << "\t";
-  write_diploid_genotype_allele(client_opt, good_pi, dgt, os, hpol);
-  os << "\n";
-}
-
-struct extra_position_data {
-  /// stores the column of basecalls actually used for snp-calling after the
-  /// mismatch density filter and other quality filters have been applied:
-  snp_pos_info good_pi;
-
-  /// stores information on approximate qscore reductions implemented to represent
-  /// site-specific basecalling dependency, note this is not applied in somatic
-  /// calling:
-  std::vector<float> dependent_eprob;
-};
-
-
-// Removed read_id_counter
-struct sample_info {
-  sample_info (
-    const starling_options& opt,
-    const unsigned report_size,
-    const unsigned knownref_report_size
-  ):
-  // indel_buff(opt.max_indel_size),
-  // read_buff(ricp),
-  // sample_opt(opt),
-  // isync_default(indel_buff, estdepth_buff, sample_opt),
-  // indel_sync_ptr(&isync_default),
-  ss(report_size),
-  used_ss(report_size),
-  ssn(knownref_report_size),
-  used_ssn(knownref_report_size)
-  // wav(opt)
-  {}
-
-  // indel_synchronizer &indel_sync() { return *indel_sync_ptr; }
-
-  // indel_buffer indel_buff;
-  pos_basecall_buffer bc_buff;
-  // starling_read_buffer read_buff;
-  // depth_buffer estdepth_buff; // provide an early estimate of read depth before realignment.
-
-  // starling_sample_options sample_opt;
-
-  // indel_synchronizer isync_default;
-  // indel_synchronizer* indel_sync_ptr;
-
-  depth_stream_stat_range ss;
-  depth_stream_stat_range used_ss;
-  depth_stream_stat_range ssn;
-  depth_stream_stat_range used_ssn;
-
-  // regional basecall average windows:
-  // win_avgs wav;
-
-  // keep a single copy of this struct to reuse for every site to lower alloc costs:
-  extra_position_data epd;
-};
-
-
-static void report_counts(const snp_pos_info& pi, const unsigned n_unused_calls, const pos_t output_pos, std::ostream& os) {
-  unsigned base_count[N_BASE];
-
-  for (unsigned i(0); i < N_BASE; ++i) base_count[i] = 0;
-
-  BOOST_FOREACH(const base_call& bc, pi.calls) {
-    assert(bc.base_id != BASE_ID::ANY);
-    base_count[bc.base_id]++;
-  }
-
-  os << "counts\t" << output_pos << '\t';
-  for (unsigned i(0); i < N_BASE; ++i) {
-    os << base_count[i] << '\t';
-  }
-  os << n_unused_calls << '\n';
-}
-
-/*
 void Evaluator::SampleLikelihood (
   PersistingThreadObjects &thread_objects,
   const InputStructures &global_context,
@@ -149,6 +20,7 @@ void Evaluator::SampleLikelihood (
   bool changed_alignment;
   unsigned int  num_valid_reads = 0;
   unsigned int  num_realigned = 0;
+
   int  num_hyp_no_null = allele_identity_vector.size() + 1; // num alleles +1 for ref
   // generate null+ref+nr.alt hypotheses per read in the case of do_multiallele_eval
   allele_eval.pileup.resize(read_stack.size());
@@ -290,144 +162,6 @@ void Evaluator::SampleLikelihood (
   cerr << "normal sample likelihood: " << snv_likelihood_n << endl;
   cerr << "tumor sample likelihood: " << snv_likelihood_t << endl;
 }
-*/
-
-
-void Evaluator::Strelka (
-  PersistingThreadObjects &thread_objects,
-  const InputStructures &global_context,
-  const ExtendParameters &parameters,
-  const ReferenceReader &ref_reader,
-  int chr_idx,
-  VariantCandidate &candidate_variant
-) {
-
-  // Initialize priors and other options
-  strelka_options opt;
-  opt.samtools_ref_seq_file = "/data1/selkov_workdir/data/reference/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa";
-  opt.is_samtools_ref_set = true;
-
-  opt.bam_seq_name = candidate_variant.variant.sequenceName;
-
-  // Strelka's realignment window for SNPs is 20 bases on either side
-  opt.user_report_range.begin_pos = max(0, multiallele_window_start - 20);
-  opt.user_report_range.is_begin_pos = true;
-  opt.user_report_range.end_pos = multiallele_window_end + 20;
-  opt.user_report_range.is_end_pos = true;
-
-  opt.user_genome_size = parameters.my_controls.genome_size;
-  opt.is_user_genome_size = true;
-
-  opt.shared_site_error_rate = 5.0e-7;
-
-  opt.nonref_test_filename= "nonref_test";
-
-  opt.is_counts = true;
-  opt.is_compute_hapscore = false;
-  opt.is_compute_VQSRmetrics = true;
-  opt.is_compute_VQSRmetrics = true;
-  bool _is_variant_windows(opt.variant_windows.size());
-  std::set<pos_t> _variant_print_pos;
-
-  reference_contig_segment ref;
-  get_starling_ref_seq(opt, ref);
-  const strelka_deriv_options dopt(opt, ref); // initializes priors
-  cerr << "dopt range size: " << dopt.report_range.size() << endl;
-
-  // pileup
-  bool changed_alignment;
-  unsigned int  num_valid_reads = 0;
-  unsigned int  num_realigned = 0;
-  int  num_hyp_no_null = allele_identity_vector.size() + 1; // num alleles +1 for ref
-  // generate null+ref+nr.alt hypotheses per read in the case of do_multiallele_eval
-  allele_eval.pileup.resize(read_stack.size());
-
-  cerr << "evaluating " << allele_eval.pileup.size() << " hypotheses\n";
-  for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
-    // --- New splicing function ---
-    allele_eval.pileup[i_read].success =
-      SpliceVariantHypotheses(
-        *read_stack[i_read],
-        *this,
-        seq_context,
-        thread_objects,
-        allele_eval.pileup[i_read].basecall,
-        allele_eval.pileup[i_read].qscore,
-        allele_eval.pileup[i_read].error_prob,
-        allele_eval.pileup[i_read].pos_in_read,
-        changed_alignment,
-        global_context,
-        ref_reader,
-        chr_idx
-    );
-
-    if (allele_eval.pileup[i_read].success){
-      num_valid_reads++;
-      if (changed_alignment)
-        num_realigned++;
-    }
-  }
-  cerr << "num_valid_reads: " << num_valid_reads << endl;
-  cerr << "num_realigned: " << num_realigned << endl;
-
-  // Check how many reads had their alignment modified
-  std::ostringstream my_info;
-  my_info.precision(4);
-  if (doRealignment and num_valid_reads > 0) {
-    cerr << "checking modified reads\n";
-    float frac_realigned = (float)num_realigned / (float)num_valid_reads;
-    // And re-do splicing without realignment if we exceed the threshold
-    if (frac_realigned > parameters.my_controls.filter_variant.realignment_threshold) {
-      my_info << "SKIPREALIGNx" << frac_realigned;
-      doRealignment = false;
-      for (unsigned int i_read = 0; i_read < allele_eval.pileup.size(); i_read++) {
-        allele_eval.pileup[i_read].success =
-          SpliceVariantHypotheses(
-            *read_stack[i_read],
-            *this,
-            seq_context,
-            thread_objects,
-            allele_eval.pileup[i_read].basecall,
-            allele_eval.pileup[i_read].qscore,
-            allele_eval.pileup[i_read].error_prob,
-            allele_eval.pileup[i_read].pos_in_read,
-            changed_alignment,
-            global_context,
-            ref_reader,
-            chr_idx
-          );
-      }
-    }
-    else {
-      my_info << "REALIGNEDx" << frac_realigned;
-    }
-    info_fields.push_back(my_info.str());
-  }
-  cerr << my_info.str() << endl;
-
-  // --------------------------------------------------------------------
-  // The following section is roughly equivalent to a portion of
-  // pileup_read_segment() for ps.type == MATCH.
-  //
-
-  const unsigned sample_no = 1;
-  bool is_tier1 = true;
-  long ref_pos = candidate_variant.variant.position;
-
-  pileup_read_segment(
-    allele_eval.pileup,
-    read_stack,
-    parameters,
-    opt,
-    dopt,
-    ref_reader,
-    ref,
-    chr_idx,
-    sample_no,
-    candidate_variant
-  );
-}
-
 
 void SummarizeInfoFields(Evaluator &eval, vcf::Variant &candidate_variant, int _cur_allele_index, const string &sample_name) {
 
@@ -780,10 +514,6 @@ bool ProcessOneVariant (
     return false;
   }
 
-  eval.Strelka(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx, candidate_variant);
-  cerr << "candidate variant (after Strelka call)\n";
-  cerr << candidate_variant.variant << endl;
-  return true;
 
   // handle the unfortunate case in which we must try multiple alleles to be happy
   // try only ref vs alt allele here
@@ -791,7 +521,6 @@ bool ProcessOneVariant (
 
   // Estimate joint variant likelihood (the product of single-sample likelihoods obtained by piling reads from both samples)
   eval.SampleLikelihood(thread_objects, *vc.global_context, *vc.parameters, *vc.ref_reader, chr_idx, candidate_variant);
-  cerr << "candidate variant\n";
   cerr << candidate_variant.variant << endl;
   return true;
 

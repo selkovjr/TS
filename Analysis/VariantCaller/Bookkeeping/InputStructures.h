@@ -60,7 +60,7 @@ struct VariantCallerContext {
   pthread_cond_t        alignment_tail_cond;          //! Conditional variable for blocking until the final alignments are processed
 
   int                   candidate_counter;            //! Number of candidates generated so far
-  //int                 candidate_dot;                //! Number of candidates that will trigger printing next "."
+  // int                   candidate_dot;                //! Number of candidates that will trigger printing next "."
   time_t                dot_time;                     //! Time that will trigger printing next '.'
 };
 

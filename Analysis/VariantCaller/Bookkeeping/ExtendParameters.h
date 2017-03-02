@@ -82,8 +82,6 @@ class ClassifyFilters {
 
 class ControlCallAndFilters {
   public:
-    long genome_size; // The input value for Strelka's attempt to rationalize genomic priors via Drake's rule
-
     // values relating the decision tree for calling/genotyping
     // i.e controlling no-call/call decisions
     // controlling variant /reference decisions
