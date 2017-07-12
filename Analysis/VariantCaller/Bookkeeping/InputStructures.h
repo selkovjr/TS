@@ -16,14 +16,12 @@
 #include <Variant.h>
 #include <VariantCaller/OrderedBAMWriter.h>
 
-#include "LinearCalibrationModel.h"
 #include "../ErrorMotifs.h"
 #include "ExtendParameters.h"
 #include "Realigner.h"
 
 using namespace std;
 using namespace BamTools;
-using namespace ion;
 
 
 class InputStructures;

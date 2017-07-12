@@ -20,7 +20,7 @@ void AutoFailTheCandidate(vcf::Variant &candidate_variant, bool use_position_bia
   NullFilterReason(candidate_variant, sample_name);
   string my_reason = "NODATA";
   AddFilterReason(candidate_variant, my_reason, sample_name);
-  cerr << "AutoFailTheCandidate()" << endl;
+  // cerr << "AutoFailTheCandidate()" << endl;
   SetFilteredStatus(candidate_variant, true);
 }
 

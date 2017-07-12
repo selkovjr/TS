@@ -26,7 +26,7 @@ QUICK START on Ubuntu 14.04 (=Trusty)
         r-base
 
 
-   MODULES="gpu Analysis" ./buildTools/build.sh
+   MODULES="Analysis" ./buildTools/build.sh
 
 
 
@@ -48,7 +48,6 @@ QUICK START on Ubuntu 11.10 (=Oneiric) (EXPERIMENTAL)
         libatlas-dev \
         gfortran \
         zlib1g-dev \
-        libarmadillo-dev \
         libboost-serialization-dev \
         libncurses-dev \
         libbz2-dev
@@ -59,12 +58,12 @@ QUICK START on Ubuntu 11.10 (=Oneiric) (EXPERIMENTAL)
 
    # icc needs sudo apt-get install libboost1.42-all-dev
 
-   MODULES="gpu Analysis" ./buildTools/build.sh
+   MODULES="Analysis" ./buildTools/build.sh
 
 
 EXTERNAL DEPENDENCIES
 
-These fall into two general categories. Those which are included 
+These fall into two general categories. Those which are included
 in the external folder and those which are assumed to be already
 installed on the system. For the external software, browse the
 folder labelled external. For system installed dependencies
@@ -86,7 +85,7 @@ you will need to install the following Ubuntu packages:
 
 BUILD EVERYTHING
 
-From the top level folder (where buildTools, Analysis, and others 
+From the top level folder (where buildTools, Analysis, and others
 are listed as subfolders) run:
 
    ./buildTools/build.sh
@@ -95,79 +94,22 @@ This will create a build folder "build" which will contain the
 compiled object files, executables, and Debian packages. Under
 the hood we are using cmake to generate a makefile based build
 system. We then run make to do the build. Finally cpack (part
-of cmake) is used to generate the packages. 
+of cmake) is used to generate the packages.
 
 BUILD SPECIFIC MODULES
 
-From the top level folder (where buildTools, Analysis, and others 
+From the top level folder (where buildTools, Analysis, and others
 are listed as subfolders) run:
 
    MODULES="FOO BAR" ./buildTools/build.sh
 
-where FOO and BAR are particular modules to build. 
-(eg Analysis). 
-
-BUILD TORRENTR MODULE
-
-A number of R library modules need to be installed in order for the torrentR module to compile.
-
-Add to /etc/apt/sources.list:
-
-    deb http://updates.iontorrent.com/updates/software trusty/
-
-Then execute the following:
-apt-get update
-apt-get install r-base
-
-The following R library modules are required to be installed:
-
-bitops_1.0-5.tar.gz
-Rcpp_0.12.1.tar.gz
-spam_0.29-3.tar.gz
-maps_2.3-3.tar.gz
-fields_6.8.tar.gz
-RCurl_1.95-4.1.tar.gz
-rjson_0.2.12.tar.gz
-
-Here is a bash script which will download and install the required R library modules:
-############################################################
-# Start of bash script
-#
-#!/bin/bash
-LIBLIST=(\
-    bitops_1.0-5.tar.gz \
-    Rcpp_0.12.1.tar.gz \
-    spam_0.29-3.tar.gz \
-    maps_2.3-3.tar.gz \
-    fields_6.8.tar.gz \
-    RCurl_1.95-4.1.tar.gz \
-    rjson_0.2.12.tar.gz \
-)
-
-for LIB in ${LIBLIST[@]}; do
-
-    LIBNAME=${LIB%_*}
-    DIR=/usr/local/lib/R/site-library
-    if ! wget -P /tmp http://updates.iontorrent.com/plugins/$LIB > /tmp/install_$LIBNAME.log 2>&1; then
-        #double fail. abort
-        echo "Failed to locate source for $LIB file. See tmp/install_$LIBNAME.log"
-        exit 1
-    fi
-    if ! R CMD INSTALL /tmp/$LIB > /tmp/install_$LIBNAME.log 2>&1; then
-        echo "Error during install: see /tmp/install_${LIBNAME}.log"
-        exit 1
-    fi
-done
-
-# End of bash script
-############################################################
-
-	MODULES='torrentR' ./buildTools/build.sh
+where FOO and BAR are particular modules to build.
+(eg Analysis).
 
 
 WORK ON SINGLE MODULE
 
-You can create a out-of-tree build folder for your module of 
+You can create a out-of-tree build folder for your module of
 interest.  eg:
 
     cd Analysis && mkdir build
@@ -194,36 +136,36 @@ TIPS
 * To generate makefile system using wizard mode:
 
     cmake -i ..
-	
+
 # Generate official build
 
 	./buildTools/build.sh -DBUILDTAG=TSRC
 
 * Generate debug build
 
-    cmake -DCMAKE_BUILD_TYPE=Debug ..    
+    cmake -DCMAKE_BUILD_TYPE=Debug ..
     - or -
     ./buildTools/build.sh -DCMAKE_BUILD_TYPE=Debug
 
 * Some mods to CMakeLists.txt file will not get correctly picked
   up if you are just running "make". In such cases, the simplest
-  solution is to blow away the build folder and re-run the build. 
+  solution is to blow away the build folder and re-run the build.
   For example:
-   
+
     rm -r build
     ./buildTools/build.sh
 
-* 'make clean' will clean out the build folder as well as the 
+* 'make clean' will clean out the build folder as well as the
   external libraries. So in general you probably do not want
   to do this. Instead just blow away the build folder as
-  described above. 
+  described above.
 
-* Build using shared libraries rather than static 
+* Build using shared libraries rather than static
   [not tested/supported]
 
     ./buildTools/build.sh -DBUILD_SHARED_LIBS:BOOL=TRUE
 
-* Direct install from build folder 
+* Direct install from build folder
   [not tested/supported]
 
     sudo make install

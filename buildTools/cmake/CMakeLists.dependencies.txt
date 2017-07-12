@@ -35,31 +35,7 @@ if(LSB_RELEASE_COMMAND)
         OUTPUT_STRIP_TRAILING_WHITESPACE)
     string(TOLOWER ${TMP_LSB_RELEASE_CODENAME} LSB_RELEASE_CODENAME)
     message(STATUS "LSB release codename: ${LSB_RELEASE_CODENAME}")
-endif(LSB_RELEASE_COMMAND) 
-
-# If defined while running cmake look for mkl
-# e.g. -DMKL_INSTALL_PATH=/home/ionadmin/intel/composer_xe_2013_sp1.0.080/mkl
-if (DEFINED MKL_INSTALL_PATH)
-  message("Setting mkl root to ${MKL_INSTALL_PATH}")
-  include_directories(${MKL_INSTALL_PATH}/include)
-  set(MKL_LINK_LIBS "-Wl,--start-group  ${MKL_INSTALL_PATH}/lib/intel64/libmkl_intel_lp64.a ${MKL_INSTALL_PATH}/lib/intel64/libmkl_core.a ${MKL_INSTALL_PATH}/lib/intel64/libmkl_sequential.a -Wl,--end-group")
-else() 
-  message("Not setting mkl root ${MKL_INSTALL_PATH}")
-endif()
-
-
-option(ION_USE_MKL "Using Intel MKL" OFF)
-mark_as_advanced(ION_USE_MKL)
-
-option(ION_USE_SYSTEM_CUDA "Use CUDA system libraries" OFF)
-mark_as_advanced(ION_USE_SYSTEM_CUDA)
-
-if (${LSB_RELEASE_CODENAME} STREQUAL "sid")
-  option(ION_USE_CUDA "Compile CUDA code" ON)
-else()
-  option(ION_USE_CUDA "Compile CUDA code" ON)
-endif()
-mark_as_advanced(ION_USE_CUDA)
+endif(LSB_RELEASE_COMMAND)
 
 option(ION_USE_SYSTEM_SAMTOOLS "Use samtools system libraries" OFF)
 mark_as_advanced(ION_USE_SYSTEM_SAMTOOLS)
@@ -83,62 +59,11 @@ mark_as_advanced(ION_USE_SYSTEM_HDF5)
 option(ION_USE_SYSTEM_EIGEN "Use EIGEN system libraries" OFF)
 mark_as_advanced(ION_USE_SYSTEM_EIGEN)
 
-option(ION_USE_SYSTEM_ARMADILLO "Use armadillo system libraries" OFF)
-mark_as_advanced(ION_USE_SYSTEM_ARMADILLO)
-
 option(ION_USE_SYSTEM_BOOST "Use boost system libraries" ON)
 mark_as_advanced(ION_USE_SYSTEM_BOOST)
 
 option(ION_USE_SYSTEM_PICARD "Use picard system libraries" OFF)
 mark_as_advanced(ION_USE_SYSTEM_PICARD)
-
-set(cuda_proj_version "7.5.18-19867135")
-set(cuda_toolkit_tar_file "cuda-linux64-rel-7.5.18-19867135.tar.gz")
-set(cuda_toolkit_patch_file "cuda_toolkit-7.5.18.patch")
-set(CUDA_VERSION "7.5")
-
-set(cuda_toolkit "cuda_toolkit")
-set(cuda_toolkit_version "${cuda_toolkit}-${cuda_proj_version}")
-
-
-if(ION_USE_CUDA)
-
-    message(STATUS "BUILD with CUDA ${CUDA_VERSION}")
-    add_definitions(-DION_COMPILE_CUDA)
-
-    if (NOT ION_USE_SYSTEM_CUDA)
-
-        ExternalProject_add(${cuda_toolkit}
-            PREFIX ${PROJECT_BINARY_DIR}/../${cuda_toolkit_version}-prefix
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/../${cuda_toolkit_version}
-            URL "http://${ION_UPDATE_SERVER}/updates/software/external/${cuda_toolkit_tar_file}"
-#            URL_MD5 ""
-            TIMEOUT "3600"
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ""
-            INSTALL_COMMAND ""
-            PATCH_COMMAND patch -p1 -t -N < "${PROJECT_SOURCE_DIR}/../external/${cuda_toolkit_patch_file}"
-        )
-
-
-        set(CUDA_TOOLKIT_ROOT_DIR "${PROJECT_BINARY_DIR}/../${cuda_toolkit_version}")
-        set(CUDA_INCLUDE_DIRS "${PROJECT_BINARY_DIR}/../${cuda_toolkit_version}/include")
-        set(CUDA_NVCC_EXECUTABLE "${PROJECT_BINARY_DIR}/../${cuda_toolkit_version}/bin/nvcc")
-        set(CUDA_CUDART_LIBRARY "${PROJECT_BINARY_DIR}/../${cuda_toolkit_version}/lib64/libcudart.so")
-        set(CUDA_TOOLKIT_INCLUDE "${PROJECT_BINARY_DIR}/../${cuda_toolkit_version}/include")
-        set(CUDA_cublas_LIBRARY "${PROJECT_BINARY_DIR}/../${cuda_toolkit_version}/lib64/libcublas.so")
-        set(CUDA_cufft_LIBRARY "${PROJECT_BINARY_DIR}/../${cuda_toolkit_version}/lib64/libcufft.so")
-        set(CUDA_VERBOSE_BUILD OFF)
-        set(CUDA_64_BIT_DEVICE_CODE ON)
-        include(${CMAKE_ROOT}/Modules/FindCUDA.cmake)
-
-    else()
-        find_package(CUDA REQUIRED)
-    endif()
-    include_directories(${CUDA_INCLUDE_DIRS})
-    message(STATUS "CUDA_LIBRARIES: ${CUDA_LIBRARIES}")
-    message(STATUS "CUDA_INCLUDE_DIRS: ${CUDA_INCLUDE_DIRS}")
-endif()
 
 if(NOT ION_USE_SYSTEM_HDF5)
   set(proj_name "hdf5")
@@ -175,54 +100,6 @@ else()
   message(STATUS "ION_HDF5_LIBS: ${ION_HDF5_LIBS}")
   include_directories("${HDF5_INCLUDE_DIRS}")
   message(STATUS "HDF5_INCLUDE_DIRS: ${HDF5_INCLUDE_DIRS}")
-endif()
-
-
-if(NOT ION_USE_SYSTEM_EIGEN)
-  set(proj_name "eigen")
-  set(proj_version "3.2.7")
-  set(proj_name_version "${proj_name}-${proj_version}")
-  ExternalProject_add(${proj_name}_proj
-    #URL "https://bitbucket.org/eigen/eigen/get/3.2.4.tar.gz"
-    URL "http://${ION_UPDATE_SERVER}/updates/software/external/eigen-3.2.7.tar.gz"
-    #URL_MD5 9559c34af203dde5f3f1d976d859c5b3
-    PREFIX ${PROJECT_BINARY_DIR}/../${proj_name_version}-prefix
-    SOURCE_DIR ${PROJECT_BINARY_DIR}/../${proj_name_version}
-    BINARY_DIR ${PROJECT_BINARY_DIR}/../${proj_name_version}-build
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-  )
-  include_directories("${PROJECT_BINARY_DIR}/../${proj_name_version}")
-else()
-  include_directories("/usr/include/eigen3/")
-endif()
-
-
-if(NOT ION_USE_SYSTEM_ARMADILLO)
-  set(proj_name "armadillo")
-  set(proj_version "6.100.0+ion0")
-  set(proj_name_version "${proj_name}-${proj_version}")
-  set(ARMADILLO_PATCH "${PROJECT_SOURCE_DIR}/../external/armadillo-6.100.0+ion0.patch")
-  ExternalProject_add(${proj_name}_proj
-    URL "http://${ION_UPDATE_SERVER}/updates/software/external/armadillo-6.100.0.tar.gz"
-    #URL_MD5 e8400bc7adb65fa0edc8c8ccb49b60eb
-    PREFIX ${PROJECT_BINARY_DIR}/../${proj_name_version}-prefix
-    SOURCE_DIR ${PROJECT_BINARY_DIR}/../${proj_name_version}
-    BINARY_DIR ${PROJECT_BINARY_DIR}/../${proj_name_version}-build
-    CMAKE_ARGS
-      -DARMA_USE_LAPACK:BOOL=TRUE
-      -DARMA_USE_BLAS:BOOL=TRUE
-      -DARMA_USE_ATLAS:BOOL=FALSE
-      -DARMA_USE_WRAPPER:BOOL=FALSE
-      -DARMA_USE_MKL:BOOL=${ION_USE_MKL}
-      -DCMAKE_INSTALL_PREFIX:PATH=${PROJECT_BINARY_DIR}/../${proj_name_version}-install
-    PATCH_COMMAND patch -p0 -t -N < "${ARMADILLO_PATCH}"
-  )
-  set(ION_ARMADILLO_LIBS "${PROJECT_BINARY_DIR}/../${proj_name_version}-install/lib/libarmadillo.so")
-  include_directories("${PROJECT_BINARY_DIR}/../${proj_name_version}-install/include")
-else()
-  set(ION_ARMADILLO_LIBS "armadillo")
 endif()
 
 
@@ -335,7 +212,7 @@ if (NOT ION_USE_SYSTEM_PICARD)
   set(proj_name_version "${proj_name}-${proj_version}")
   ExternalProject_add(${proj_name}
     URL "http://${ION_UPDATE_SERVER}/updates/software/external/picard-tools-1.130.tar.gz"
-    #URL_MD5 
+    #URL_MD5
     # in source build
     PREFIX ${PROJECT_BINARY_DIR}/../${proj_name_version}-prefix
     SOURCE_DIR "${PROJECT_BINARY_DIR}/../${proj_name_version}"

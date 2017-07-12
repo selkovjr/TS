@@ -1,9 +1,0 @@
----
-# file: gridengine_master.yml
-- hosts: webserver
-  roles:
-    - webserver
-  tags:
-    - webserver
-  vars_files:
-    - [ "group_vars/all_local", "group_vars/all" ]

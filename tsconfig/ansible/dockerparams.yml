@@ -1,4 +1,0 @@
----
-# file: dockerparams.yml
-- name:
-  set_fact: docker_image="true"

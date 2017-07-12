@@ -116,11 +116,11 @@ public:
         cerr << "  suppress_no_calls_: " << suppress_no_calls_ << endl;
         cerr << "    " << current_variant->variant << endl;
         if (current_variant->variant.isFiltered and !current_variant->variant.isHotSpot and suppress_no_calls_) {
-          cerr << "      writing to filtered\n";
+          // cerr << "      writing to filtered\n";
           filtered_vcf_stream_ << current_variant->variant << endl;
         }
         else {
-          cerr << "      writing to output\n\n";
+          // cerr << "      writing to output\n\n";
           output_vcf_stream_ << current_variant->variant << endl;
         }
       }

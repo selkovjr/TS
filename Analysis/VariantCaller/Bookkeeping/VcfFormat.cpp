@@ -38,7 +38,14 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
     << "##fileformat=VCFv4.1" << endl
     << "##fileDate=" << dateStr() << endl
     << "##fileUTCtime=" << get_time_iso_string(time(NULL)) << endl
-    << "##source=\"tvc " << IonVersion::GetVersion() << "-" << IonVersion::GetRelease() << " (" << IonVersion::GetGitHash() << ") - Torrent Variant Caller\"" << endl;
+    << "##source=\"bamwalker " << IonVersion::GetVersion() << "-" << IonVersion::GetRelease() << " (" << IonVersion::GetGitHash() << ") - Torrent Variant Caller - candidate generator\"" << endl
+    << "##bams=\"";
+
+  for(size_t i = 0; i < parameters->bams.size(); ++i) {
+      if(i != 0) headerss << ",";
+      headerss << parameters->bams[i];
+  }
+  headerss << "\"\n";
 
   if (not parameters->params_meta_name.empty())
     headerss << "##parametersName=\"" << parameters->params_meta_name << "\"" << endl;

@@ -17,7 +17,6 @@
 #include "MiscUtil.h"
 
 using namespace std;
-using namespace ion;
 
 class Evaluator;
 

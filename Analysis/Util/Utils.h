@@ -12,8 +12,8 @@
 #include <sstream>
 #include <sys/time.h>
 #ifndef ALIGNSTATS_IGNORE
-#include "SpecialDataTypes.h"
 #include "LinuxCompat.h"
+#include "Region.h"
 #endif
 // Transition states used in Analysis main function for progress tracking
 #define WELL_TO_IMAGE 1
@@ -57,20 +57,6 @@ void  defineSubRegion (int rows, int cols, int runIndex, int regionIdx, Region *
 void FillInDirName (const std::string &path, std::string &dir, std::string &file);
 void  init_salute();
 
-
-int seqToFlow (const char *seq, int seqLen, int *ionogram, int ionogramLen, char *flowOrder, int flowOrderLen);
-#ifndef ALIGNSTATS_IGNORE
-void flowToSeq (std::string &seq, hpLen_vec_t &hpLen, std::string &flowOrder);
-#endif
-void GetChipDim (const char *type, int dims[2], const char *);
-std::string GetMemUsage();
-void MemoryUsage (const std::string &s);
-void MemUsage (const std::string &s);
-int totalMemOnTorrentServer();
-int GetAbsoluteFreeSystemMemoryInKB();
-int GetFreeSystemMem();
-int GetCachedSystemMem();
-int GetSystemMemInBuffers();
 
 
 //string utils
@@ -157,7 +143,7 @@ class ClockTimer
       st_last = st;
       usec = usec_last = 0;
     }
-    
+
     void UpdateLast(const struct timeval &t) { st_last = t; }
 
     void CalcMicroSec() {
@@ -221,13 +207,13 @@ public:
   void EndInterval() { mUsecTotal += mTimer.GetMicroSec(); mCalls++;}
   double GetTotalUsec() const { return mUsecTotal; }
   size_t GetCalls() const { return mCalls; }
-  void PrintSeconds (std::ostream &out, const std::string &prefix) const { 
-    out << prefix << " " << GetTotalUsec() / 1e6 << " seconds in " << mCalls << " intervals." << std::endl; 
+  void PrintSeconds (std::ostream &out, const std::string &prefix) const {
+    out << prefix << " " << GetTotalUsec() / 1e6 << " seconds in " << mCalls << " intervals." << std::endl;
   }
-  void PrintMilliSeconds (std::ostream &out, const std::string &prefix) const { 
+  void PrintMilliSeconds (std::ostream &out, const std::string &prefix) const {
     out << prefix << " " << GetTotalUsec() / 1e3 << " milli seconds in " << mCalls << " intervals." << std::endl;
   }
-  
+
 private:
   size_t mCalls;
   double mUsecTotal; // microseconds
@@ -235,16 +221,16 @@ private:
 };
 
 /**
- * Utility class for storing key value pairs. 
- */ 
+ * Utility class for storing key value pairs.
+ */
 class Info {
 
 public:
 
   /** Get the value associated with a particular key, return false if key not present. */
   bool GetValue(const std::string &key, std::string &value) const;
-  
-  /** 
+
+  /**
    * Set the value associated with a particular key. Newer values for
    * same key overwrite previos values. */
   bool SetValue(const std::string &key, const std::string &value);
@@ -257,12 +243,12 @@ public:
 
   /** Entry exists. */
   bool KeyExists(const std::string &key) const;
-    
-  
+
+
   /** Empty out the keys, value pairs. */
   void Clear();
 
-private:   
+private:
   std::vector<std::string> mKeys;
   std::vector<std::string> mValues;
   std::map<std::string, size_t> mMap;

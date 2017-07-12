@@ -1,9 +1,0 @@
----
-# file: igv.yml
-- hosts: igv
-  roles:
-    - igv
-  tags:
-    - igv
-  vars_files:
-    - [ "group_vars/all_local", "group_vars/all" ]

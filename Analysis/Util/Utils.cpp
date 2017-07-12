@@ -2,6 +2,7 @@
 #include "Utils.h"
 #ifndef ALIGNSTATS_IGNORE
 #include "IonVersion.h"
+#include "Region.h"
 #endif
 #include <cstdio>
 #include <sys/stat.h>
@@ -714,40 +715,7 @@ void uintVectorToString (vector<unsigned int> &v, string &s, string &nullStr, ch
   }
 }
 
-int seqToFlow (const char *seq, int seqLen, int *ionogram, int ionogramLen, char *flowOrder, int flowOrderLen)
-{
-  int flows = 0;
-  int bases = 0;
-  while (flows < ionogramLen && bases < seqLen)
-  {
-    ionogram[flows] = 0;
-    while ( (bases < seqLen) && (flowOrder[flows%flowOrderLen] == seq[bases]))
-    {
-      ionogram[flows]++;
-      bases++;
-    }
-    flows++;
-  }
-  return flows;
-}
-
 #ifndef ALIGNSTATS_IGNORE
-void flowToSeq (string &seq, hpLen_vec_t &hpLen, string &flowOrder)
-{
-  unsigned int cycleLen = flowOrder.size();
-  seq.clear();
-  if (cycleLen > 0)
-  {
-    for (unsigned int iFlow=0; iFlow < hpLen.size(); iFlow++)
-    {
-      char thisNuc = flowOrder[iFlow % cycleLen];
-      for (char iNuc=0; iNuc < hpLen[iFlow]; iNuc++)
-      {
-        seq += thisNuc;
-      }
-    }
-  }
-}
 //
 // Returns pointer to string containing path to explog.txt file
 // Can be in given raw data directory, or parent of given directory if its a gridded dataset
@@ -774,7 +742,7 @@ char * MakeExpLogPathFromDatDir (const char *dir)
     free (parent);
   //if (parent2)
   //free (parent2);
-  
+
   if (isFile (filepath))
   {
     return filepath;
@@ -951,7 +919,7 @@ int GetFreeSystemMem()
     return mem;
 
   int n = fscanf (fp, "%d", &mem);
- 
+
   if (n != 1)
     mem = 0;
 

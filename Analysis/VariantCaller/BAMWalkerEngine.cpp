@@ -661,7 +661,7 @@ void BAMWalkerEngine::BeginPositionProcessingTask(list<PositionInProgress>::iter
 bool BAMWalkerEngine::AdvancePosition(int position_increment, int next_hotspot_chr, long next_hotspot_position)
 {
   next_position_ += position_increment;
-  cerr << "AdvancePosition: " << next_position_<< "\n";
+  // cerr << "AdvancePosition: " << next_position_<< "\n";
 
   // Skip-ahead logic for sparse BAMs
   if (tmp_begin_) {

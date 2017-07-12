@@ -5,7 +5,6 @@
 //! @brief    HP Indel detection
 
 #include "ExtendedReadInfo.h"
-#include "ion_util.h"
 #include "ReferenceReader.h"
 #include "BAMWalkerEngine.h"
 #include "RandSchrange.h"

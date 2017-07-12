@@ -463,17 +463,22 @@ void Evaluator::StackUpOneVariant(const ExtendParameters &parameters, VariantCan
       }
     }
 #else
+    // without resampling
     read_counter++;
     read_stack.push_back(rai);
     if (sample_name == "tumor") {
       read_counter_t++;
       read_stack_t.push_back(rai);
-      cerr << "tumor:  " << rai->alignment.Name << endl;
+#if DEBUG
+      cerr << "stacking up tumor:  " << rai->alignment.Name << endl;
+#endif
     }
     if (sample_name == "normal") {
       read_counter_n++;
       read_stack_n.push_back(rai);
-      cerr << "normal: " << rai->alignment.Name << endl;
+#if DEBUG
+      cerr << "stacking up normal: " << rai->alignment.Name << endl;
+#endif
     }
 #endif
   }

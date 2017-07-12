@@ -9,7 +9,6 @@
 #include <vector>
 #include <stdio.h>
 #include <pthread.h>
-#include <armadillo>
 
 #include "ExtendParameters.h"
 
@@ -36,13 +35,6 @@
 using namespace std;
 
 
-void TheSilenceOfTheArmadillos(ofstream &null_ostream)
-{
-  // Disable armadillo warning messages.
-  arma::set_stream_err1(null_ostream);
-  arma::set_stream_err2(null_ostream);
-}
-
 void * VariantCallerWorker(void *input);
 
 int main(int argc, char* argv[])
@@ -50,10 +42,6 @@ int main(int argc, char* argv[])
 
   printf("bamwalker %s-%s (%s) - Torrent Variant Caller (hacked)\n\n",
          IonVersion::GetVersion().c_str(), IonVersion::GetRelease().c_str(), IonVersion::GetGitHash().c_str());
-
-  // stolen from "Analysis" to silence error messages from Armadillo library
-  ofstream null_ostream("/dev/null"); // must stay live for entire scope, or crash when writing
-  TheSilenceOfTheArmadillos(null_ostream);
 
   time_t start_time = time(NULL);
 
@@ -397,11 +385,11 @@ void * VariantCallerWorker(void *input)
       more_positions = vc.bam_walker->AdvancePosition(haplotype_length, next_hotspot_chr, next_hotspot_position);
     else
       more_positions = vc.bam_walker->AdvancePosition(haplotype_length);
-    cerr << "more_positions: " << more_positions << "\n";
+    // cerr << "more_positions: " << more_positions << "\n";
     pthread_mutex_unlock(&vc.bam_walker_mutex);
 
     if (not variant_candidates.empty()) {
-      cerr << " Got candidates!" << endl;
+      // cerr << " Got candidates!" << endl;
 
       int vcf_writer_slot = vc.vcf_writer->ReserveSlot();
       vc.candidate_counter += variant_candidates.size();

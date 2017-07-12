@@ -1,6 +1,0 @@
----
-# file: roles/common/handlers/main.yml
-
-- name: update grub
-  command: /usr/sbin/update-grub
-  when: not docker_image

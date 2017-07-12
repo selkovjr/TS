@@ -421,7 +421,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
 {
   allele_pileup_.clear();
   ref_pileup_.initialize_reference(position_ticket->pos, num_samples_);
-  cerr << "haplotype length: " << haplotype_length << ", scan_haplotype: " << scan_haplotype << endl; // ZZ
+  // cerr << "haplotype length: " << haplotype_length << ", scan_haplotype: " << scan_haplotype << endl; // ZZ
   if (haplotype_length == 1) {
     //
     // Aggregate observed alleles. Basic, non-haplotype mode
@@ -449,11 +449,11 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
       else if (rai->refmap_has_allele[read_pos] == 'A') {
         const Allele& allele = rai->refmap_allele[read_pos];
 
-        /* Debug by Zheng */
-        string allele_seq(allele.alt_sequence, allele.alt_length);
-        string ref = ref_reader_->substr(position_ticket->chr, position_ticket->pos, allele.alt_length);
-        cerr << "Adding sample " << rai->sample_index << " observation at " << allele.position <<  ", read_pos " << read_pos << ", alt_length " << allele.alt_length << " from " << ref << " to " << allele_seq << endl;
-        /* Debug by Zheng */
+        // /* Debug by Zheng */
+        // string allele_seq(allele.alt_sequence, allele.alt_length);
+        // string ref = ref_reader_->substr(position_ticket->chr, position_ticket->pos, allele.alt_length);
+        // cerr << "Adding sample " << rai->sample_index << " observation at " << allele.position <<  ", read_pos " << read_pos << ", alt_length " << allele.alt_length << " from " << ref << " to " << allele_seq << endl;
+        // /* Debug by Zheng */
 
         allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
       }
@@ -463,7 +463,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
     for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
       AlleleDetails& allele = I->second;
       if (allele.type != ALLELE_REFERENCE) {
-        cerr << "New allele at " << allele.position  << ", ref_length " << allele.ref_length << " with " << allele.alt_sequence << endl; // ZZ
+        // cerr << "New allele at " << allele.position  << ", ref_length " << allele.ref_length << " with " << allele.alt_sequence << endl; // ZZ
       }
     }
   } // haplotype_length == 1
@@ -500,17 +500,17 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
           string tmp1(obs.alt_sequence, obs.alt_length);
           Allele& allele = rai->refmap_allele[read_pos];
           string tmp(allele.alt_sequence, allele.alt_length);
-          cerr << "2nd pass Adding observation at " << allele.position <<  ", read_pos " << read_pos << ", alt_length " << allele.alt_length << " from " << tmp1 << " to " << tmp << endl; // ZZ
+          // cerr << "2nd pass Adding observation at " << allele.position <<  ", read_pos " << read_pos << ", alt_length " << allele.alt_length << " from " << tmp1 << " to " << tmp << endl; // ZZ
           allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
         }
       }
     }
-    cerr << "Scan_haplotype pass PileUpAlleles" << endl; // ZZ
+    // cerr << "Scan_haplotype pass PileUpAlleles" << endl; // ZZ
     /* ZZ */
        for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
          AlleleDetails& allele = I->second;
          if (allele.type != ALLELE_REFERENCE) {
-           cerr << "New allele at " << allele.position  << ", ref_length " << allele.ref_length << " with " << allele.alt_sequence << endl;
+           // cerr << "New allele at " << allele.position  << ", ref_length " << allele.ref_length << " with " << allele.alt_sequence << endl;
          }
        }
     /* */
@@ -561,7 +561,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
         ref_pileup_.add_reference_observation(rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, rai->read_count);
       else {
         string tmp(allele.alt_sequence, allele.alt_length);
-        cerr << "Final pass: Adding observation at " << allele.position <<  ", read_pos " << read_start << ", alt_length " << allele.alt_length <<  " to " << tmp << endl; // ZZ
+        // cerr << "Final pass: Adding observation at " << allele.position <<  ", read_pos " << read_start << ", alt_length " << allele.alt_length <<  " to " << tmp << endl; // ZZ
         allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
       }
     }

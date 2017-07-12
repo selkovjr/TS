@@ -50,7 +50,6 @@
 
 using namespace std;
 using namespace BamTools;
-using namespace ion;
 
 
 // ----------------------------------------------------------------------

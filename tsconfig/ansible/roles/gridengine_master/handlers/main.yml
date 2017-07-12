@@ -1,5 +1,0 @@
----
-# file: roles/gridengine_master/handlers/main.yml
-
-- name: restart gridengine-master
-  service: name=gridengine-master state=restarted

@@ -7,13 +7,7 @@
 # cmake build system
 
 MODULES=${MODULES-"
-  gpu
   Analysis
-  torrentR
-  torrentPy
-  tsconfig
-  RSM
-  tsvm
 "}
 
 BUILD_ROOT=`pwd`

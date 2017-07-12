@@ -1,5 +1,0 @@
----
-# file: roles/nfs_client/handlers/main.yml
-
-- name: remount all
-  shell: bash -lc 'mount -a'
