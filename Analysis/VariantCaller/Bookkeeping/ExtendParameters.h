@@ -82,13 +82,6 @@ class ClassifyFilters {
 
 class ControlCallAndFilters {
   public:
-    // values relating the decision tree for calling/genotyping
-    // i.e controlling no-call/call decisions
-    // controlling variant /reference decisions
-    // Note this is >not< the candidate generation tree but the calling decision tree
-    float data_quality_stringency;
-    float read_rejection_threshold;
-
     int downSampleCoverage;
     int RandSeed;                  //!< Seed for random number generator to reservoir sample reads.
 
@@ -131,10 +124,6 @@ class ProgramControlSettings {
     int DEBUG;
 
     bool do_indel_assembly;
-
-    bool rich_json_diagnostic;
-    bool minimal_diagnostic;
-    string json_plot_dir;
 
     bool inputPositionsOnly;
 

@@ -525,7 +525,6 @@ bool BAMWalkerEngine::GetNextAlignmentCore(Alignment* new_read, VariantCallerCon
     do {
       if (!bam_reader_.GetNextAlignmentCore(temp_reads[i])) break;
       temp_reads[i].BuildCharData();
-      // Do indel assembly only if no molecular tag detected.
       if(vc.parameters->program_flow.do_indel_assembly){
         vc.indel_assembly->processRead(temp_reads[i], indel_target);
       }

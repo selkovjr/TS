@@ -392,7 +392,6 @@ void StoreGenotypeForOneSample(vcf::Variant &candidate_variant, const string &sa
   else {
     for (vector<string>::iterator its = sampleNames.begin(); its != sampleNames.end(); ++its) {
       string& sampleName = *its;
-      //cout << "VariantAssist: SampleName = " << sampleName << " my_sample = " << my_sample_name << endl;
       map<string, vector<string> >& sampleOutput = candidate_variant.samples[sampleName];
       map<string, vector<string> >::iterator it;
       it = sampleOutput.find("GT");
@@ -412,7 +411,6 @@ void StoreGenotypeForOneSample(vcf::Variant &candidate_variant, const string &sa
         sampleOutput["GT"].push_back("./.");
         sampleOutput["GQ"].push_back(convertToString(0));
       }
-      //cout <<"VariantAssist: total genotypes = " << sampleOutput["GT"].size() << endl;
     }
   }
 }

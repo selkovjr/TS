@@ -100,12 +100,8 @@ set(ION_FREEBAYES_DIR ${ION_TS_EXTERNAL}/freebayes)
 include_directories(${ION_VCFLIB_DIR})
 include_directories(${ION_FREEBAYES_DIR}/src)
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller")
-include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Evaluator")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Bookkeeping")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Reads")
-include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Splice")
-include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Filter")
-include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Strelka")
 include_directories("${PROJECT_SOURCE_DIR}/realignment")
 
 set(tvcSRCS
@@ -115,7 +111,6 @@ set(tvcSRCS
   VariantCaller/OrderedBAMWriter.cpp
   VariantCaller/SampleManager.cpp
   VariantCaller/TargetsManager.cpp
-  VariantCaller/HandleVariant.cpp
   VariantCaller/MetricsManager.cpp
   VariantCaller/LocalContext.cpp
 
@@ -125,17 +120,6 @@ set(tvcSRCS
   VariantCaller/Bookkeeping/VcfFormat.cpp
 
   VariantCaller/Reads/ExtendedReadInfo.cpp
-
-  VariantCaller/Splice/SpliceVariantHypotheses.cpp
-
-  VariantCaller/Filter/DecisionTreeData.cpp
-  VariantCaller/Filter/VariantAssist.cpp
-
-  VariantCaller/Evaluator/ClassifyVariant.cpp
-  VariantCaller/Evaluator/LocusData.cpp
-  VariantCaller/Evaluator/TentativeAlignment.cpp
-  VariantCaller/Evaluator/StackEngine.cpp
-  VariantCaller/Evaluator/DiagnosticJSON.cpp
 
   # TODO: Actually build vcflib as a static library and link to variant caller.
   # TODO2: Resolve bgzf.c collisions between vcflib and bamtools

@@ -147,9 +147,7 @@ void VariantCallerHelp() {
 
   printf("Debugging:\n");
   printf("  -d,--debug                            INT         (0/1/2) display extra debug messages [0]\n");
-  printf("     --do-json-diagnostic               on/off      (devel) dump internal state to json file (uses much more time/memory/disk) [off]\n");
   printf("     --postprocessed-bam                FILE        (devel) save tvc-processed reads to an (unsorted) BAM file [optional]\n");
-  printf("     --do-minimal-diagnostic            on/off      (devel) provide minimal read information for called variants [off]\n");
   printf("     --override-limits                  on/off      (devel) disable limit-check on input parameters [off].\n");
   printf("     --output-multi-min-allele-freq     on/off      output the inference results for multiple min-allele-freq in vcf [off].\n");
   printf("     --snp-multi-min-allele-freq        FLOAT VECTOR  multiple min-allele-freq for snp calls [0.05,0.1,0.15,0.2].\n");
@@ -163,9 +161,6 @@ void VariantCallerHelp() {
 ControlCallAndFilters::ControlCallAndFilters() {
 
   // all defaults handled by sub-filters
-  data_quality_stringency = 4.0f;  // phred-score for this variant per read
-  read_rejection_threshold = 0.5f; // half the reads gone, filter this
-
   use_position_bias = false;
   position_bias_ref_fraction = 0.05;  // FRO/(FRO+FAO)
   position_bias = 0.75f;              // position bias
@@ -191,11 +186,6 @@ ProgramControlSettings::ProgramControlSettings() {
   nThreads = 1;
   DEBUG = 0;
   do_indel_assembly = true;
-
-  rich_json_diagnostic = false;
-  minimal_diagnostic = false;
-  json_plot_dir = "./json_diagnostic/";
-  inputPositionsOnly = false;
 
   is_multi_min_allele_freq = false;
   snp_multi_min_allele_freq.clear();
@@ -553,8 +543,6 @@ void ControlCallAndFilters::CheckParameterLimits() {
 
   filter_variant.CheckParameterLimits();
 
-  CheckParameterLowerBound<float>     ("data-quality-stringency",  data_quality_stringency,  0.0f);
-  CheckParameterLowerUpperBound<float>("read-rejection-threshold", read_rejection_threshold, 0.0f, 1.0f);
   CheckParameterLowerUpperBound<int>  ("downsample-to-coverage",   downSampleCoverage,       20, 100000);
   CheckParameterLowerUpperBound<float>("position-bias-ref-fraction",position_bias_ref_fraction,  0.0f, 1.0f);
   CheckParameterLowerUpperBound<float>("position-bias",            position_bias,  0.0f, 1.0f);
@@ -605,13 +593,6 @@ void ControlCallAndFilters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
 
   filter_variant.SetOpts(opts, tvc_params);
   RandSeed = 631;    // Not exposed to user at this point
-
-  data_quality_stringency               = RetrieveParameterDouble(opts, tvc_params, '-', "data-quality-stringency",4.0f);
-
-  // catchall filter parameter to be used to filter any generic predictive model of quality
-  data_quality_stringency               = RetrieveParameterDouble(opts, tvc_params, '-', "data-quality-stringency",4.0f);
-  // if we reject half the reads from evaluator, something badly wrong with this position
-  read_rejection_threshold              = RetrieveParameterDouble(opts, tvc_params, '-', "read-rejection-threshold",0.5f);
 
   use_position_bias                     = RetrieveParameterBool(opts, tvc_params, '-', "use-position-bias", false);
   position_bias_ref_fraction            = RetrieveParameterDouble(opts, tvc_params, '-', "position-bias-ref-fraction",0.05f);
@@ -698,9 +679,6 @@ void ProgramControlSettings::SetOpts(OptArgs &opts, Json::Value &tvc_params) {
   DEBUG                                 = opts.GetFirstInt   ('d', "debug", 0);
   nThreads                              = RetrieveParameterInt   (opts, tvc_params, 'n', "num-threads", 12);
   nVariantsPerThread                    = RetrieveParameterInt   (opts, tvc_params, 'N', "num-variants-per-thread", 250);
-  // decide diagnostic
-  rich_json_diagnostic                  = RetrieveParameterBool  (opts, tvc_params, '-', "do-json-diagnostic", false);
-  minimal_diagnostic                    = RetrieveParameterBool  (opts, tvc_params, '-', "do-minimal-diagnostic", false);
 
   inputPositionsOnly                    = RetrieveParameterBool  (opts, tvc_params, '-', "process-input-positions-only", false);
 

@@ -13,7 +13,6 @@
 #include "ExtendParameters.h"
 
 #include "InputStructures.h"
-#include "HandleVariant.h"
 #include "ReferenceReader.h"
 #include "OrderedVCFWriter.h"
 #include "BAMWalkerEngine.h"
@@ -21,7 +20,6 @@
 #include "ExtendedReadInfo.h"
 #include "TargetsManager.h"
 #include "MetricsManager.h"
-#include "DecisionTreeData.h"
 
 #include "IonVersion.h"
 
@@ -47,12 +45,6 @@ int main(int argc, char* argv[])
 
 
   mkdir(parameters.outputDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-  if (parameters.program_flow.rich_json_diagnostic || parameters.program_flow.minimal_diagnostic) {
-    // make output directory "side effect bad"
-    parameters.program_flow.json_plot_dir = parameters.outputDir + "/json_diagnostic/";
-    mkdir(parameters.program_flow.json_plot_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-  }
 
   ReferenceReader ref_reader;
   ref_reader.Initialize(parameters.fasta);
@@ -372,44 +364,6 @@ void * VariantCallerWorker(void *input)
       }
 
       pthread_mutex_unlock(&vc.candidate_generation_mutex);
-      // Separate the queuing of variants from actual work of calling variants
-      for (deque<VariantCandidate>::iterator v = variant_candidates.begin(); v != variant_candidates.end(); ++v) {
-        if (vc.parameters->multisample) {
-          cerr << "multisample candidate; num_samples_ = " << vc.sample_manager->num_samples_ << "\n";
-          bool pass = false; // if pass == false there are no reads for the candidate
-          bool filter = true;
-          for (int sample_index = 0; (sample_index < vc.sample_manager->num_samples_); ++sample_index) {
-            cerr << "sample " << sample_index << " filtered: " << v->variant.isFiltered << endl;
-            pass = true;
-            if (!v->variant.isFiltered) {filter = false;}
-            v->variant.isFiltered = false;
-          }
-          if (filter) {
-            cerr << "------------------- NOCALL: filtered candidate ----------------\n";
-            v->variant.filter = "NOCALL";
-            v->variant.isFiltered = true;
-          }
-          else {
-            cerr << "------------------- PASS ----------------\n";
-            v->variant.filter = "PASS";
-            v->variant.isFiltered = false;
-          }
-          if (!pass) {
-            cerr << "------------------- !pass: evaluating candidate ----------------\n";
-            for (int sample_index = 0; (sample_index < vc.sample_manager->num_samples_); ++sample_index) {
-              cerr << "autofailing sample  " << sample_index << endl;
-              AutoFailTheCandidate(v->variant, vc.parameters->my_controls.use_position_bias, v->variant.sampleNames[sample_index]);
-            }
-          }
-        } /* multisample */
-        else {
-          cerr << "------------------- single-sample candidate ----------------\n";
-          if (!ProcessOneVariant(thread_objects, vc, *v, *position_ticket)) {
-            cerr << "autofailing\n";
-            AutoFailTheCandidate(v->variant, vc.parameters->my_controls.use_position_bias, v->variant.sampleNames[0]);
-          }
-        }
-      }
 
       cerr << "writing candidates\n";
       vc.vcf_writer->WriteSlot(vcf_writer_slot, variant_candidates);

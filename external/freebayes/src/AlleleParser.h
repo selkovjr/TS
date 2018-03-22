@@ -21,9 +21,10 @@ class OrderedVCFWriter;
 class AlleleDetails {
 public:
   AlleleDetails() : type(ALLELE_UNKNOWN), chr(0), position(0), ref_length(0),
-      length(0), minimized_prefix(0),
-      repeat_boundary(0), hp_repeat_len (0) , initialized(false), filtered(false),
-      coverage(0), coverage_fwd(0), coverage_rev(0), molecular_family_coverage(0), molecular_family_coverage_fwd(0), molecular_family_coverage_rev(0), samples(1) {}
+      length(0), minimized_prefix(0), repeat_boundary(0), hp_repeat_len (0),
+      initialized(false), filtered(false),
+      coverage(0), coverage_fwd(0), coverage_rev(0),
+      samples(1) {}
 
   void add_observation(const Allele& observation, int sample_index, bool is_reverse_strand, int _chr, int num_samples, int read_count) {
     if (not initialized) {
@@ -36,41 +37,29 @@ public:
     }
     if (sample_index < 0) return;
     coverage += read_count;
-    molecular_family_coverage += 1;
     if ((int)samples.size() != num_samples)
       samples.resize(num_samples);
     samples[sample_index].coverage += read_count;
-    samples[sample_index].molecular_family_coverage += 1;
     if (is_reverse_strand) {
       coverage_rev += read_count;
       samples[sample_index].coverage_rev += read_count;
-      molecular_family_coverage_rev += 1;
-      samples[sample_index].molecular_family_coverage_rev += 1;
     } else {
       coverage_fwd += read_count;
       samples[sample_index].coverage_fwd += read_count;
-      molecular_family_coverage_fwd += 1;
-      samples[sample_index].molecular_family_coverage_fwd += 1;
     }
   }
 
   void add_reference_observation(int sample_index, bool is_reverse_strand, int chr_idx_, int read_count) {
     coverage += read_count;
-    molecular_family_coverage += 1;
     //if ((int)samples.size() <= sample_index)
     //  samples.resize(sample_index+1);
     samples[sample_index].coverage += read_count;
-    samples[sample_index].molecular_family_coverage += 1;
     if (is_reverse_strand) {
       coverage_rev += read_count;
       samples[sample_index].coverage_rev += read_count;
-      molecular_family_coverage_rev += 1;
-      samples[sample_index].molecular_family_coverage_rev += 1;
     } else {
       coverage_fwd += read_count;
       samples[sample_index].coverage_fwd += read_count;
-      molecular_family_coverage_fwd += 1;
-      samples[sample_index].molecular_family_coverage_fwd += 1;
     }
   }
 
@@ -83,9 +72,6 @@ public:
     coverage = 0;
     coverage_fwd = 0;
     coverage_rev = 0;
-    molecular_family_coverage = 0;
-    molecular_family_coverage_fwd = 0;
-    molecular_family_coverage_rev = 0;
     samples.clear();
     samples.resize(num_samples);
   }
@@ -102,13 +88,10 @@ public:
   }
 
   struct AlleleCoverage {
-    AlleleCoverage() : coverage(0), coverage_fwd(0), coverage_rev(0), molecular_family_coverage(0), molecular_family_coverage_fwd(0), molecular_family_coverage_rev(0) {}
+    AlleleCoverage() : coverage(0), coverage_fwd(0), coverage_rev(0) {}
     long int coverage;
     long int coverage_fwd;
     long int coverage_rev;
-    long int molecular_family_coverage;
-    long int molecular_family_coverage_fwd;
-    long int molecular_family_coverage_rev;
   };
 
   AlleleType              type;                 //! type of the allele
@@ -125,9 +108,6 @@ public:
   long int                coverage;             //! total allele coverage (across samples)
   long int                coverage_fwd;         //! forward strand allele coverage (across samples)
   long int                coverage_rev;         //! reverse strand allele coverage (across samples)
-  long int                molecular_family_coverage;             //! total molecular family allele coverage (across samples)
-  long int                molecular_family_coverage_fwd;         //! forward strand molecular family allele coverage (across samples)
-  long int                molecular_family_coverage_rev;         //! reverse strand molecular family allele coverage (across samples)
   vector<AlleleCoverage>  samples;              //! per-sample coverages
 };
 
@@ -228,7 +208,6 @@ private:
   pileup                      allele_pileup_;
   AlleleDetails               ref_pileup_;
   vector<long int>           coverage_by_sample_;
-  vector<long int>           molecular_family_coverage_by_sample_;
   //vector<char>                black_list_strand_;
   char                        black_list_strand_; // revert to 4.2
   int                         hp_max_lenght_override_value; //! if not zero then it overrides the maxHPLenght parameter in filtering

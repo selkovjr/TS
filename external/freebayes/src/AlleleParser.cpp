@@ -514,17 +514,6 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
       coverage_by_sample_[sample] += genotype.samples.at(sample).coverage;
   }
 
-  molecular_family_coverage_by_sample_.resize(num_samples_);
-  for (int sample = 0; sample < num_samples_; ++sample)
-    molecular_family_coverage_by_sample_[sample] = ref_pileup_.samples.at(sample).molecular_family_coverage;
-
-  for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
-    AlleleDetails& genotype = I->second;
-    for (int sample = 0; sample < num_samples_; ++sample)
-      molecular_family_coverage_by_sample_[sample] += genotype.samples.at(sample).molecular_family_coverage;
-  }
-
-
   // black_list_strand.clear();black_list_strand.push_back('.'); revert to 4.2
   black_list_strand_ = '.';
   hp_max_lenght_override_value = 0;
@@ -855,10 +844,6 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx)
     total_cov += coverage_by_sample_[sample_idx];
 
-  int total_molecular_family_cov = 0;
-  for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx)
-    total_molecular_family_cov += molecular_family_coverage_by_sample_[sample_idx];
-
   if (process_input_positions_only_) // skip all non-hot-spot positions
     return;
 
@@ -1104,14 +1089,12 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
       common_ref_length - common_prefix - common_suffix);
 
   candidate.variant.info["RO"].push_back(convertToString(ref_pileup_.coverage));
-  //  candidate.variant.info["MRO"].push_back(convertToString(ref_pileup_.molecular_family_coverage));
   candidate.variant.info["SRF"].push_back(convertToString(ref_pileup_.coverage_fwd));
   candidate.variant.info["SRR"].push_back(convertToString(ref_pileup_.coverage_rev));
 
   for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
     map<string, vector<string> >& format = candidate.variant.samples[sample_manager_->sample_names_[sample_idx]];
     format["RO"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage));
-    //  format["MRO"].push_back(convertToString(ref_pileup_.samples[sample_idx].molecular_family_coverage));
     format["SRF"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage_fwd));
     format["SRR"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage_rev));
   }
@@ -1119,7 +1102,6 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   total_cov = ref_pileup_.coverage;
   total_cov_fwd = ref_pileup_.coverage_fwd;
   total_cov_rev = ref_pileup_.coverage_rev;
-  total_molecular_family_cov = ref_pileup_.molecular_family_coverage;
 
   for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
     AlleleDetails& allele = I->second;
@@ -1127,7 +1109,6 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
     total_cov += allele.coverage;
     total_cov_fwd += allele.coverage_fwd;
     total_cov_rev += allele.coverage_rev;
-    total_molecular_family_cov += allele.molecular_family_coverage;
     if (allele.filtered)
       continue;
 
@@ -1139,7 +1120,6 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
     candidate.variant.info["TYPE"].push_back(allele.type_str());
     candidate.variant.info["LEN"].push_back(convertToString(allele.length));
     candidate.variant.info["AO"].push_back(convertToString(allele.coverage));
-    //  candidate.variant.info["MAO"].push_back(convertToString(allele.molecular_family_coverage));
     candidate.variant.info["SAF"].push_back(convertToString(allele.coverage_fwd));
     candidate.variant.info["SAR"].push_back(convertToString(allele.coverage_rev));
     //   candidate.variant.info["JUNK"].push_back(convertToString(allele.hp_repeat_len));
@@ -1158,7 +1138,6 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
     for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
       map<string, vector<string> >& format = candidate.variant.samples[sample_manager_->sample_names_[sample_idx]];
       format["AO"].push_back(convertToString(allele.samples[sample_idx].coverage));
-      //  format["MAO"].push_back(convertToString(allele.samples[sample_idx].molecular_family_coverage));
       format["SAF"].push_back(convertToString(allele.samples[sample_idx].coverage_fwd));
       format["SAR"].push_back(convertToString(allele.samples[sample_idx].coverage_rev));
     }
@@ -1167,12 +1146,10 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   candidate.variant.info["DP"].push_back(convertToString(total_cov));
   candidate.variant.info["DPF"].push_back(convertToString(total_cov_fwd));
   candidate.variant.info["DPR"].push_back(convertToString(total_cov_rev));
-  //  candidate.variant.info["MDP"].push_back(convertToString(total_molecular_family_cov));
 
   for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
     map<string, vector<string> >& format = candidate.variant.samples[sample_manager_->sample_names_[sample_idx]];
     format["DP"].push_back(convertToString(coverage_by_sample_[sample_idx]));
-    //  format["MDP"].push_back(convertToString(molecular_family_coverage_by_sample_[sample_idx]));
   }
 }
 
