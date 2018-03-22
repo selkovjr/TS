@@ -57,7 +57,6 @@ class Evaluator {
         const ReferenceReader &ref_reader, int chr_idx);
     void FilterAllAlleles(const ClassifyFilters &filter_variant, const vector<VariantSpecificParams>& variant_specific_params);
     void StackUpOneVariant(const ExtendParameters &parameters, VariantCandidate &candidate_variant, const PositionInProgress& bam_position);
-    void SampleLikelihood(PersistingThreadObjects &thread_objects, const InputStructures &global_context, const ExtendParameters &parameters, const ReferenceReader &ref_reader, int chr_idx, VariantCandidate &candidate_variant);
     void Strelka(PersistingThreadObjects &thread_objects, const InputStructures &global_context, const ExtendParameters &parameters, const ReferenceReader &ref_reader, int chr_idx, VariantCandidate &candidate_variant);
     void ScanSupportingEvidence(float &mean_ll_delta, int i_allele);
     void ComputePosteriorGenotype(int _alt_allele_index,float local_min_allele_freq, int &genotype_call,
