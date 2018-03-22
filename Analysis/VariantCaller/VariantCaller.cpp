@@ -20,15 +20,12 @@
 #include "SampleManager.h"
 #include "ExtendedReadInfo.h"
 #include "TargetsManager.h"
-#include "HotspotReader.h"
 #include "MetricsManager.h"
 #include "DecisionTreeData.h"
 
 #include "IonVersion.h"
 
 #include <boost/math/distributions/poisson.hpp>
-#include "tvcutils/viterbi.h"
-#include "tvcutils/unify_vcf.h"
 
 #include "IndelAssembly/IndelAssembly.h"
 
@@ -85,12 +82,6 @@ int main(int argc, char* argv[])
 
   OrderedBAMWriter bam_writer;
 
-  HotspotReader hotspot_reader;
-  hotspot_reader.Initialize(ref_reader, parameters.variantPriorsFile);
-  if (!parameters.blacklistFile.empty()) {
-    if (parameters.variantPriorsFile.empty()) {hotspot_reader.Initialize(ref_reader);}
-    hotspot_reader.MakeHintQueue(parameters.blacklistFile);
-  }
   string parameters_file = parameters.opts.GetFirstString('-', "parameters-file", "");
 
   IndelAssemblyArgs parsed_opts;
@@ -109,7 +100,7 @@ int main(int argc, char* argv[])
   IndelAssembly indel_assembly(&parsed_opts, &ref_reader, &sample_manager, &targets_manager);
 
   // set up producer of variants
-  AlleleParser candidate_generator(parameters, ref_reader, sample_manager, vcf_writer, hotspot_reader);
+  AlleleParser candidate_generator(parameters, ref_reader, sample_manager, vcf_writer);
 
   MetricsManager metrics_manager;
 
@@ -181,28 +172,6 @@ int main(int argc, char* argv[])
   else{
     indel_assembly.out.close();
   }
-
-  string novel_vcf = parameters.outputDir + "/" + parameters.outputFile;
-  string assembly_vcf = parameters.outputDir + "/indel_assembly.vcf";
-  string hotspots_file = parameters.variantPriorsFile;
-  string output_vcf = parameters.outputDir + "/TSVC_variants.vcf";
-  string tvc_metrics = parameters.outputDir + "/tvc_metrics.json";
-  string input_depth = parameters.outputDir + "/depth.txt";
-  string output_genome_vcf = parameters.outputDir + "/TSVC_variants.genome.vcf";
-
-  if (!parameters.postprocessed_bam.empty()) {
-      int return_code = system(string("samtools index " + parameters.postprocessed_bam).c_str());
-  }
-
-  { // block serves as isolation of merging and building tabix index
-    // Prepare merger object
-    VcfOrderedMerger merger(novel_vcf, assembly_vcf, hotspots_file, output_vcf, tvc_metrics, input_depth, output_genome_vcf, ref_reader, targets_manager, 10, max(0, parameters.minCoverage), true);
-
-    merger.perform();
-  }
-
-  build_index(parameters.outputDir + "/TSVC_variants.vcf");
-  build_index(parameters.outputDir + "/TSVC_variants.genome.vcf");
 
   cerr << endl;
   cout << endl;
@@ -379,12 +348,7 @@ void * VariantCallerWorker(void *input)
     vc.candidate_generator->GenerateCandidates(variant_candidates, position_ticket, haplotype_length);
 
     pthread_mutex_lock(&vc.bam_walker_mutex);
-    int next_hotspot_chr = -1;
-    long next_hotspot_position = -1;
-    if (vc.candidate_generator->GetNextHotspotLocation(next_hotspot_chr, next_hotspot_position))
-      more_positions = vc.bam_walker->AdvancePosition(haplotype_length, next_hotspot_chr, next_hotspot_position);
-    else
-      more_positions = vc.bam_walker->AdvancePosition(haplotype_length);
+    more_positions = vc.bam_walker->AdvancePosition(haplotype_length);
     // cerr << "more_positions: " << more_positions << "\n";
     pthread_mutex_unlock(&vc.bam_walker_mutex);
 

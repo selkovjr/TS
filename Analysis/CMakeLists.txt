@@ -110,14 +110,12 @@ include_directories("${PROJECT_SOURCE_DIR}/realignment")
 
 set(tvcSRCS
   VariantCaller/IndelAssembly/IndelAssembly.cpp
-  VariantCaller/tvcutils/unify_vcf.cpp
   VariantCaller/VariantCaller.cpp
   VariantCaller/BAMWalkerEngine.cpp
   VariantCaller/OrderedBAMWriter.cpp
   VariantCaller/SampleManager.cpp
   VariantCaller/TargetsManager.cpp
   VariantCaller/HandleVariant.cpp
-  VariantCaller/HotspotReader.cpp
   VariantCaller/MetricsManager.cpp
   VariantCaller/LocalContext.cpp
 
@@ -164,83 +162,6 @@ target_link_libraries(bamwalker ${ION_BAMTOOLS_LIBS} ${EXTRA_LIBS} z pthread)
 add_dependencies(bamwalker IONVERSION bamtools htslib_proj)
 install(TARGETS bamwalker DESTINATION bin)
 
-
-add_executable(tvcassembly
-  VariantCaller/IndelAssembly/IndelAssemblyMain.cpp
-  VariantCaller/IndelAssembly/IndelAssembly.cpp
-  VariantCaller/TargetsManager.cpp
-  VariantCaller/SampleManager.cpp
-
-  # TODO: Actually build vcflib as a static library and link to variant caller.
-  # TODO2: Resolve bgzf.c collisions between vcflib and bamtools
-  ${ION_VCFLIB_DIR}/Variant.cpp
-  ${ION_VCFLIB_DIR}/split.cpp
-  ${ION_VCFLIB_DIR}/tabixpp/tabix.cpp
-  ${ION_VCFLIB_DIR}/tabixpp/index.c
-  ${ION_VCFLIB_DIR}/tabixpp/bgzf.c
-  ${ION_VCFLIB_DIR}/smithwaterman/LeftAlign.cpp
-  ${ION_VCFLIB_DIR}/smithwaterman/Repeats.cpp
-  ${ION_VCFLIB_DIR}/smithwaterman/IndelAllele.cpp
-  ${ION_VCFLIB_DIR}/smithwaterman/SmithWatermanGotoh.cpp
-
-  Util/OptArgs.cpp
-  ${ION_TS_EXTERNAL}/jsoncpp-src-amalgated0.6.0-rc1/jsoncpp.cpp
-  ${PROJECT_BINARY_DIR}/IonVersion.cpp
-)
-
-target_link_libraries(tvcassembly ${ION_BAMTOOLS_LIBS} ${EXTRA_LIBS} z pthread)
-add_dependencies(tvcassembly IONVERSION bamtools htslib_proj)
-install(TARGETS tvcassembly DESTINATION bin)
-
-
-
-add_executable(tvcutils
-  VariantCaller/tvcutils/tvcutils.cpp
-  VariantCaller/tvcutils/prepare_hotspots.cpp
-  VariantCaller/tvcutils/validate_bed.cpp
-  VariantCaller/tvcutils/unify_vcf.cpp
-  VariantCaller/tvcutils/split_vcf.cpp
-  VariantCaller/TargetsManager.cpp
-  Util/OptArgs.cpp
-#  Util/Utils.cpp
-  ${ION_VCFLIB_DIR}/Variant.cpp
-  ${ION_VCFLIB_DIR}/split.cpp
-  ${ION_VCFLIB_DIR}/tabixpp/tabix.cpp
-  ${ION_VCFLIB_DIR}/tabixpp/index.c
-  ${ION_VCFLIB_DIR}/tabixpp/bgzf.c
-  ${ION_VCFLIB_DIR}/smithwaterman/LeftAlign.cpp
-  ${ION_VCFLIB_DIR}/smithwaterman/Repeats.cpp
-  ${ION_VCFLIB_DIR}/smithwaterman/IndelAllele.cpp
-  ${ION_VCFLIB_DIR}/smithwaterman/SmithWatermanGotoh.cpp
-  ${ION_TS_EXTERNAL}/jsoncpp-src-amalgated0.6.0-rc1/jsoncpp.cpp
-  ${PROJECT_BINARY_DIR}/IonVersion.cpp
-)
-target_link_libraries(tvcutils  ${ION_BAMTOOLS_LIBS} z)
-add_dependencies(tvcutils IONVERSION bamtools)
-install(TARGETS tvcutils DESTINATION bin)
-
-
-add_executable(bamrealignment
-    realignment/bamrealignment.cpp
-    realignment/Realigner.h
-    realignment/Realigner.cpp
-    Util/Utils.cpp
-    Util/OptArgs.cpp
-    ${PROJECT_BINARY_DIR}/IonVersion.cpp
-    )
-target_link_libraries(bamrealignment ${ION_BAMTOOLS_LIBS} z pthread)
-add_dependencies(bamrealignment bamtools)
-install(TARGETS bamrealignment DESTINATION bin)
-
-add_executable(SamVsSam
-        SamUtils/SamVsSam.cpp
-)
-target_link_libraries(SamVsSam ion-analysis ${ION_SAMTOOLS_LIBS} ${ION_HTSLIB_LIBS} pthread dl)
-install(TARGETS SamVsSam DESTINATION bin)
-
-add_executable(seqCoverage coverage/seqCoverage.cpp coverage/interval_tree.cpp)
-add_dependencies(seqCoverage IONVERSION)
-install(TARGETS seqCoverage DESTINATION bin)
 
 # Setup for testing and gtest in particular, only needed once in file before tests.
 enable_testing()

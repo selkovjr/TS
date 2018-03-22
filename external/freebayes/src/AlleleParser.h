@@ -10,7 +10,6 @@
 #include "ReferenceReader.h"
 #include "BAMWalkerEngine.h"
 #include "SampleManager.h"
-#include "HotspotReader.h"
 #include "InputStructures.h"
 
 using namespace std;
@@ -23,8 +22,8 @@ class AlleleDetails {
 public:
   AlleleDetails() : type(ALLELE_UNKNOWN), chr(0), position(0), ref_length(0),
       length(0), minimized_prefix(0),
-      repeat_boundary(0), hp_repeat_len (0) , initialized(false), filtered(false), is_hotspot(false),
-      hotspot_params(NULL), coverage(0), coverage_fwd(0), coverage_rev(0), molecular_family_coverage(0), molecular_family_coverage_fwd(0), molecular_family_coverage_rev(0), samples(1) {}
+      repeat_boundary(0), hp_repeat_len (0) , initialized(false), filtered(false),
+      coverage(0), coverage_fwd(0), coverage_rev(0), molecular_family_coverage(0), molecular_family_coverage_fwd(0), molecular_family_coverage_rev(0), samples(1) {}
 
   void add_observation(const Allele& observation, int sample_index, bool is_reverse_strand, int _chr, int num_samples, int read_count) {
     if (not initialized) {
@@ -92,22 +91,6 @@ public:
   }
 
 
-  void add_hotspot(const HotspotAllele& observation, int num_samples) {
-    is_hotspot = true;
-    hotspot_params = &observation;
-    if (not initialized) {
-      chr = observation.chr;
-      position = observation.pos;
-      ref_length = observation.ref_length;
-      alt_sequence = observation.alt;
-      type = observation.type;
-      length = observation.length;
-      initialized = true;
-    }
-    if ((int)samples.size() != num_samples)
-      samples.resize(num_samples);
-  }
-
   const char *type_str() {
     if (type == ALLELE_DELETION)    return "del";
     if (type == ALLELE_INSERTION)   return "ins";
@@ -139,8 +122,6 @@ public:
   long int                hp_repeat_len;        //! length of HP for filtering
   bool                    initialized;          //! is allele type info populated?
   bool                    filtered;             //! if true, do not report this allele as candidate
-  bool                    is_hotspot;           //! is this allele present in hotspot file?
-  const HotspotAllele *   hotspot_params;       //! if not NULL, points to hotspot-specific parameters struct
   long int                coverage;             //! total allele coverage (across samples)
   long int                coverage_fwd;         //! forward strand allele coverage (across samples)
   long int                coverage_rev;         //! reverse strand allele coverage (across samples)
@@ -193,7 +174,7 @@ class AlleleParser {
 public:
 
    AlleleParser(const ExtendParameters& parameters, const ReferenceReader& ref_reader,
-       const SampleManager& sample_manager, OrderedVCFWriter& vcf_writer, HotspotReader& hotspot_reader);
+       const SampleManager& sample_manager, OrderedVCFWriter& vcf_writer);
   ~AlleleParser();
 
   //! basic filters to reject a read
@@ -205,22 +186,12 @@ public:
   void GenerateCandidates(deque<VariantCandidate>& variant_candidates,
       list<PositionInProgress>::iterator& position_ticket, int& haplotype_length);
 
-  bool GetNextHotspotLocation(int& chr, long& position) const;
-
 private:
-  //void SetupHotspotsVCF(const string& hotspots_file); // XXX remove me!
-
   void MakeAllele(deque<Allele>& alleles, AlleleType type, long int pos, int length, const char *alt_sequence) const;
 
-  void PileUpAlleles(int allowed_allele_types, int haplotype_length, bool scan_haplotype,
-      list<PositionInProgress>::iterator& position_ticket, int hotspot_window);
+  void PileUpAlleles(int allowed_allele_types, int haplotype_length, bool scan_haplotype, list<PositionInProgress>::iterator& position_ticket);
 
   void PileUpAlleles(int pos, int haplotype_length, list<PositionInProgress>::iterator& position_ticket);
-
-  void PileUpHotspotOnly( vector<HotspotAllele> hotspot, list<PositionInProgress>::iterator& position_ticket) {
-	if (hotspot.size() == 0) return;
-	PileUpAlleles(hotspot[0].pos, hotspot[0].ref_length, position_ticket);
-  }
 
   void InferAlleleTypeAndLength(AlleleDetails& allele) const;
 
@@ -228,9 +199,6 @@ private:
 
   void GenerateCandidateVariant(deque<VariantCandidate>& variant_candidates,
       list<PositionInProgress>::iterator& position_ticket, int& haplotype_length);
-
-  void FillInHotSpotVariant(deque<VariantCandidate>& variant_candidates, vector<HotspotAllele>& hotspot);
-  void BlacklistAlleleIfNeeded(AlleleDetails& allele);
 
 
   // operation parameters
@@ -255,9 +223,6 @@ private:
   const SampleManager *       sample_manager_;
   OrderedVCFWriter *          vcf_writer_;              //! Only used as Variant factory
   int                         num_samples_;
-
-  HotspotReader *             hotspot_reader_;
-  deque<HotspotAllele>        hotspot_alleles_;
 
   typedef map<Allele,AlleleDetails,AllelePositionCompare>  pileup;
   pileup                      allele_pileup_;
