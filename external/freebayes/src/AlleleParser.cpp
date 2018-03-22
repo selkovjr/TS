@@ -1031,6 +1031,8 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   }
 
   int total_cov = 0;
+  int total_cov_fwd = 0;
+  int total_cov_rev = 0;
   for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx)
     total_cov += coverage_by_sample_[sample_idx];
 
@@ -1417,12 +1419,16 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   }
 
   total_cov = ref_pileup_.coverage;
+  total_cov_fwd = ref_pileup_.coverage_fwd;
+  total_cov_rev = ref_pileup_.coverage_rev;
   total_molecular_family_cov = ref_pileup_.molecular_family_coverage;
 
   for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
     AlleleDetails& allele = I->second;
 
     total_cov += allele.coverage;
+    total_cov_fwd += allele.coverage_fwd;
+    total_cov_rev += allele.coverage_rev;
     total_molecular_family_cov += allele.molecular_family_coverage;
     if (allele.filtered)
       continue;
@@ -1466,6 +1472,8 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   } // multiallelic tags: TYPE, LEN, AO, SAF, SAR, HRUN
 
   candidate.variant.info["DP"].push_back(convertToString(total_cov));
+  candidate.variant.info["DPF"].push_back(convertToString(total_cov_fwd));
+  candidate.variant.info["DPR"].push_back(convertToString(total_cov_rev));
   //  candidate.variant.info["MDP"].push_back(convertToString(total_molecular_family_cov));
 
   for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {

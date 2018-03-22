@@ -18,12 +18,6 @@ InputStructures::InputStructures()
 void InputStructures::Initialize(ExtendParameters &parameters, const ReferenceReader& ref_reader, const SamHeader &bam_header)
 {
   DEBUG                 = parameters.program_flow.DEBUG;
-
-  if (parameters.sseMotifsProvided) {
-    cout << "Loading systematic error contexts." << endl;
-    read_error_motifs(parameters.sseMotifsFileName);
-    cout << "Loaded." << endl;
-  }
 }
 
 

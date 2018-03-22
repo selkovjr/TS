@@ -198,7 +198,6 @@ class AlleleIdentity {
     void SubCategorizeSNP(const LocalReferenceContext &reference_contextl);
     void SubCategorizeMNP(const LocalReferenceContext &reference_contextl);
     bool getVariantType(const string _altAllele, const LocalReferenceContext &reference_context,
-                        const TIonMotifSet & ErrorMotifs,
                         const ClassifyFilters &filter_variant,
                         const ReferenceReader &ref_reader,
                         int chr_idx);
@@ -216,8 +215,6 @@ class AlleleIdentity {
         const VariantSpecificParams& variant_specific_params);
     void DetectLongHPThresholdCases(const LocalReferenceContext &seq_context, int maxHPLength);
     void DetectNotAVariant(const LocalReferenceContext &seq_context);
-    void PredictSequenceMotifSSE(const LocalReferenceContext &reference_context, const TIonMotifSet & ErrorMotifs,
-                                 const ReferenceReader &ref_reader, int chr_idx);
 };
 
 

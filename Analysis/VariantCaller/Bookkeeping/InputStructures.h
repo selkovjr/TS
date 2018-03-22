@@ -16,7 +16,6 @@
 #include <Variant.h>
 #include <VariantCaller/OrderedBAMWriter.h>
 
-#include "../ErrorMotifs.h"
 #include "ExtendParameters.h"
 #include "Realigner.h"
 
@@ -135,12 +134,8 @@ class InputStructures {
 public:
   int                       DEBUG;
 
-  // Reusable objects
-  TIonMotifSet              ErrorMotifs;
-
   InputStructures();
   void Initialize(ExtendParameters &parameters, const ReferenceReader& ref_reader, const SamHeader &bam_header);
-  void read_error_motifs(string & fname){ErrorMotifs.load_from_file(fname.c_str());};
 };
 
 // ==============================================================================

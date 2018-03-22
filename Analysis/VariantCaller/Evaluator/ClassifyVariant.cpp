@@ -5,7 +5,6 @@
 //! @brief    HP Indel detection
 
 #include "ClassifyVariant.h"
-#include "ErrorMotifs.h"
 #include "StackEngine.h"
 
 // This function only works for the 1 base -> 1 base SNP representation
@@ -431,7 +430,6 @@ bool AlleleIdentity::CheckValidAltAllele(const LocalReferenceContext &reference_
 bool AlleleIdentity::getVariantType(
   const string _altAllele,
   const LocalReferenceContext &reference_context,
-  const TIonMotifSet & ErrorMotifs,
   const ClassifyFilters &filter_variant,
   const ReferenceReader &ref_reader,
   int chr_idx
@@ -447,7 +445,6 @@ bool AlleleIdentity::getVariantType(
   // We should now be guaranteed a valid variant position in here
   if (is_ok) {
     is_ok = CharacterizeVariantStatus(reference_context, ref_reader, chr_idx);
-    PredictSequenceMotifSSE(reference_context, ErrorMotifs, ref_reader, chr_idx);
   }
   is_ok = is_ok and CheckValidAltAllele(reference_context);
 
@@ -605,46 +602,6 @@ void AlleleIdentity::CalculateWindowForVariant(const LocalReferenceContext &seq_
 // ------------------------------------------------------------------------------
 // Filtering functions
 
-void AlleleIdentity::PredictSequenceMotifSSE(const LocalReferenceContext &reference_context,
-                             const TIonMotifSet & ErrorMotifs,
-                             const ReferenceReader &ref_reader, int chr_idx) {
-
-  //cout << "Hello from PredictSequenceMotifSSE" << endl;
-  sse_prob_positive_strand = 0;
-  sse_prob_negative_strand = 0;
-  //long vcf_position = reference_context.position0+1;
-  long var_position = reference_context.position0 + left_anchor; // This points to the first deleted base
-
-  string seqContext;
-  // status.isHPIndel && status.isDeletion implies reference_context.my_hp_length.at(left_anchor) > 1
-  if (status.isHPIndel && status.isDeletion) {
-
-    // cout << start_pos << "\t" << variant_context.refBaseAtCandidatePosition << variant_context.ref_hp_length << "\t" << variant_context.refBaseLeft << variant_context.left_hp_length << "\t" << variant_context.refBaseRight  << variant_context.right_hp_length << "\t";
-
-    unsigned context_left = var_position >= 10 ? 10 : var_position;
-    //if (var_position + reference_context.my_hp_length.at(left_anchor) + 10 < ref_reader.chr_size(chr_idx))
-      seqContext = ref_reader.substr(chr_idx, var_position - context_left, context_left + (unsigned int)reference_context.my_hp_length[left_anchor] + 10);
-    //  else
-    //  seqContext = ref_reader.substr(chr_idx, var_position - context_left);
-
-    if (seqContext.length() > 0 && context_left < seqContext.length()) {
-      sse_prob_positive_strand = ErrorMotifs.get_sse_probability(seqContext, context_left);
-
-       //cout << seqContext << "\t" << context_left << "\t" << sse_prob_positive_strand << "\t";
-
-      context_left = seqContext.length() - context_left - 1;
-      string reverse_seqContext;
-      ReverseComplement(seqContext, reverse_seqContext);
-
-      sse_prob_negative_strand = ErrorMotifs.get_sse_probability(reverse_seqContext, context_left);
-
-     // cout << reverse_seqContext << "\t" << context_left << "\t" << sse_prob_negative_strand << "\t";
-
-    }
-  }
-}
-
-
 void AlleleIdentity::DetectLongHPThresholdCases(const LocalReferenceContext &seq_context, int maxHPLength) {
   if (status.isIndel && ref_hp_length > maxHPLength) {
     filterReasons.push_back("HPLEN");
@@ -698,8 +655,7 @@ void Evaluator::SetupAllAlleles(
 
     allele_identity_vector[i_allele].indelActAsHPIndel = parameters.my_controls.filter_variant.indel_as_hpindel;
 
-    allele_identity_vector[i_allele].getVariantType(variant->alt[i_allele], seq_context,
-        global_context.ErrorMotifs,  parameters.my_controls.filter_variant, ref_reader, chr_idx);
+    allele_identity_vector[i_allele].getVariantType(variant->alt[i_allele], seq_context, parameters.my_controls.filter_variant, ref_reader, chr_idx);
     allele_identity_vector[i_allele].CalculateWindowForVariant(seq_context, global_context.DEBUG, ref_reader, chr_idx);
   }
 
