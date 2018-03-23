@@ -70,7 +70,7 @@ public:
     while (num_slots_written_ < num_slots_) {
       for (deque<VariantCandidate>::iterator current_variant = slot_dropbox_[num_slots_written_].begin();
           current_variant != slot_dropbox_[num_slots_written_].end(); ++current_variant) {
-        if (current_variant->variant.isFiltered and !current_variant->variant.isHotSpot and suppress_no_calls_)
+        if (current_variant->variant.isFiltered and suppress_no_calls_)
           filtered_vcf_stream_ << current_variant->variant << endl;
         else
           output_vcf_stream_ << current_variant->variant << endl;

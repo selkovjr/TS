@@ -657,7 +657,7 @@ void BAMWalkerEngine::BeginPositionProcessingTask(list<PositionInProgress>::iter
 }
 
 
-bool BAMWalkerEngine::AdvancePosition(int position_increment, int next_hotspot_chr, long next_hotspot_position)
+bool BAMWalkerEngine::AdvancePosition(int position_increment)
 {
   next_position_ += position_increment;
   // cerr << "AdvancePosition: " << next_position_<< "\n";
@@ -666,13 +666,6 @@ bool BAMWalkerEngine::AdvancePosition(int position_increment, int next_hotspot_c
   if (tmp_begin_) {
     int closest_chr = tmp_begin_->alignment.RefID;
     int closest_pos = tmp_begin_->original_position;
-    if (next_hotspot_chr >= 0) {
-      if (next_hotspot_chr < closest_chr or (next_hotspot_chr == closest_chr and next_hotspot_position < closest_pos)) {
-        // actually the hotspot is closer
-        closest_chr = next_hotspot_chr;
-        closest_pos = next_hotspot_position;
-      }
-    }
 
     if (next_target_->chr < closest_chr)
       next_position_ = next_target_->end; // Just force transition to next target
