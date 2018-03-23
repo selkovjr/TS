@@ -132,7 +132,6 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
     string snp_multi_min_allele_freq_size = convertToString(parameters->program_flow.snp_multi_min_allele_freq.size());
     string mnp_multi_min_allele_freq_size = convertToString(parameters->program_flow.mnp_multi_min_allele_freq.size());
     string indel_multi_min_allele_freq_size = convertToString(parameters->program_flow.indel_multi_min_allele_freq.size());
-    string hotspot_multi_min_allele_freq_size = convertToString(parameters->program_flow.hotspot_multi_min_allele_freq.size());
     // the union of all var types
     headerss<< "##FORMAT=<ID=MUAF,Number=" + multi_min_allele_freq_size + ",Type=Float,Description=\"Union of multi-min-allele-freq associated with TYPE.\">" << endl
       << "##FORMAT=<ID=MUQUAL,Number=" + multi_min_allele_freq_size + ",Type=Float,Description=\"QUAL scores for MAF.\">" << endl
@@ -152,12 +151,7 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
       << "##FORMAT=<ID=IMAF,Number=" + indel_multi_min_allele_freq_size + ",Type=Float,Description=\"Values of indel-multi-min-allele-freq.\">" << endl
       << "##FORMAT=<ID=IMQUAL,Number=" + indel_multi_min_allele_freq_size + ",Type=Float,Description=\"QUAL scores for indel-multi-min-allele-freq.\">" << endl
       << "##FORMAT=<ID=IMGT,Number=" + indel_multi_min_allele_freq_size + ",Type=String,Description=\"Genotypes for indel-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=IMGQ,Number=" + indel_multi_min_allele_freq_size + ",Type=Integer,Description=\"Genotype quality scores for indel-multi-min-allele-freq.\">" << endl
-      // for hotspot
-      << "##FORMAT=<ID=HMAF,Number=" + hotspot_multi_min_allele_freq_size + ",Type=Float,Description=\"Values of hotspot-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=HMQUAL,Number=" + hotspot_multi_min_allele_freq_size + ",Type=Float,Description=\"QUAL scores for hotspot-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=HMGT,Number=" + hotspot_multi_min_allele_freq_size + ",Type=String,Description=\"Genotypes for hotspot-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=HMGQ,Number=" + hotspot_multi_min_allele_freq_size + ",Type=Integer,Description=\"Genotype quality scores for hotspot-multi-min-allele-freq.\">" << endl;
+      << "##FORMAT=<ID=IMGQ,Number=" + indel_multi_min_allele_freq_size + ",Type=Integer,Description=\"Genotype quality scores for indel-multi-min-allele-freq.\">" << endl;
   }
 
 
@@ -186,7 +180,7 @@ void ClearVal(vcf::Variant &var, const char *clear_me){
 };
 
 
-//clear all the info tags, in case of a HotSpot VCF react Info tags might contain prior values
+//clear all the info tags
 void clearInfoTags(vcf::Variant &var) {
   map<string, vector<string> >::iterator it;
 
@@ -468,8 +462,7 @@ void RemoveFilteredAlleles(vcf::Variant &candidate_variant, vector<int> &filtere
   string my_healing_glow = "HEALED";
   vector<string> originalAltAlleles = candidate_variant.alt;
   if (originalAltAlleles.size() > 1  &&
-      originalAltAlleles.size() > filtered_alleles_index.size()  //remove only when number of alleles more than number of filtered alleles
-      && !candidate_variant.isHotSpot) { //dont remove alleles if it is a HOT SPOT position as alleles might have been provided by the user.
+      originalAltAlleles.size() > filtered_alleles_index.size()) {  //remove only when number of alleles more than number of filtered alleles
     //remove filtered alleles with no support
     string altStr;
     int index;

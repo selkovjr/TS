@@ -18,6 +18,7 @@ using namespace std;
 class BasicFilters {
   public:
     float min_allele_freq;
+    int min_allele_count;
 
     float strand_bias_threshold;
     float strand_bias_pval_threshold;
@@ -29,6 +30,7 @@ class BasicFilters {
     int min_var_cov;
 
     BasicFilters() {
+      min_allele_count =2;
       min_allele_freq = 0.2f;
       strand_bias_threshold = 0.8f;
       strand_bias_pval_threshold = 1.0f;
@@ -38,45 +40,6 @@ class BasicFilters {
       min_quality_score = 2.5f;
       min_var_cov = 0;
     };
-};
-
-
-
-// control filters based on variant local sequence context alone
-class ClassifyFilters {
-  public:
-    // define tricky homopolymer runs
-    int hp_max_length ;
-
-    // how to handle SSE issues
-    float sseProbThreshold;
-    float minRatioReadsOnNonErrorStrand;
-    // don't worry about small relative SSE events
-    float sse_relative_safety_level;
-
-    // local realignment per variant type
-    bool  do_snp_realignment;    //
-    bool  do_mnp_realignment;
-    float realignment_threshold; // Do not realign if fraction of reads changing alignment is above threshold
-
-    // treat non hp indels as hp indels
-    bool indel_as_hpindel;
-
-    ClassifyFilters() {
-      hp_max_length = 11;
-
-      sseProbThreshold = 0.2;
-      minRatioReadsOnNonErrorStrand = 0.2; // min ratio of reads supporting variant on non-sse strand for variant to be called
-      sse_relative_safety_level = 0.03f; // scale SSE we worry about by read depth - don't worry about anything less than a 5% problem
-
-      do_snp_realignment = false;
-      do_mnp_realignment = false;
-      realignment_threshold = 1.0;
-
-      indel_as_hpindel = false;
-    };
-    void SetOpts(OptArgs &opts, Json::Value & tvc_params);
-    void CheckParameterLimits();
 };
 
 
@@ -100,8 +63,6 @@ class ControlCallAndFilters {
     bool use_lod_filter;
     float lod_multiplier;
 
-    ClassifyFilters filter_variant;
-
     // tuning parameter for xbias
     //  float xbias_tune;
     float sbias_tune;
@@ -109,7 +70,6 @@ class ControlCallAndFilters {
     BasicFilters filter_snps;
     BasicFilters filter_mnp;
     BasicFilters filter_hp_indel;
-    BasicFilters filter_hotspot;
 
     ControlCallAndFilters();
     void SetOpts(OptArgs &opts, Json::Value& tvc_params);
@@ -131,7 +91,6 @@ class ProgramControlSettings {
     vector<float> snp_multi_min_allele_freq;
     vector<float> mnp_multi_min_allele_freq;
     vector<float> indel_multi_min_allele_freq;
-    vector<float> hotspot_multi_min_allele_freq;
 
     ProgramControlSettings();
     void SetOpts(OptArgs &opts, Json::Value & pf_params);
@@ -155,24 +114,24 @@ public:
   bool              processInputPositionsOnly;
 
   // operation parameters
-  bool useDuplicateReads;      // -E --use-duplicate-reads
-  int useBestNAlleles;         // -n --use-best-n-alleles
-  bool allowIndels;            // -I --allow-indels
-  bool allowMNPs;              // -X --allow-mnps
-  bool allowComplex;           // -X --allow-complex
-  int maxComplexGap;
-  bool allowSNPs;              // -I --no-snps
-  int min_mapping_qv;                    // -m --min-mapping-quality
-  float readMaxMismatchFraction;  // -z --read-max-mismatch-fraction
-  int       read_snp_limit;            // -$ --read-snp-limit
-  long double minAltFraction;  // -F --min-alternate-fraction
-  long double minIndelAltFraction; // Added by SU to reduce Indel Candidates for Somatic
-  int minAltCount;             // -C --min-alternate-count
-  int minAltTotal;             // -G --min-alternate-total
-  int minCoverage;             // -! --min-coverage
-  int mergeLookAhead;          // --merge-variant-lookahead
-  bool debug; // set if debuglevel >=1
-  bool multisample;            // multisample run
+  bool        useDuplicateReads;        // -E --use-duplicate-reads
+  int         useBestNAlleles;          // -n --use-best-n-alleles
+  bool        allowIndels;              // -I --allow-indels
+  bool        allowMNPs;                // -X --allow-mnps
+  bool        allowComplex;             // -X --allow-complex
+  int         maxComplexGap;
+  bool        allowSNPs;                // -I --no-snps
+  int         min_mapping_qv;           // -m --min-mapping-quality
+  float       readMaxMismatchFraction;  // -z --read-max-mismatch-fraction
+  int         read_snp_limit;           // -$ --read-snp-limit
+  long double minAltFraction;           // -F --min-alternate-fraction
+  long double minIndelAltFraction;      // Added by SU to reduce Indel Candidates for Somatic
+  int         minAltCount;              // -C --min-alternate-count
+  int         minAltTotal;              // -G --min-alternate-total
+  int         minCoverage;              // -! --min-coverage
+  int         mergeLookAhead;           // --merge-variant-lookahead
+  bool        debug;                    // set if debuglevel >=1
+  bool        multisample;              // multisample run
 
 
   OptArgs opts;

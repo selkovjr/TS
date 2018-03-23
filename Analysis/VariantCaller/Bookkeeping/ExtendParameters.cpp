@@ -56,15 +56,9 @@ void VariantCallerHelp() {
   printf("  -z,--read-max-mismatch-fraction       FLOAT       do not use reads with fraction of mismatches above this [1.0]\n");
   printf("     --gen-min-alt-allele-freq          FLOAT       minimum required alt allele frequency to generate a candidate [0.2]\n");
   printf("     --gen-min-indel-alt-allele-freq    FLOAT       minimum required alt allele frequency to generate a homopolymer indel candidate [0.2]\n");
+  printf("     --gen-min-alt-allele-count         INT         minimum required alt allele count to generate a candidate [2]\n");
   printf("     --gen-min-coverage                 INT         minimum required coverage to generate a candidate [6]\n");
   printf("     --merge-variant-lookahead          INT         how many bases ahead to merge nearby variant to form correct haplotype [3, 0 if not allow complex]\n");
-  printf("\n");
-
-  printf("External variant candidates:\n");
-  printf("  -l,--blacklist-vcf                    FILE        vcf.gz file (+.tbi) with blacklist candidate variant locations and alleles [optional]\n");
-  printf("  -c,--input-vcf                        FILE        vcf.gz file (+.tbi) with additional candidate variant locations and alleles [optional]\n");
-  printf("     --process-input-positions-only     on/off      only generate candidates at locations from input-vcf [off]\n");
-  printf("     --use-input-allele-only            on/off      only consider provided alleles for locations in input-vcf [off]\n");
   printf("\n");
 
   printf("Advanced variant candidate scoring options:\n");
@@ -110,15 +104,6 @@ void VariantCallerHelp() {
   printf("     --indel-min-allele-freq            FLOAT       minimum required alt allele frequency for non-reference indel call [0.2]\n");
   printf("     --indel-min-var-coverage           INT         filter out indels with variant allele coverage below this [snp-min-var-coverage]\n");
 
-  printf("     --hotspot-min-coverage             INT         filter out hotspot variants with total coverage below this [6]\n");
-  printf("     --hotspot-min-cov-each-strand      INT         filter out hotspot variants with coverage on either strand below this [snp-min-cov-each-strand]\n");
-  printf("     --hotspot-min-variant-score        FLOAT       filter out hotspot variants with QUAL score below this [snp-min-variant-score]\n");
-  printf("     --hotspot-strand-bias              FLOAT       filter out hotspot variants with strand bias above this [0.95] given strand bias > hotspot-strand-bias\n");
-  printf("     --hotspot-strand-bias-pval         FLOAT       filter out hotspot variants with pval below this [1.0] given pval < hotspot-strand-bias-pval\n");
-  //  printf("     --hotspot-strand-bias              FLOAT       filter out hotspot variants with strand bias above this [0.95]\n");
-  printf("  -H,--hotspot-min-allele-freq          FLOAT       minimum required alt allele frequency for non-reference hotspot variant call [0.2]\n");
-  printf("     --hotspot-min-var-coverage         INT         filter out hotspot variants with variant allele coverage below this [snp-min-var-coverage]\n");
-
   // Filters not depending on the variant score
   printf("  -L,--hp-max-length                    INT         filter out indels in homopolymers above this [8]\n");
   printf("  -e,--error-motifs                     FILE        table of systematic error motifs and their error rates [optional]\n");
@@ -153,7 +138,6 @@ void VariantCallerHelp() {
   printf("     --snp-multi-min-allele-freq        FLOAT VECTOR  multiple min-allele-freq for snp calls [0.05,0.1,0.15,0.2].\n");
   printf("     --mnp-multi-min-allele-freq        FLOAT VECTOR  multiple min-allele-freq for mnp calls [snp-multi-min-allele-freq].\n");
   printf("     --indel-multi-min-allele-freq      FLOAT VECTOR  multiple min-allele-freq for indel calls [0.05,0.1,0.15,0.2].\n");
-  printf("     --hotspot-multi-min-allele-freq    FLOAT VECTOR  multiple min-allele-freq for hotspot calls [0.05,0.1,0.15,0.2].\n");
   printf("\n");
 }
 
@@ -169,10 +153,8 @@ ControlCallAndFilters::ControlCallAndFilters() {
   use_lod_filter = false;
   lod_multiplier = 0.6f;
 
-  //xbias_tune = 0.005f;
   sbias_tune = 0.5f;
   downSampleCoverage = 2000;
-  RandSeed = 631;
 
   // wanted by downstream
   suppress_reference_genotypes = true;
@@ -191,7 +173,6 @@ ProgramControlSettings::ProgramControlSettings() {
   snp_multi_min_allele_freq.clear();
   mnp_multi_min_allele_freq.clear();
   indel_multi_min_allele_freq.clear();
-  hotspot_multi_min_allele_freq.clear();
 }
 
 
@@ -511,38 +492,9 @@ int RetrieveParameterVectorFloat(OptArgs &opts, Json::Value& json, char short_na
 }
 
 
-// =============================================================================
-
-void ClassifyFilters::SetOpts(OptArgs &opts, Json::Value & tvc_params) {
-
-  hp_max_length                         = RetrieveParameterInt   (opts, tvc_params, 'L', "hp-max-length", 8);
-  sseProbThreshold                      = RetrieveParameterDouble(opts, tvc_params, '-', "sse-prob-threshold", 0.2);
-  minRatioReadsOnNonErrorStrand         = RetrieveParameterDouble(opts, tvc_params, '-', "min-ratio-reads-non-sse-strand", 0.2);
-  sse_relative_safety_level             = RetrieveParameterDouble(opts, tvc_params, '-', "sse-relative-safety-level", 0.025);
-  // min ratio of reads supporting variant on non-sse strand for variant to be called
-  do_snp_realignment                    = RetrieveParameterBool  (opts, tvc_params, '-', "do-snp-realignment", true);
-  do_mnp_realignment                    = RetrieveParameterBool  (opts, tvc_params, '-', "do-mnp-realignment", do_snp_realignment);
-  realignment_threshold                 = RetrieveParameterDouble(opts, tvc_params, '-', "realignment-threshold", 1.0);
-
-  indel_as_hpindel               = RetrieveParameterBool  (opts, tvc_params, '-', "indel-as-hpindel", false);
-}
-
-void ClassifyFilters::CheckParameterLimits() {
-
-  CheckParameterLowerBound<int>       ("hp-max-length",        hp_max_length,        1);
-  CheckParameterLowerUpperBound<float>("sse-prob-threshold",   sseProbThreshold, 0.0f, 1.0f);
-  CheckParameterLowerUpperBound<float>("min-ratio-reads-non-sse-strand",   minRatioReadsOnNonErrorStrand, 0.0f, 1.0f);
-  CheckParameterLowerUpperBound<float>("sse-relative-safety-level",   sse_relative_safety_level, 0.0f, 1.0f);
-  CheckParameterLowerUpperBound<float>("realignment-threshold",   realignment_threshold, 0.0f, 1.0f);
-
-}
-
 // ===========================================================================
 
 void ControlCallAndFilters::CheckParameterLimits() {
-
-  filter_variant.CheckParameterLimits();
-
   CheckParameterLowerUpperBound<int>  ("downsample-to-coverage",   downSampleCoverage,       20, 100000);
   CheckParameterLowerUpperBound<float>("position-bias-ref-fraction",position_bias_ref_fraction,  0.0f, 1.0f);
   CheckParameterLowerUpperBound<float>("position-bias",            position_bias,  0.0f, 1.0f);
@@ -576,24 +528,11 @@ void ControlCallAndFilters::CheckParameterLimits() {
   CheckParameterLowerUpperBound<float>("indel-strand-bias-pval",     filter_hp_indel.strand_bias_pval_threshold,  0.0f, 1.0f);
 //  CheckParameterLowerBound<float>     ("indel-beta-bias",            filter_hp_indel.beta_bias_filter,    0.0f);
   CheckParameterLowerBound<int>       ("indel-min-var-coverage",     filter_hp_indel.min_var_cov,         0);
-
-  CheckParameterLowerBound<int>       ("hotspot-min-cov-each-strand",  filter_hotspot.min_cov_each_strand, 0);
-  CheckParameterLowerBound<float>     ("hotspot-min-variant-score",    filter_hotspot.min_quality_score,   0.0f);
-  CheckParameterLowerUpperBound<float>("hotspot-min-allele-freq",      filter_hotspot.min_allele_freq,     0.0f, 1.0f);
-  CheckParameterLowerBound<int>       ("hotspot-min-coverage",         filter_hotspot.min_cov,             0);
-  CheckParameterLowerUpperBound<float>("hotspot-strand-bias",          filter_hotspot.strand_bias_threshold,  0.5f, 1.0f);
-  CheckParameterLowerUpperBound<float>("hotspot-strand-bias-pval",     filter_hotspot.strand_bias_pval_threshold,  0.0f, 1.0f);
-//  CheckParameterLowerBound<float>     ("hotspot-beta-bias",            filter_hotspot.beta_bias_filter,    0.0f);
-  CheckParameterLowerBound<int>       ("hotspot-min-var-coverage",     filter_hotspot.min_var_cov,         0);
 }
 
 // ------------------------------------------------------
 
 void ControlCallAndFilters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
-
-  filter_variant.SetOpts(opts, tvc_params);
-  RandSeed = 631;    // Not exposed to user at this point
-
   use_position_bias                     = RetrieveParameterBool(opts, tvc_params, '-', "use-position-bias", false);
   position_bias_ref_fraction            = RetrieveParameterDouble(opts, tvc_params, '-', "position-bias-ref-fraction",0.05f);
   position_bias                         = RetrieveParameterDouble(opts, tvc_params, '-', "position-bias",0.75f);
@@ -638,16 +577,6 @@ void ControlCallAndFilters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
   filter_hp_indel.strand_bias_threshold = RetrieveParameterDouble(opts, tvc_params, 'S', "indel-strand-bias", 0.85);
   filter_hp_indel.strand_bias_pval_threshold= RetrieveParameterDouble(opts, tvc_params, 's', "indel-strand-bias-pval", 1.0);
   filter_hp_indel.min_var_cov           = RetrieveParameterInt   (opts, tvc_params, '-', "indel-min-var-coverage", filter_snps.min_var_cov);
-  // derive hotspots by default from SNPs
-  // override from command line or json
-  filter_hotspot.min_cov_each_strand    = RetrieveParameterInt   (opts, tvc_params, '-', "hotspot-min-cov-each-strand", filter_snps.min_cov_each_strand);
-  filter_hotspot.min_quality_score      = RetrieveParameterDouble(opts, tvc_params, '-', "hotspot-min-variant-score", filter_snps.min_quality_score);
-  filter_hotspot.min_allele_freq        = RetrieveParameterDouble(opts, tvc_params, 'H', "hotspot-min-allele-freq", filter_snps.min_allele_freq);
-  filter_hotspot.min_cov                = RetrieveParameterInt   (opts, tvc_params, '-', "hotspot-min-coverage", filter_snps.min_cov);
-  filter_hotspot.strand_bias_threshold  = RetrieveParameterDouble(opts, tvc_params, '-', "hotspot-strand-bias", filter_snps.strand_bias_threshold);
-  filter_hotspot.strand_bias_pval_threshold= RetrieveParameterDouble(opts, tvc_params, 's', "hotspot-strand-bias-pval", filter_snps.strand_bias_pval_threshold);
-  filter_hotspot.min_var_cov            = RetrieveParameterInt   (opts, tvc_params, '-', "hotspot-min-var-coverage", filter_snps.min_var_cov);
-
 }
 
 // =============================================================================
@@ -668,10 +597,6 @@ void ProgramControlSettings::CheckParameterLimits() {
     string identifier = "indel-multi-min-allele-freq[" + convertToString(i_freq) + "]";
     CheckParameterLowerUpperBound<float>  (identifier, indel_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
   }
-  for(unsigned int i_freq = 0; i_freq < hotspot_multi_min_allele_freq.size(); ++i_freq){
-    string identifier = "hotspot-multi-min-allele-freq[" + convertToString(i_freq) + "]";
-    CheckParameterLowerUpperBound<float>  (identifier, hotspot_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
-  }
 }
 
 void ProgramControlSettings::SetOpts(OptArgs &opts, Json::Value &tvc_params) {
@@ -679,8 +604,6 @@ void ProgramControlSettings::SetOpts(OptArgs &opts, Json::Value &tvc_params) {
   DEBUG                                 = opts.GetFirstInt   ('d', "debug", 0);
   nThreads                              = RetrieveParameterInt   (opts, tvc_params, 'n', "num-threads", 12);
   nVariantsPerThread                    = RetrieveParameterInt   (opts, tvc_params, 'N', "num-variants-per-thread", 250);
-
-  inputPositionsOnly                    = RetrieveParameterBool  (opts, tvc_params, '-', "process-input-positions-only", false);
 
   do_indel_assembly                     = RetrieveParameterBool  (opts, tvc_params, '-', "do-indel-assembly", true);
 
@@ -694,7 +617,6 @@ void ProgramControlSettings::SetOpts(OptArgs &opts, Json::Value &tvc_params) {
   }
   RetrieveParameterVectorFloat(opts, tvc_params, '-', "mnp-multi-min-allele-freq", snp_multi_min_allele_freq_str, mnp_multi_min_allele_freq);
   RetrieveParameterVectorFloat(opts, tvc_params, '-', "indel-multi-min-allele-freq", "0.05,0.1,0.15,0.2", indel_multi_min_allele_freq);
-  RetrieveParameterVectorFloat(opts, tvc_params, '-', "hotspot-multi-min-allele-freq", "0.05,0.1,0.15,0.2", hotspot_multi_min_allele_freq);
 }
 
 // ===========================================================================
@@ -749,12 +671,6 @@ void ExtendParameters::SetupFileIO(OptArgs &opts, Json::Value& tvc_params) {
   }
   else
   ValidateAndCanonicalizePath(blacklistFile);
-  variantPriorsFile                     = opts.GetFirstString('c', "input-vcf", "");
-  if (variantPriorsFile.empty()) {
-    cerr << "INFO: No input VCF (Hotspot) file specified via -c,--input-vcf" << endl;
-  }
-  else
-  ValidateAndCanonicalizePath(variantPriorsFile);
 
   sseMotifsFileName                     = opts.GetFirstString('e', "error-motifs", "");
   sseMotifsProvided = true;
@@ -811,28 +727,19 @@ void ExtendParameters::SetFreeBayesParameters(OptArgs &opts, Json::Value& fb_par
 
   //useBestNAlleles = 0;
   useBestNAlleles                       = RetrieveParameterInt   (opts, fb_params, 'm', "use-best-n-alleles", 2);
-  onlyUseInputAlleles                   = RetrieveParameterBool  (opts, fb_params, '-', "use-input-allele-only", false);
   min_mapping_qv                        = RetrieveParameterInt   (opts, fb_params, 'M', "min-mapping-qv", 4);
   read_snp_limit                        = RetrieveParameterInt   (opts, fb_params, 'U', "read-snp-limit", 10);
   readMaxMismatchFraction               = RetrieveParameterDouble(opts, fb_params, 'z', "read-max-mismatch-fraction", 1.0);
   maxComplexGap                         = RetrieveParameterInt   (opts, fb_params, '!', "max-complex-gap", 1);
   // read from json or command line, otherwise default to snp frequency
   minAltFraction                        = RetrieveParameterDouble(opts, fb_params, '-', "gen-min-alt-allele-freq", my_controls.filter_snps.min_allele_freq);
+  minAltCount                           = RetrieveParameterDouble(opts, fb_params, '-', "gen-min-alt-allele-count", my_controls.filter_snps.min_allele_count);
   minCoverage                           = RetrieveParameterInt   (opts, fb_params, '-', "gen-min-coverage", my_controls.filter_snps.min_cov);
   minIndelAltFraction                   = RetrieveParameterDouble(opts, fb_params, '-', "gen-min-indel-alt-allele-freq", my_controls.filter_hp_indel.min_allele_freq);
   // set up debug levels
 
   if (program_flow.DEBUG > 0)
     debug = true;
-
-  if (program_flow.inputPositionsOnly) {
-    processInputPositionsOnly = true;
-  }
-
-  if (variantPriorsFile.empty() && (processInputPositionsOnly || onlyUseInputAlleles) ) {
-    cerr << "ERROR: Parameter error - Process-input-positions-only: " << processInputPositionsOnly << " use-input-allele-only: " << onlyUseInputAlleles << " :  Specified without Input VCF File " << endl;
-    exit(1);
-  }
 }
 
 
@@ -874,6 +781,7 @@ void ExtendParameters::CheckParameterLimits() {
   CheckParameterLowerUpperBound<float>("read-max-mismatch-fraction", readMaxMismatchFraction,      0.0f, 1.0f);
 
   CheckParameterLowerUpperBound<long double>("gen-min-alt-allele-freq",       minAltFraction,      0.0, 1.0);
+  CheckParameterLowerBound<int>             ("gen-min-alt-allele-count",      minAltCount,         1);
   CheckParameterLowerBound<int>             ("gen-min-coverage",              minCoverage,         0);
   CheckParameterLowerUpperBound<long double>("gen-min-indel-alt-allele-freq", minIndelAltFraction, 0.0, 1.0);
 
@@ -897,19 +805,16 @@ ExtendParameters::ExtendParameters(int argc, char** argv)
   allowSNPs = true;          // -I --no-snps
   allowComplex = false;
   maxComplexGap = 3;
-  onlyUseInputAlleles = false;
   min_mapping_qv = 0;                    // -m --min-mapping-quality
   readMaxMismatchFraction = 1.0;    //  -z --read-max-mismatch-fraction
   read_snp_limit = 10000000;       // -$ --read-snp-limit
-  minAltFraction = 0.2;  // require 20% of reads from sample to be supporting the same alternate to consider
+  minAltFraction = 0.2;            // require 20% of reads from sample to be supporting the same alternate to consider
   minIndelAltFraction = 0.2;
-  minAltCount = 2; // require 2 reads in same sample call
+  minAltCount = 2;                 // require 2 reads in same sample call
   minAltTotal = 1;
   minCoverage = 0;
   debug = false;
   multisample = false;
-
-  processInputPositionsOnly = false;
 
   //OptArgs opts;
   opts.ParseCmdLine(argc, (const char**)argv);

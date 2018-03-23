@@ -20,16 +20,19 @@ class OrderedVCFWriter;
 
 class AlleleDetails {
 public:
-  AlleleDetails() : type(ALLELE_UNKNOWN), chr(0), position(0), ref_length(0),
-      length(0), minimized_prefix(0), repeat_boundary(0), hp_repeat_len (0),
+  AlleleDetails() : type(ALLELE_UNKNOWN), chr(0), position(0),
+      ref_length(0), length(0), minimized_prefix(0), repeat_boundary(0), hp_repeat_len (0),
       initialized(false), filtered(false),
       coverage(0), coverage_fwd(0), coverage_rev(0),
+      // ref_q(0), ref_q_fwd(0), ref_q_rev(0),
+      // alt_q(0), alt_q_fwd(0), alt_q_rev(0),
       samples(1) {}
 
   void add_observation(const Allele& observation, int sample_index, bool is_reverse_strand, int _chr, int num_samples, int read_count) {
     if (not initialized) {
       type = observation.type;
       alt_sequence.append(observation.alt_sequence, observation.alt_length);
+      quality.append(observation.quality, observation.alt_length);
       position = observation.position;
       chr = _chr;
       ref_length = observation.ref_length;
@@ -96,6 +99,7 @@ public:
 
   AlleleType              type;                 //! type of the allele
   string                  alt_sequence;         //! allele sequence
+  string                  quality;              //! allele sequence
   int                     chr;                  //! chromosome
   long int                position;             //! position 0-based against reference
   unsigned int            ref_length;           //! allele length relative to the reference
@@ -167,7 +171,7 @@ public:
       list<PositionInProgress>::iterator& position_ticket, int& haplotype_length);
 
 private:
-  void MakeAllele(deque<Allele>& alleles, AlleleType type, long int pos, int length, const char *alt_sequence) const;
+  void MakeAllele(deque<Allele>& alleles, AlleleType type, long int pos, int length, const char *alt_sequence, const char *quality) const;
 
   void PileUpAlleles(int allowed_allele_types, int haplotype_length, bool scan_haplotype, list<PositionInProgress>::iterator& position_ticket);
 

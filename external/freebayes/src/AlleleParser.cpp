@@ -67,22 +67,27 @@ bool AlleleParser::BasicFilters(Alignment& ra) const
   // Basic read filters
 
   if (!sample_manager_->IdentifySample(ra.alignment, ra.sample_index, ra.primary_sample)) {
+    cerr << "FILTER: sample" << endl;
     ra.filtered = true;
     return false;
   }
   if (ra.alignment.IsDuplicate() and not use_duplicate_reads_) {
+    cerr << "FILTER: duplicate" << endl;
     ra.filtered = true;
     return false;
   }
   if (!ra.alignment.IsMapped()) {
+    cerr << "FILTER: unmapped" << endl;
     ra.filtered = true;
     return false;
   }
   if (!ra.alignment.IsPrimaryAlignment()) {
+    cerr << "FILTER: not primary" << endl;
     ra.filtered = true;
     return false;
   }
   if (ra.alignment.MapQuality < min_mapping_qv_) {
+    cerr << "FILTER: map quality" << endl;
     ra.filtered = true;
     return false;
   }
@@ -100,8 +105,8 @@ void AlleleParser::UnpackReadAlleles(Alignment& ra) const
   // Parse read into alleles and store them in generator-friendly format
 
   int ref_length = ra.end - ra.alignment.Position;
-  ra.refmap_start.reserve(ref_length+1);
-  ra.refmap_code.reserve(ref_length+1);
+  ra.refmap_start.reserve(ref_length + 1);
+  ra.refmap_code.reserve(ref_length + 1);
   ra.refmap_has_allele.assign(ref_length,'N');
   ra.refmap_allele.resize(ref_length);
 
@@ -111,6 +116,7 @@ void AlleleParser::UnpackReadAlleles(Alignment& ra) const
   ReferenceReader::iterator ref_ptr  = ref_reader_->iter(ra.alignment.RefID, ra.alignment.Position);
   int                       ref_pos  = ra.alignment.Position;
   const char *              read_ptr = &ra.alignment.QueryBases[0];
+  const char *              qual_ptr = &ra.alignment.Qualities[0];
 
   vector<CigarOp>::const_iterator cigar = ra.alignment.CigarData.begin();
   vector<CigarOp>::const_iterator cigar_end  = ra.alignment.CigarData.end();
@@ -126,8 +132,8 @@ void AlleleParser::UnpackReadAlleles(Alignment& ra) const
     unsigned int cigar_len = cigar->Length;
 
     // Special precaution. If multiple cigars of same type in a row, merge them right here.
-    while ((cigar+1) != cigar_end and (cigar+1)->Type == cigar->Type) {
-      cigar_len += (cigar+1)->Length;
+    while ((cigar + 1) != cigar_end and (cigar + 1)->Type == cigar->Type) {
+      cigar_len += (cigar + 1)->Length;
       ++cigar;
     }
 
@@ -145,12 +151,13 @@ void AlleleParser::UnpackReadAlleles(Alignment& ra) const
           ++ref_pos;
           ++ref_ptr;
           ++read_ptr;
+          ++qual_ptr;
           ++length;
           continue;
         }
 
         if (length)
-          MakeAllele(alleles, ALLELE_REFERENCE, ref_pos - length, length, read_ptr - length);
+          MakeAllele(alleles, ALLELE_REFERENCE, ref_pos - length, length, read_ptr - length, qual_ptr - length);
 
         // register mismatch
         ++mismatch_count;
@@ -160,25 +167,25 @@ void AlleleParser::UnpackReadAlleles(Alignment& ra) const
         length = 0;
         if (*read_ptr == 'A' or *read_ptr == 'T' or *read_ptr == 'G' or *read_ptr == 'C') {
           ra.refmap_code.push_back('X');
-          MakeAllele(alleles, ALLELE_SNP, ref_pos, 1, read_ptr);
+          MakeAllele(alleles, ALLELE_SNP, ref_pos, 1, read_ptr, qual_ptr);
         } else {
           ra.refmap_code.push_back('N');
-          MakeAllele(alleles, ALLELE_NULL, ref_pos, 1, read_ptr);
+          MakeAllele(alleles, ALLELE_NULL, ref_pos, 1, read_ptr, qual_ptr);
         }
 
         // update positions
         ++ref_pos;
         ++ref_ptr;
         ++read_ptr;
+        ++qual_ptr;
       }
 
       if (length)
-        MakeAllele(alleles, ALLELE_REFERENCE, ref_pos - length, length, read_ptr - length);
-
+        MakeAllele(alleles, ALLELE_REFERENCE, ref_pos - length, length, read_ptr - length, qual_ptr - length);
 
     } else if (cigar->Type == 'D') { // deletion
 
-      MakeAllele(alleles, ALLELE_DELETION, ref_pos, cigar_len, read_ptr);
+      MakeAllele(alleles, ALLELE_DELETION, ref_pos, cigar_len, read_ptr, qual_ptr);
 
       mismatch_count += cigar_len;
 
@@ -193,15 +200,17 @@ void AlleleParser::UnpackReadAlleles(Alignment& ra) const
     } else if (cigar->Type == 'I') { // insertion
 
 
-      MakeAllele(alleles, ALLELE_INSERTION, ref_pos, cigar_len, read_ptr);
+      MakeAllele(alleles, ALLELE_INSERTION, ref_pos, cigar_len, read_ptr, qual_ptr);
 
       mismatch_count += cigar_len;
 
       read_ptr += cigar_len;
+      qual_ptr += cigar_len;
 
       // handle other cigar element types
     } else if (cigar->Type == 'S') { // soft clip, clipped sequence present in the read not matching the reference
       read_ptr += cigar_len;
+      qual_ptr += cigar_len;
 
     } else if (cigar->Type == 'H') { // hard clip on the read, clipped sequence is not present in the read
       // the alignment position is the first non-clipped base.
@@ -226,6 +235,7 @@ void AlleleParser::UnpackReadAlleles(Alignment& ra) const
   if (alleles.empty() or ra.alignment.QueryBases.size() == 0 or
       (mismatch_count > (int)((float)ra.alignment.QueryBases.size()) * read_max_mismatch_fraction_) or
       ra.snp_count > read_snp_limit_) {
+    cerr << "FILTER: too many mismatches or no recorded alleles" << endl;
     ra.filtered = true;
     return;
   }
@@ -252,13 +262,14 @@ void AlleleParser::UnpackReadAlleles(Alignment& ra) const
 
 // -----------------------------------------------------------------------------
 
-void AlleleParser::MakeAllele(deque<Allele>& alleles, AlleleType type, long int pos, int length, const char *alt_sequence) const
+void AlleleParser::MakeAllele(deque<Allele>& alleles, AlleleType type, long int pos, int length, const char *alt_sequence, const char *quality) const
 {
+  cerr << "Qualities (" << type << ", " << length << "): " << string(quality).substr(0, length) << endl;
 
   int ref_length = (type == ALLELE_INSERTION) ? 0 : length;
   int alt_length = (type == ALLELE_DELETION) ? 0 : length;
 
-  Allele new_allele(type, pos, ref_length, alt_length, alt_sequence);
+  Allele new_allele(type, pos, ref_length, alt_length, alt_sequence, quality);
 
   if (alleles.empty()) {
     // presently, it's unclear how to handle insertions and deletions
@@ -333,6 +344,7 @@ void AlleleParser::MakeAllele(deque<Allele>& alleles, AlleleType type, long int 
     }
     new_allele.position--;
     new_allele.alt_sequence--;
+    new_allele.quality--;
     new_allele.ref_length++;
     new_allele.alt_length++;
   }
@@ -359,7 +371,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
         position_ticket->end = NULL; break;
       }
       if (rai->filtered) {
-        // cerr << "    skipping filtered " << rai->alignment.Name << endl;
+        cerr << "    skipping filtered " << rai->alignment.Name << endl;
         continue;
       }
 
@@ -389,7 +401,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
     for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
       AlleleDetails& allele = I->second;
       if (allele.type != ALLELE_REFERENCE) {
-        // cerr << "New allele at " << allele.position  << ", ref_length " << allele.ref_length << " with " << allele.alt_sequence << endl; // ZZ
+        cerr << "New allele at " << allele.position  << ", ref_length " << allele.ref_length << " with " << allele.alt_sequence << ", Q-score " << allele.quality << endl; // ZZ
       }
     }
   } // haplotype_length == 1
@@ -561,6 +573,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
     AlleleDetails& allele = I->second;
 
     if (allele.alt_sequence.empty()) {
+      cerr << "FILTER: empty" << endl;
       allele.filtered = true;
       continue;
     }
@@ -568,12 +581,14 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
     //InferAlleleTypeAndLength(allele);// ZZ no need to do that now again.
 
     if (not (allele.type & allowed_allele_types)) {
+      cerr << "FILTER: unknown allele type" << endl;
       allele.filtered = true;
       continue;
     }
 
     if (allele.coverage < min_alt_total_) {
-      // cerr << "  rejected for min_alt_count: " << allele.coverage << " < " << min_alt_total_ << endl;
+      cerr << "FILTER: min_alt_total_" << endl;
+      cerr << "  rejected for min_alt_count: " << allele.coverage << " < " << min_alt_total_ << endl;
       allele.filtered = true;
       continue;
     }
@@ -582,6 +597,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
       ? min_indel_alt_fraction_ : min_alt_fraction_;
 
     if (allele.ref_length > 20) min_fraction /= 2.0;
+
     // special somatic filter
     /* if (allele.type & (ALLELE_DELETION | ALLELE_INSERTION)) {
     // loosen filter for hp repeats 0-3 where we expect high accuracy even on proton
@@ -592,7 +608,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
     min_fraction = min_indel_alt_fraction_;
     }*/
     bool reject = true;
-    bool print = false;
+    bool print = true;
     //if (allele.position == 48591864 && allele.type == ALLELE_SNP) print = true;
 
     for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
@@ -608,6 +624,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
     }
 
     if (reject) {
+      cerr << "FILTER: rejected somatic" << endl;
       allele.filtered = true;
       continue;
     }
@@ -629,6 +646,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
     for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
       AlleleDetails& allele = I->second;
       if (allele.type == ALLELE_SNP and allele.coverage < quals[snps_to_skip])
+        cerr << "FILTER: use_best_n_alleles" << endl;
         allele.filtered = true;
     }
   }
