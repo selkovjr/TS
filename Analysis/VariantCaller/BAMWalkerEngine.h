@@ -34,15 +34,15 @@ enum AlleleType {
 
 struct Allele {
   Allele() : type(ALLELE_UNKNOWN), position(0), ref_length(0), alt_length(0), alt_sequence(NULL) {}
-  Allele(AlleleType t, long int pos, unsigned int ref_len, unsigned int alt_len, const char *seq_ptr, const char *quality)
-      : type(t), position(pos), ref_length(ref_len), alt_length(alt_len), alt_sequence(seq_ptr) {}
+  Allele(AlleleType t, long int pos, unsigned int ref_len, unsigned int alt_len, const char *seq_ptr, const char *qual_ptr)
+      : type(t), position(pos), ref_length(ref_len), alt_length(alt_len), alt_sequence(seq_ptr), quality_string(qual_ptr) {}
 
   AlleleType      type;             //! type of the allele
   long int        position;         //! 0-based position within current chromosome
   unsigned int    ref_length;       //! allele length relative to the reference
   unsigned int    alt_length;       //! allele length relative to the read
   const char *    alt_sequence;     //! allele sequence within the read, need not be 0-terminated
-  const char *    quality;          //! base quality string, need not be 0-terminated
+  const char *    quality_string;   //! base quality string, need not be 0-terminated
 };
 
 
