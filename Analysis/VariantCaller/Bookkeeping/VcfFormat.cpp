@@ -115,7 +115,7 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
 
   headerss << "##FILTER=<ID=NOCALL,Description=\"Generic filter. Filtering details stored in FR info tag.\">" << endl;
 
-  headerss << "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">" << endl
+  headerss
     << "##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">" << endl
     << "##FORMAT=<ID=RO,Number=1,Type=Integer,Description=\"Reference allele observation count\">" << endl
 
@@ -133,35 +133,6 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
     << "##FORMAT=<ID=AQ,Number=1,Type=Float,Description=\"Mean base quality in the alternate allele\">" << endl
     << "##FORMAT=<ID=AQF,Number=1,Type=Float,Description=\"Mean base quality in the alternate allele on the forward strand\">" << endl
     << "##FORMAT=<ID=AQR,Number=1,Type=Float,Description=\"Mean base quality in the alternate allele on the reverse strand\">" << endl;
-
-  // If we want to output multiple min-allele-freq
-  if(parameters->program_flow.is_multi_min_allele_freq) {
-    string multi_min_allele_freq_size = "?";
-    string snp_multi_min_allele_freq_size = convertToString(parameters->program_flow.snp_multi_min_allele_freq.size());
-    string mnp_multi_min_allele_freq_size = convertToString(parameters->program_flow.mnp_multi_min_allele_freq.size());
-    string indel_multi_min_allele_freq_size = convertToString(parameters->program_flow.indel_multi_min_allele_freq.size());
-    // the union of all var types
-    headerss<< "##FORMAT=<ID=MUAF,Number=" + multi_min_allele_freq_size + ",Type=Float,Description=\"Union of multi-min-allele-freq associated with TYPE.\">" << endl
-      << "##FORMAT=<ID=MUQUAL,Number=" + multi_min_allele_freq_size + ",Type=Float,Description=\"QUAL scores for MAF.\">" << endl
-      << "##FORMAT=<ID=MUGT,Number=" + multi_min_allele_freq_size + ",Type=String,Description=\"Genotypes for MAF.\">" << endl
-      << "##FORMAT=<ID=MUGQ,Number=" + multi_min_allele_freq_size + ",Type=Integer,Description=\"Genotype quality scores for MAF.\">" << endl
-      // for snp
-      << "##FORMAT=<ID=SMAF,Number=" + snp_multi_min_allele_freq_size + ",Type=Float,Description=\"Values of snp-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=SMQUAL,Number=" + snp_multi_min_allele_freq_size + ",Type=Float,Description=\"QUAL scores for snp-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=SMGT,Number=" + snp_multi_min_allele_freq_size + ",Type=String,Description=\"Genotypes for snp-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=SMGQ,Number=" + snp_multi_min_allele_freq_size + ",Type=Integer,Description=\"Genotype quality scores for snp-multi-min-allele-freq.\">" << endl
-      // for mnp
-      << "##FORMAT=<ID=MMAF,Number=" + mnp_multi_min_allele_freq_size + ",Type=Float,Description=\"Values of mnp-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=MMQUAL,Number=" + mnp_multi_min_allele_freq_size + ",Type=Float,Description=\"QUAL scores for mnp-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=MMGT,Number=" + mnp_multi_min_allele_freq_size + ",Type=String,Description=\"Genotypes for mnp-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=MMGQ,Number=" + mnp_multi_min_allele_freq_size + ",Type=Integer,Description=\"Genotype quality scores for mnp-multi-min-allele-freq.\">" << endl
-      // for indel
-      << "##FORMAT=<ID=IMAF,Number=" + indel_multi_min_allele_freq_size + ",Type=Float,Description=\"Values of indel-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=IMQUAL,Number=" + indel_multi_min_allele_freq_size + ",Type=Float,Description=\"QUAL scores for indel-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=IMGT,Number=" + indel_multi_min_allele_freq_size + ",Type=String,Description=\"Genotypes for indel-multi-min-allele-freq.\">" << endl
-      << "##FORMAT=<ID=IMGQ,Number=" + indel_multi_min_allele_freq_size + ",Type=Integer,Description=\"Genotype quality scores for indel-multi-min-allele-freq.\">" << endl;
-  }
-
 
   headerss << "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT";
   // Ensure primary sample is always in the first column (IR req)
@@ -330,96 +301,5 @@ void AddFilterReason(vcf::Variant &candidate_variant, string &additional_reason,
 }
 
 void AddInfoReason(vcf::Variant &candidate_variant, string &additional_reason, const string &sample_name){
-}
-
-// if, for example, missing data
-void NullGenotypeAllSamples(vcf::Variant & candidate_variant)
-{
-  vector<string>& sampleNames = candidate_variant.sampleNames;
-
-  for (vector<string>::iterator its = sampleNames.begin(); its != sampleNames.end(); ++its) {
-    string& sampleName = *its;
-    map<string, vector<string> >& sampleOutput = candidate_variant.samples[sampleName];
-
-    // for multi-min-allele-freq
-    vector<string> tags_for_multi_min_allele_freq = {"MUAF", "MUQUAL", "MUGQ", "MUGT",
-      "SMAF", "SMQUAL", "SMGQ", "SMGT",
-      "MMAF", "MMQUAL", "MMGQ", "MMGT",
-      "IMAF", "IMQUAL", "IMGQ", "IMGT",
-      "HMAF", "HMQUAL", "HMGQ", "HMGT"};
-    map<string, vector<string> >::iterator it;
-    for(unsigned int i_tag = 0; i_tag < tags_for_multi_min_allele_freq.size(); ++i_tag){
-      it = sampleOutput.find(tags_for_multi_min_allele_freq[i_tag]);
-      if (it != sampleOutput.end()){
-        it->second.clear();
-        it->second.push_back(".");
-      }
-    }
-  }
-}
-
-void OverwriteGenotypeForOneSample(vcf::Variant &candidate_variant, const string &my_sample_name, string &my_genotype, float genotype_quality){
-  // will create entry if one does not exist
-
-  map<string, vector<string> >& sampleOutput = candidate_variant.samples[my_sample_name];
-  // clear existing values
-  map<string, vector<string> >::iterator it;
-  it = sampleOutput.find("GT");
-  if (it != sampleOutput.end())    sampleOutput["GT"].clear();
-  it = sampleOutput.find("GQ");
-  if (it != sampleOutput.end())     sampleOutput["GQ"].clear();
-
-
-  sampleOutput["GT"].push_back(my_genotype);
-  // genotype quality should be an "int"
-  //cout << "Storing Genotype = " << my_genotype << endl;
-  sampleOutput["GQ"].push_back(convertToString((int)genotype_quality));
-
-}
-
-void DetectAndSetFilteredGenotype(vcf::Variant &candidate_variant, map<string, float>& variant_quality, const string &sample_name){
-  if (candidate_variant.isFiltered){
-    string no_call_genotype = "./.";
-    float original_quality = variant_quality[sample_name];
-    OverwriteGenotypeForOneSample(candidate_variant, sample_name, no_call_genotype, original_quality);
-  }
-}
-
-
-void StoreGenotypeForOneSample(vcf::Variant &candidate_variant, const string &sample_name, string &my_genotype, float genotype_quality, bool multisample) {
-  vector<string> sampleNames = candidate_variant.sampleNames;
-
-  if (multisample) {
-    map<string, vector<string> >& sampleOutput = candidate_variant.samples[sample_name];
-    sampleOutput["GT"].clear();
-    sampleOutput["GT"].push_back(my_genotype);
-    //cout << "Storing Genotype = " << my_genotype << endl;
-    sampleOutput["GQ"].clear();
-    sampleOutput["GQ"].push_back(convertToString((int)genotype_quality));
-  }
-  else {
-    for (vector<string>::iterator its = sampleNames.begin(); its != sampleNames.end(); ++its) {
-      string& sampleName = *its;
-      map<string, vector<string> >& sampleOutput = candidate_variant.samples[sampleName];
-      map<string, vector<string> >::iterator it;
-      it = sampleOutput.find("GT");
-      if (it != sampleOutput.end())    sampleOutput["GT"].clear();
-      it = sampleOutput.find("GQ");
-      if (it != sampleOutput.end())     sampleOutput["GQ"].clear();
-
-      if (sampleName.compare(sample_name) == 0) { //sample of interest
-        //cout << "isNocall " << isNoCall << " genotype = " << my_genotype << endl;
-
-        // if no-call, will reset this entry as a final step, but until then, give me my genotype
-        sampleOutput["GT"].push_back(my_genotype);
-        //cout << "Storing Genotype = " << my_genotype << endl;
-        sampleOutput["GQ"].push_back(convertToString((int)genotype_quality));
-
-      } else { //for all other samples in BAM file just make a no-call at this point.
-        sampleOutput["GT"].push_back("./.");
-        sampleOutput["GQ"].push_back(convertToString(0));
-      }
-    }
-  }
 }
 

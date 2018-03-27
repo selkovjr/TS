@@ -78,11 +78,6 @@ class ProgramControlSettings {
     int nVariantsPerThread;
     int DEBUG;
 
-    bool is_multi_min_allele_freq;
-    vector<float> snp_multi_min_allele_freq;
-    vector<float> mnp_multi_min_allele_freq;
-    vector<float> indel_multi_min_allele_freq;
-
     ProgramControlSettings();
     void SetOpts(OptArgs &opts, Json::Value & pf_params);
     void CheckParameterLimits();

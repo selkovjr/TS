@@ -43,9 +43,6 @@ float RetrieveQualityTagValue(vcf::Variant &current_variant, const string &tag_w
 float RetrieveQualityTagValue(vcf::Variant &current_variant, const string &tag_wanted, int _allele_index, const string &sample_name);
 
 // double-star pointer here
-void StoreGenotypeForOneSample(vcf::Variant & candidate_variant, const string &my_sample_name, string &my_genotype, float genotype_quality, bool multisample);
-void NullGenotypeAllSamples(vcf::Variant & candidate_variant);
-void OverwriteGenotypeForOneSample(vcf::Variant & candidate_variant, const string &my_sample_name, string &my_genotype, float genotype_quality);
 void NullFilterReason(vcf::Variant &candidate_variant, const string &sample_name);
 void AddFilterReason(vcf::Variant &candidate_variant, string &additional_reason, const string &sample_name);
 void AddFilterReason(vcf::Variant &candidate_variant, string &additional_reason, const string &sample_name, unsigned int alt_allele_index);

@@ -155,11 +155,6 @@ ProgramControlSettings::ProgramControlSettings() {
   nVariantsPerThread = 1000;
   nThreads = 1;
   DEBUG = 0;
-
-  is_multi_min_allele_freq = false;
-  snp_multi_min_allele_freq.clear();
-  mnp_multi_min_allele_freq.clear();
-  indel_multi_min_allele_freq.clear();
 }
 
 
@@ -566,18 +561,6 @@ void ProgramControlSettings::CheckParameterLimits() {
 
   CheckParameterLowerUpperBound<int>  ("num-threads",              nThreads,             1, 128);
   CheckParameterLowerUpperBound<int>  ("num-variants-per-thread",  nVariantsPerThread,   1, 10000);
-  for(unsigned int i_freq = 0; i_freq < snp_multi_min_allele_freq.size(); ++i_freq){
-    string identifier = "multi-min-allele-freq[" + convertToString(i_freq) + "]";
-    CheckParameterLowerUpperBound<float>  (identifier, snp_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
-  }
-  for(unsigned int i_freq = 0; i_freq < mnp_multi_min_allele_freq.size(); ++i_freq){
-    string identifier = "mnp-multi-min-allele-freq[" + convertToString(i_freq) + "]";
-    CheckParameterLowerUpperBound<float>  (identifier, mnp_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
-  }
-  for(unsigned int i_freq = 0; i_freq < indel_multi_min_allele_freq.size(); ++i_freq){
-    string identifier = "indel-multi-min-allele-freq[" + convertToString(i_freq) + "]";
-    CheckParameterLowerUpperBound<float>  (identifier, indel_multi_min_allele_freq[i_freq], 0.0f, 1.0f);
-  }
 }
 
 void ProgramControlSettings::SetOpts(OptArgs &opts, Json::Value &tvc_params) {
@@ -585,17 +568,6 @@ void ProgramControlSettings::SetOpts(OptArgs &opts, Json::Value &tvc_params) {
   DEBUG                                 = opts.GetFirstInt   ('d', "debug", 0);
   nThreads                              = RetrieveParameterInt   (opts, tvc_params, 'n', "num-threads", 12);
   nVariantsPerThread                    = RetrieveParameterInt   (opts, tvc_params, 'N', "num-variants-per-thread", 250);
-
-  RetrieveParameterVectorFloat(opts, tvc_params, '-', "snp-multi-min-allele-freq", "0.05,0.1,0.15,0.2", snp_multi_min_allele_freq);
-  string snp_multi_min_allele_freq_str = "";
-  for(unsigned i_freq = 0; i_freq < snp_multi_min_allele_freq.size(); ++i_freq){
-    snp_multi_min_allele_freq_str += convertToString(snp_multi_min_allele_freq[i_freq]);
-    if(i_freq < snp_multi_min_allele_freq.size() - 1){
-      snp_multi_min_allele_freq_str += ",";
-    }
-  }
-  RetrieveParameterVectorFloat(opts, tvc_params, '-', "mnp-multi-min-allele-freq", snp_multi_min_allele_freq_str, mnp_multi_min_allele_freq);
-  RetrieveParameterVectorFloat(opts, tvc_params, '-', "indel-multi-min-allele-freq", "0.05,0.1,0.15,0.2", indel_multi_min_allele_freq);
 }
 
 // ===========================================================================
