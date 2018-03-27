@@ -105,7 +105,6 @@ include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Reads")
 include_directories("${PROJECT_SOURCE_DIR}/realignment")
 
 set(tvcSRCS
-  VariantCaller/IndelAssembly/IndelAssembly.cpp
   VariantCaller/VariantCaller.cpp
   VariantCaller/BAMWalkerEngine.cpp
   VariantCaller/OrderedBAMWriter.cpp
