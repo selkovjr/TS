@@ -22,8 +22,6 @@ AlleleParser::AlleleParser(const ExtendParameters& parameters, const ReferenceRe
   min_alt_count_ = parameters.minAltCount;
   min_alt_total_ = parameters.minAltTotal;
   min_coverage_ = parameters.minCoverage;
-  only_use_input_alleles_ = parameters.onlyUseInputAlleles;
-  process_input_positions_only_ = parameters.processInputPositionsOnly;
 
   ref_reader_ = &ref_reader;
   sample_manager_ = &sample_manager;
@@ -40,10 +38,7 @@ AlleleParser::AlleleParser(const ExtendParameters& parameters, const ReferenceRe
   if (parameters.allowComplex)
     allowed_allele_types_ |= ALLELE_COMPLEX;
 
-  // black_list_strand.clear(); black_list_strand.push_back('.');  // revert to 4.2
-  black_list_strand_ = '.';
   hp_max_lenght_override_value = 0;
-  strand_bias_override_value = 0.0;
   merge_lookahead_ = parameters.mergeLookAhead;
 
 }
@@ -351,9 +346,13 @@ void AlleleParser::MakeAllele(deque<Allele>& alleles, AlleleType type, long int 
 
 // -----------------------------------------------------------------------------
 
-void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length, bool scan_haplotype,
-    list<PositionInProgress>::iterator& position_ticket)
-{
+void AlleleParser::PileUpAlleles(
+  int allowed_allele_types,
+  int haplotype_length,
+  bool scan_haplotype,
+  list<PositionInProgress>::iterator& position_ticket
+) {
+  cerr << "1. PileUpAlleles(allowed: " << allowed_allele_types << ", haplotype length: " << haplotype_length << ", scan_haplotype: " << scan_haplotype << ", position_ticket" << endl;
   allele_pileup_.clear();
   ref_pileup_.initialize_reference(position_ticket->pos, num_samples_);
   // cerr << "haplotype length: " << haplotype_length << ", scan_haplotype: " << scan_haplotype << endl; // ZZ
@@ -389,6 +388,7 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
         // cerr << "Adding sample " << rai->sample_index << " observation at " << allele.position <<  ", read_pos " << read_pos << ", alt_length " << allele.alt_length << " from " << ref << " to " << allele_seq << endl;
         // /* Debug by Zheng */
 
+        cerr << "add_observation(1)" << endl;
         allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
       }
     }
@@ -434,7 +434,8 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
           string tmp1(obs.alt_sequence, obs.alt_length);
           Allele& allele = rai->refmap_allele[read_pos];
           string tmp(allele.alt_sequence, allele.alt_length);
-          // cerr << "2nd pass Adding observation at " << allele.position <<  ", read_pos " << read_pos << ", alt_length " << allele.alt_length << " from " << tmp1 << " to " << tmp << ", Q-score " << string(allele.quality_string).substr(0, allele.ref_length) << endl; // ZZ
+          cerr << "2nd pass Adding observation at " << allele.position <<  ", read_pos " << read_pos << ", alt_length " << allele.alt_length << " from " << tmp1 << " to " << tmp << ", Q-score " << string(allele.quality_string).substr(0, allele.ref_length) << endl; // ZZ
+          cerr << "add_observation(2)" << endl;
           allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
         }
       }
@@ -468,12 +469,13 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
         continue;
 
       const char* start_ptr = rai->refmap_start[read_start];
-      const char* end_ptr = rai->refmap_start[read_start+haplotype_length];
+      const char* end_ptr = rai->refmap_start[read_start + haplotype_length];
 
       Allele allele;
       allele.position = position_ticket->pos;
       allele.ref_length = haplotype_length;
       allele.alt_sequence = start_ptr; // Pointer to the beginning of alternate sequence
+      allele.quality_string = &(rai->alignment.Qualities[0]) + (end_ptr - start_ptr);
       allele.alt_length = end_ptr - start_ptr;
 
       if (allele.alt_length == 0)
@@ -495,8 +497,11 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
         ref_pileup_.add_reference_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, rai->read_count);
       }
       else {
-        // string tmp(allele.alt_sequence, allele.alt_length);
-        // cerr << "Final pass: Adding alt observation at " << allele.position <<  ", read_pos " << read_start << ", alt_length " << allele.alt_length <<  " to " << tmp << ", Q-score " << string(allele.quality_string).substr(0, allele.ref_length) << endl; // ZZ
+        string tmp(allele.alt_sequence, allele.alt_length);
+        //cerr << "Final pass: Adding alt observation at " << allele.position <<  ", read_pos " << read_start << ", alt_length " << allele.alt_length <<  " to " << tmp << ", Q-score " << string(allele.quality_string).substr(0, allele.ref_length) << endl; // ZZ
+        string ref = ref_reader_->substr(position_ticket->chr, position_ticket->pos, allele.alt_length);
+        cerr << "Final pass: Adding alt observation (" << allele.type << ") at " << allele.position <<  ", read_pos " << read_start << ", alt_length " << allele.alt_length <<  " from " << ref << " to " << tmp << endl;
+        cerr << "add_observation(3)" << endl;
         allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
       }
     }
@@ -526,7 +531,6 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
   // black_list_strand.clear();black_list_strand.push_back('.'); revert to 4.2
   black_list_strand_ = '.';
   hp_max_lenght_override_value = 0;
-  strand_bias_override_value = 0.0;
 
   // calculate prefix before doing black list ZZ
   for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
@@ -537,14 +541,6 @@ void AlleleParser::PileUpAlleles(int allowed_allele_types, int haplotype_length,
   }
   //  end ZZ
 
-
-  if (only_use_input_alleles_) {
-    // in this case, no need to check black list since all the variants are filtered anyway.
-    for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
-      AlleleDetails& allele = I->second;
-    }
-    return;
-  }
 
   //revert to 4.2; remove denovo alleles generated from the bad-strand
   //if (black_list_strand_ != '.') {  // Need to check black list for varints with non zero minimized_prefix evne if black_list_strand is '.'
@@ -819,7 +815,7 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   // Generate candidates
   int lookahead = merge_lookahead_;
   int lookahead_flow = 2;
-  if (lookahead_flow > lookahead-1) lookahead_flow = lookahead-1;
+  if (lookahead_flow > lookahead - 1) lookahead_flow = lookahead - 1;
   int not_look_ahead = 0;
 
   int max_length = position_ticket->target_end-position_ticket->pos;
@@ -833,7 +829,7 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   string refstring;
   refstring = ref_reader_->substr(position_ticket->chr, position_ticket->pos, max_length);
 
-  if (position_ticket->pos == (position_ticket->target_end-1)) { // Last base in target
+  if (position_ticket->pos == (position_ticket->target_end - 1)) { // Last base in target
     PileUpAlleles(allowed_allele_types_ & (ALLELE_REFERENCE|ALLELE_SNP), 1, false, position_ticket);
     not_look_ahead = 1;
   }
@@ -853,15 +849,43 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx)
     total_cov += coverage_by_sample_[sample_idx];
 
-  if (process_input_positions_only_) // skip all non-hot-spot positions
-    return;
-
   if (total_cov == 0 || total_cov < min_coverage_)
     return;
 
-  if (not only_use_input_alleles_) {
-
+  // The following block has the effect of extending repeats so that they are
+  // anchored on both sides. In the absence of multi-base haplotypes, a
+  // spectrum of indels such as this:
+  //
+  // ATTTTT
+  // ------
+  // ATTTT
+  // ATTT
+  // ATT
+  // AT
+  // A
+  // ATTTTTT
+  // ATTTTTTT
+  //
+  // becomes:
+  //
+  // ATTTTTTTTTTTTTTTTTTTTTTTTTTTA
+  // -----------------------------
+  // ATTTTTTTTTTTTTTTTTTTTTTA
+  // ATTTTTTTTTTTTTTTTTTTTTTTA
+  // ATTTTTTTTTTTTTTTTTTTTTTTTA
+  // ATTTTTTTTTTTTTTTTTTTTTTTTTA
+  // ATTTTTTTTTTTTTTTTTTTTTTTTTTA
+  // ATTTTTTTTTTTTTTTTTTTTTTTTTTTT
+  // ATTTTTTTTTTTTTTTTTTTTTTTTTTTTA
+  //
+  // Insertions disappear and a SNP is gained instead -- what's up with that?
+  // For the purposes of of blacklist generation; the less smart this step is,
+  // the better. Disabled until better times.
+  //
+  // if (not only_use_input_alleles_) {
     // Detect multi-base haplotypes and redo the pileup if needed
+
+  if (0) {
 
     for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
       AlleleDetails& allele = I->second;
@@ -872,6 +896,7 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
 
     // cerr << "haplotype length: " << haplotype_length << ", not_look_ahead: " << not_look_ahead << endl;
     if (haplotype_length > not_look_ahead) {
+      cerr << "here: " << haplotype_length << " > " << not_look_ahead << endl;
 
       // NB: for indels in tandem repeats, if the indel sequence is
       // derived from the repeat structure, build the haplotype
@@ -910,7 +935,7 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
       // now re-get the alleles
       PileUpAlleles(allowed_allele_types_, haplotype_length, false, position_ticket);
     } // haplotype_length > not_look_ahead
-  } // not only_use_input_alleles (detect multi-base haplotypes)
+  } // not only_use_input_alleles_ (detect multi-base haplotypes)
 
 
   // Alleles pileup is complete, now actually finalize the candidates
@@ -1106,6 +1131,9 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
     format["RO"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage));
     format["SRF"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage_fwd));
     format["SRR"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage_rev));
+    format["RQ"].push_back(convertToString(1.0 * ref_pileup_.samples[sample_idx].ref_q / ref_pileup_.samples[sample_idx].coverage));
+    format["RQF"].push_back(convertToString(1.0 * ref_pileup_.samples[sample_idx].ref_q_fwd / ref_pileup_.samples[sample_idx].coverage_fwd));
+    format["RQR"].push_back(convertToString(1.0 * ref_pileup_.samples[sample_idx].ref_q_rev / ref_pileup_.samples[sample_idx].coverage_rev));
   }
 
   total_cov = ref_pileup_.coverage;
@@ -1134,14 +1162,9 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
     //   candidate.variant.info["JUNK"].push_back(convertToString(allele.hp_repeat_len));
     candidate.variant.info["HRUN"].push_back("0");
     candidate.variant_specific_params.push_back(VariantSpecificParams());
-    // candidate.variant_specific_params.back().black_strand = black_list_strand.size()>(unsigned)allele.minimized_prefix ? black_list_strand[allele.minimized_prefix] : '.'; // revert to 4.2
     if (hp_max_lenght_override_value > 0) {
       candidate.variant_specific_params.back().hp_max_length = hp_max_lenght_override_value;
       candidate.variant_specific_params.back().hp_max_length_override = true;
-    }
-    if (strand_bias_override_value > 0) {
-      candidate.variant_specific_params.back().strand_bias = strand_bias_override_value;
-      candidate.variant_specific_params.back().strand_bias_override = true;
     }
 
     for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
@@ -1149,6 +1172,9 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
       format["AO"].push_back(convertToString(allele.samples[sample_idx].coverage));
       format["SAF"].push_back(convertToString(allele.samples[sample_idx].coverage_fwd));
       format["SAR"].push_back(convertToString(allele.samples[sample_idx].coverage_rev));
+      format["AQ"].push_back(convertToString(1.0 * allele.samples[sample_idx].alt_q / allele.samples[sample_idx].coverage));
+      format["AQF"].push_back(convertToString(1.0 * allele.samples[sample_idx].alt_q_fwd / allele.samples[sample_idx].coverage_fwd));
+      format["AQR"].push_back(convertToString(1.0 * allele.samples[sample_idx].alt_q_rev / allele.samples[sample_idx].coverage_rev));
     }
   } // multiallelic tags: TYPE, LEN, AO, SAF, SAR, HRUN
 
@@ -1164,6 +1190,7 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
 
 void AlleleParser::PileUpAlleles(int pos, int haplotype_length,  list<PositionInProgress>::iterator& position_ticket)
 {
+  cerr << "2. PileUpAlleles(pos: " << pos << ", haplotype length: " << haplotype_length << ", position_ticket" << endl;
   allele_pileup_.clear();
   ref_pileup_.initialize_reference(pos, num_samples_);
   int haplotypeEnd = pos + haplotype_length;
@@ -1179,20 +1206,21 @@ void AlleleParser::PileUpAlleles(int pos, int haplotype_length,  list<PositionIn
     int read_start = pos - rai->alignment.Position;
     // next 4 lines try to capture all possible alt, even the one starting with D
     int rd = read_start;
-    for (; rd <= read_start+haplotype_length; rd++) {
+    for (; rd <= read_start + haplotype_length; rd++) {
       if (rai->refmap_code[rd] != 'D') break;
     }
-    if (rd > read_start+haplotype_length) continue;
+    if (rd > read_start + haplotype_length) continue;
     // if (rai->refmap_code[read_start] == 'D')    // isDividedIndel
     //  continue;
 
     const char* start_ptr = rai->refmap_start[rd];
-    const char* end_ptr = rai->refmap_start[read_start+haplotype_length];
+    const char* end_ptr = rai->refmap_start[read_start + haplotype_length];
 
     Allele allele;
     allele.position = pos;
     allele.ref_length = haplotype_length;
     allele.alt_sequence = start_ptr; // Pointer to the beginning of alternate sequence
+    allele.quality_string = &(rai->alignment.Qualities[0]) + (end_ptr - start_ptr);
     allele.alt_length = end_ptr - start_ptr;
 
     if (allele.alt_length == 0)
@@ -1217,6 +1245,7 @@ void AlleleParser::PileUpAlleles(int pos, int haplotype_length,  list<PositionIn
     else {
       string tmp(allele.alt_sequence, allele.alt_length);
       //cerr << "Adding observation at " << allele.position <<  ", read_pos " << read_start << ", alt_length " << allele.alt_length <<  " to " << tmp << endl; // ZZ
+      cerr << "add_observation(4)" << endl;
       allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
     }
   }

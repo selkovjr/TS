@@ -28,9 +28,16 @@ void ReverseComplement(string &seqContext, string &reverse_complement);
 std::string intToString(int x, int width);
 template<typename T>
 std::string convertToString(const T& r) {
-    std::ostringstream iss;
+  std::ostringstream iss;
+  iss.setf(ios::fixed, ios::floatfield);
+  iss.precision(1);
+  if (::isnan(r)) {
+    iss << '.';
+  }
+  else {
     iss << r;
-    return iss.str();
+  }
+  return iss.str();
 }
 
 

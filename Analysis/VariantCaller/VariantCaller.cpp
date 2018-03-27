@@ -25,8 +25,6 @@
 
 #include <boost/math/distributions/poisson.hpp>
 
-#include "IndelAssembly/IndelAssembly.h"
-
 using namespace std;
 
 
@@ -75,21 +73,6 @@ int main(int argc, char* argv[])
   OrderedBAMWriter bam_writer;
 
   string parameters_file = parameters.opts.GetFirstString('-', "parameters-file", "");
-
-  IndelAssemblyArgs parsed_opts;
-  parsed_opts.setReference(parameters.fasta);
-  parsed_opts.setBams(parameters.bams);
-  parsed_opts.setTargetFile(parameters.targets);
-  parsed_opts.setOutputVcf(parameters.outputDir + "/indel_assembly.vcf");
-  parsed_opts.setParametersFile(parameters_file);
-  parsed_opts.setSampleName(sample_name);
-  // Print the indel_assembly parameters if do_indel_assembly = true
-  if(parameters.program_flow.do_indel_assembly)
-    parsed_opts.processParameters(parameters.opts);
-  else
-    cout<<"TVC: Indel assembly off."<< endl;
-
-  IndelAssembly indel_assembly(&parsed_opts, &ref_reader, &sample_manager, &targets_manager);
 
   // set up producer of variants
   AlleleParser candidate_generator(parameters, ref_reader, sample_manager, vcf_writer);

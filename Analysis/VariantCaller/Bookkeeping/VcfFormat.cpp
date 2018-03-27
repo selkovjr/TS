@@ -124,7 +124,15 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
     << "##FORMAT=<ID=SRF,Number=1,Type=Integer,Description=\"Number of reference observations on the forward strand\">" << endl
     << "##FORMAT=<ID=SRR,Number=1,Type=Integer,Description=\"Number of reference observations on the reverse strand\">" << endl
     << "##FORMAT=<ID=SAF,Number=A,Type=Integer,Description=\"Alternate allele observations on the forward strand\">" << endl
-    << "##FORMAT=<ID=SAR,Number=A,Type=Integer,Description=\"Alternate allele observations on the reverse strand\">" << endl;
+    << "##FORMAT=<ID=SAR,Number=A,Type=Integer,Description=\"Alternate allele observations on the reverse strand\">" << endl
+
+    << "##FORMAT=<ID=RQ,Number=1,Type=Float,Description=\"Mean base quality in the reference allele\">" << endl
+    << "##FORMAT=<ID=RQF,Number=1,Type=Float,Description=\"Mean base quality in the reference allele on the forward strand\">" << endl
+    << "##FORMAT=<ID=RQR,Number=1,Type=Float,Description=\"Mean base quality in the reference allele on the reverse strand\">" << endl
+
+    << "##FORMAT=<ID=AQ,Number=1,Type=Float,Description=\"Mean base quality in the alternate allele\">" << endl
+    << "##FORMAT=<ID=AQF,Number=1,Type=Float,Description=\"Mean base quality in the alternate allele on the forward strand\">" << endl
+    << "##FORMAT=<ID=AQR,Number=1,Type=Float,Description=\"Mean base quality in the alternate allele on the reverse strand\">" << endl;
 
   // If we want to output multiple min-allele-freq
   if(parameters->program_flow.is_multi_min_allele_freq) {
@@ -251,6 +259,12 @@ void SetUpFormatString(vcf::Variant &var) {
   var.format.push_back("SAF");
   var.format.push_back("SRF");
   var.format.push_back("SRR");
+  var.format.push_back("RQ");
+  var.format.push_back("RQF");
+  var.format.push_back("RQR");
+  var.format.push_back("AQ");
+  var.format.push_back("AQF");
+  var.format.push_back("AQR");
 }
 
 

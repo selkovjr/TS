@@ -110,9 +110,6 @@ public:
   string            basecaller_version;
   string            tmap_version;
 
-  bool              onlyUseInputAlleles;
-  bool              processInputPositionsOnly;
-
   // operation parameters
   bool        useDuplicateReads;        // -E --use-duplicate-reads
   int         useBestNAlleles;          // -n --use-best-n-alleles

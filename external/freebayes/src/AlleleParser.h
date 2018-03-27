@@ -24,52 +24,53 @@ public:
       ref_length(0), length(0), minimized_prefix(0), repeat_boundary(0), hp_repeat_len (0),
       initialized(false), filtered(false),
       coverage(0), coverage_fwd(0), coverage_rev(0),
-      // ref_q(0), ref_q_fwd(0), ref_q_rev(0),
-      // alt_q(0), alt_q_fwd(0), alt_q_rev(0),
       samples(1) {}
 
   void add_observation(const Allele& observation, int sample_index, bool is_reverse_strand, int _chr, int num_samples, int read_count) {
+    int q = observation.quality_string[0] - 33;
+
     if (not initialized) {
       type = observation.type;
       alt_sequence.append(observation.alt_sequence, observation.alt_length);
       position = observation.position;
       chr = _chr;
       ref_length = observation.ref_length;
-      allele_quality_sum = 0;
       initialized = true;
     }
     if (sample_index < 0) return;
 
     coverage += read_count;
-    allele_quality_sum += observation.quality_string[0] - 33;
     if ((int)samples.size() != num_samples)
       samples.resize(num_samples);
     samples[sample_index].coverage += read_count;
+    samples[sample_index].alt_q += q;
     if (is_reverse_strand) {
       coverage_rev += read_count;
       samples[sample_index].coverage_rev += read_count;
+      samples[sample_index].alt_q_rev += q;
     } else {
       coverage_fwd += read_count;
       samples[sample_index].coverage_fwd += read_count;
+      samples[sample_index].alt_q_fwd += q;
     }
-    cerr << "add_observation() quality: " << string(observation.quality_string).substr(0, observation.alt_length) << ", Q sum: " << allele_quality_sum << ", Q mean: " << allele_quality_sum / coverage << endl;
   }
 
   void add_reference_observation(const Allele& observation, int sample_index, bool is_reverse_strand, int chr_idx_, int read_count) {
+    int q = observation.quality_string[0] - 33;
+
     coverage += read_count;
-    allele_quality_sum += observation.quality_string[0] - 33;
-    //if ((int)samples.size() <= sample_index)
-    //  samples.resize(sample_index+1);
     samples[sample_index].coverage += read_count;
+    samples[sample_index].ref_q += q;
     if (is_reverse_strand) {
       coverage_rev += read_count;
       samples[sample_index].coverage_rev += read_count;
-    } else {
+      samples[sample_index].ref_q_rev += q;
+    }
+    else {
       coverage_fwd += read_count;
       samples[sample_index].coverage_fwd += read_count;
+      samples[sample_index].ref_q_fwd += q;
     }
-
-    cerr << "add_reference_observation() quality: " << string(observation.quality_string).substr(0, observation.alt_length) << ", Q sum: " << allele_quality_sum << ", Q mean: " << allele_quality_sum / coverage << endl;
   }
 
   void initialize_reference(long int _position, int num_samples) {
@@ -81,7 +82,6 @@ public:
     coverage = 0;
     coverage_fwd = 0;
     coverage_rev = 0;
-    allele_quality_sum = 0;
     samples.clear();
     samples.resize(num_samples);
   }
@@ -97,16 +97,25 @@ public:
     return "???";
   }
 
-  struct AlleleCoverage {
-    AlleleCoverage() : coverage(0), coverage_fwd(0), coverage_rev(0) {}
-    long int coverage;
+  struct SampleData {
+    SampleData() :
+      coverage(0), coverage_fwd(0), coverage_rev(0),
+      ref_q(0), ref_q_fwd(0), ref_q_rev(0),
+      alt_q(0), alt_q_fwd(0), alt_q_rev(0)
+    {}
+    long int coverage;      // single-sample depth at this allele's position
     long int coverage_fwd;
     long int coverage_rev;
+    long int ref_q;         // The sum of base quality scores across this sample's reads supporting reference allele
+    long int ref_q_fwd;
+    long int ref_q_rev;
+    long int alt_q;         // The sum of base quality scores across this sample's reads supporting alt allele
+    long int alt_q_fwd;
+    long int alt_q_rev;
   };
 
   AlleleType              type;                 //! type of the allele
   string                  alt_sequence;         //! allele sequence
-  long int                allele_quality_sum;   //! The sum of base quality scores across all reads supporting the allele
   int                     chr;                  //! chromosome
   long int                position;             //! position 0-based against reference
   unsigned int            ref_length;           //! allele length relative to the reference
@@ -119,7 +128,7 @@ public:
   long int                coverage;             //! total allele coverage (across samples)
   long int                coverage_fwd;         //! forward strand allele coverage (across samples)
   long int                coverage_rev;         //! reverse strand allele coverage (across samples)
-  vector<AlleleCoverage>  samples;              //! per-sample coverages
+  vector<SampleData>      samples;              //! per-sample coverages
 };
 
 // ====================================================================
