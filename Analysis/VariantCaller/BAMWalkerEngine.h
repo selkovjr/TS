@@ -135,7 +135,6 @@ struct PositionInProgress {
 
 class VariantCallerContext;
 class ReferenceReader;
-class IndelAssembly;
 
 class BAMWalkerEngine {
 public:
@@ -163,7 +162,7 @@ public:
 
   // Loading new reads
   void RequestReadProcessingTask(Alignment*& new_read);
-  bool GetNextAlignmentCore(Alignment* new_read, VariantCallerContext& vc, vector<MergedTarget>::iterator& indel_target);
+  bool GetNextAlignmentCore(Alignment* new_read, VariantCallerContext& vc);
   void FinishReadProcessingTask(Alignment* new_read, bool success);
 
   // Processing genomic position

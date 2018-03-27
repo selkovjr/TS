@@ -31,7 +31,6 @@ class AlleleParser;
 class OrderedVCFWriter;
 class SampleManager;
 class MetricsManager;
-class IndelAssembly;
 
 // ==============================================================================
 
@@ -47,7 +46,6 @@ struct VariantCallerContext {
   OrderedVCFWriter *    vcf_writer;                   //! Sorting, threading friendly VCF writer
   MetricsManager *      metrics_manager;              //! Keeps track of metrics to output in tvc_metrics.json
   SampleManager*        sample_manager;               //! Tracks the sample used in multi-sample analysis
-  IndelAssembly*        indel_assembly;               //! Outputs the indel_assembly.vcf for long indels
 
   pthread_mutex_t       bam_walker_mutex;             //! Mutex for state-altering bam_walker operations
   pthread_mutex_t       read_loading_mutex;           //! Mutex for raw read retrieval

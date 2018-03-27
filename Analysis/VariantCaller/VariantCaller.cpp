@@ -90,7 +90,6 @@ int main(int argc, char* argv[])
   vc.bam_writer = &bam_writer;
   vc.metrics_manager = &metrics_manager;
   vc.sample_manager  = &sample_manager;
-  vc.indel_assembly = &indel_assembly;
 
   pthread_mutex_init(&vc.candidate_generation_mutex, NULL);
   pthread_mutex_init(&vc.read_loading_mutex, NULL);
@@ -138,18 +137,6 @@ int main(int argc, char* argv[])
 
   cerr << endl;
   cout << endl;
-  cout << "[tvc] Processing time: " << (time(NULL)-start_time) << " seconds." << endl;
-
-
-  if(vc.parameters->program_flow.do_indel_assembly){
-    indel_assembly.onTraversalDone();
-  }
-  else{
-    indel_assembly.out.close();
-  }
-
-  cerr << endl;
-  cout << endl;
   cout << "[tvc] Normal termination. Processing time: " << (time(NULL)-start_time) << " seconds." << endl;
 
   return 0;
@@ -162,7 +149,6 @@ void * VariantCallerWorker(void *input)
   BamAlignment alignment;
   VariantCallerContext& vc = *static_cast<VariantCallerContext*>(input);
 
-  vector<MergedTarget>::iterator indel_target = vc.targets_manager->merged.begin();
   vector<MergedTarget>::iterator depth_target = vc.targets_manager->merged.begin();
 
   deque<VariantCandidate> variant_candidates;
@@ -266,7 +252,7 @@ void * VariantCallerWorker(void *input)
       pthread_mutex_unlock(&vc.bam_walker_mutex);
 
       for (int i = 0; i < kReadBatchSize; ++i) {
-        success[i] = vc.bam_walker->GetNextAlignmentCore(new_read[i], vc, indel_target);
+        success[i] = vc.bam_walker->GetNextAlignmentCore(new_read[i], vc);
         if (not success[i])
           break;
       }

@@ -11,7 +11,6 @@
 #include <limits.h>
 #include <set>
 #include "ReferenceReader.h"
-#include "IndelAssembly/IndelAssembly.h"
 #include "InputStructures.h"
 
 
@@ -510,7 +509,7 @@ int getSoftEnd(BamAlignment& alignment) {
   return position;
 }
 
-bool BAMWalkerEngine::GetNextAlignmentCore(Alignment* new_read, VariantCallerContext& vc, vector<MergedTarget>::iterator& indel_target)
+bool BAMWalkerEngine::GetNextAlignmentCore(Alignment* new_read, VariantCallerContext& vc)
 {
   //return has_more_alignments_ = (bam_reader_.GetNextAlignmentCore(new_read->alignment) && new_read!=NULL && new_read->alignment.RefID>=0);
   // maintain a list of all reads that are in order of read name if the position is the same, ZZ
@@ -525,9 +524,6 @@ bool BAMWalkerEngine::GetNextAlignmentCore(Alignment* new_read, VariantCallerCon
     do {
       if (!bam_reader_.GetNextAlignmentCore(temp_reads[i])) break;
       temp_reads[i].BuildCharData();
-      if(vc.parameters->program_flow.do_indel_assembly){
-        vc.indel_assembly->processRead(temp_reads[i], indel_target);
-      }
       if (temp_reads[i].RefID < 0) break;
       if (temp_reads[i].Position != temp_reads[0].Position or temp_reads[i].RefID != temp_reads[0].RefID) {
         next_temp_read = &temp_reads[i];
