@@ -111,7 +111,6 @@ set(tvcSRCS
   VariantCaller/SampleManager.cpp
   VariantCaller/TargetsManager.cpp
   VariantCaller/MetricsManager.cpp
-  VariantCaller/LocalContext.cpp
 
   VariantCaller/Bookkeeping/MiscUtil.cpp
   VariantCaller/Bookkeeping/ExtendParameters.cpp
