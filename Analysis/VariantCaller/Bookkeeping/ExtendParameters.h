@@ -48,11 +48,6 @@ class ControlCallAndFilters {
     int downSampleCoverage;
     int RandSeed;                  //!< Seed for random number generator to reservoir sample reads.
 
-    bool suppress_reference_genotypes;
-    bool suppress_nocall_genotypes;
-    bool heal_snps; // if a snp is the best allele, discard all others
-    bool suppress_no_calls;
-
     // position bias probably should not be variant specific
     bool use_position_bias;
     float position_bias_ref_fraction;
@@ -82,10 +77,6 @@ class ProgramControlSettings {
     int nThreads;
     int nVariantsPerThread;
     int DEBUG;
-
-    bool do_indel_assembly;
-
-    bool inputPositionsOnly;
 
     bool is_multi_min_allele_freq;
     vector<float> snp_multi_min_allele_freq;

@@ -25,7 +25,6 @@ public:
     num_slots_ = 0;
     num_slots_written_ = 0;
     slot_ready_.push_back(false);
-    suppress_no_calls_ = true;
     pthread_mutex_init(&slot_mutex_, NULL);
     pthread_mutex_init(&write_mutex_, NULL);
   }
@@ -37,29 +36,14 @@ public:
 
   void Initialize(const string& output_vcf, const ExtendParameters& parameters, ReferenceReader& ref_reader, const SampleManager& sample_manager) {
 
-    string filtered_vcf;
-    size_t pos = output_vcf.rfind(".");
-    if (pos != string::npos)
-      filtered_vcf = output_vcf.substr(0, pos);
-    else
-      filtered_vcf = output_vcf;
-    filtered_vcf += "_filtered.vcf";
-
     output_vcf_stream_.open(output_vcf.c_str());
     if (not output_vcf_stream_.is_open()) {
       cerr << "ERROR: Cannot open output vcf file " << output_vcf << " : " << strerror(errno) << endl;
       exit(1);
     }
-    filtered_vcf_stream_.open(filtered_vcf.c_str());
-    if (not filtered_vcf_stream_.is_open()) {
-      cerr << "ERROR: Cannot open filtered vcf file " << filtered_vcf << " : " << strerror(errno) << endl;
-      exit(1);
-    }
-    suppress_no_calls_ = parameters.my_controls.suppress_no_calls;
 
     string vcf_header = getVCFHeader(&parameters, ref_reader, sample_manager.sample_names_, sample_manager.primary_sample_);
     output_vcf_stream_ << vcf_header << endl;
-    filtered_vcf_stream_ << vcf_header << endl;
     variant_initializer_.parseHeader(vcf_header);
   }
 
@@ -70,17 +54,12 @@ public:
     while (num_slots_written_ < num_slots_) {
       for (deque<VariantCandidate>::iterator current_variant = slot_dropbox_[num_slots_written_].begin();
           current_variant != slot_dropbox_[num_slots_written_].end(); ++current_variant) {
-        if (current_variant->variant.isFiltered and suppress_no_calls_)
-          filtered_vcf_stream_ << current_variant->variant << endl;
-        else
           output_vcf_stream_ << current_variant->variant << endl;
       }
       slot_dropbox_[num_slots_written_].clear();
       num_slots_written_++;
-
     }
     output_vcf_stream_.close();
-    filtered_vcf_stream_.close();
   }
 
   int ReserveSlot() {
@@ -111,17 +90,8 @@ public:
         break;
       for (deque<VariantCandidate>::iterator current_variant = slot_dropbox_[num_slots_written_].begin();
           current_variant != slot_dropbox_[num_slots_written_].end(); ++current_variant) {
-        cerr << "  isFiltered: " << current_variant->variant.isFiltered << endl;
-        cerr << "  suppress_no_calls_: " << suppress_no_calls_ << endl;
         cerr << "    " << current_variant->variant << endl;
-        if (current_variant->variant.isFiltered and suppress_no_calls_) {
-          // cerr << "      writing to filtered\n";
-          filtered_vcf_stream_ << current_variant->variant << endl;
-        }
-        else {
-          // cerr << "      writing to output\n\n";
-          output_vcf_stream_ << current_variant->variant << endl;
-        }
+        output_vcf_stream_ << current_variant->variant << endl;
       }
       slot_dropbox_[num_slots_written_].clear();
       num_slots_written_++;
@@ -137,8 +107,6 @@ private:
   pthread_mutex_t               slot_mutex_;            //! Mutex controlling access to the dropbox
   pthread_mutex_t               write_mutex_;           //! Mutex controlling VCF writing
   ofstream                      output_vcf_stream_;     //! Main output VCF file
-  ofstream                      filtered_vcf_stream_;   //! Filtered VCF file
-  bool                          suppress_no_calls_;     //! If false, filtered variants also go to main VCF
   vcf::VariantCallFile          variant_initializer_;   //! Fake writer to initialize new Variant objects
 };
 

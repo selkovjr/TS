@@ -24,7 +24,6 @@ void VariantCallerHelp() {
   printf("  -n,--num-threads                      INT         number of worker threads [2]\n");
   printf("  -N,--num-variants-per-thread          INT         worker thread batch size [500]\n");
   printf("     --parameters-file                  FILE        json file with algorithm control parameters [optional]\n");
-  printf("     --do-indel-assembly                on/off      do indel assembly to call long indel variants [on]\n");
   printf("\n");
 
   printf("Inputs:\n");
@@ -39,9 +38,6 @@ void VariantCallerHelp() {
   printf("Outputs:\n");
   printf("  -O,--output-dir                       DIRECTORY   base directory for all output files [current dir]\n");
   printf("  -o,--output-vcf                       FILE        vcf file with variant calling results [required]\n");
-  printf("     --suppress-reference-genotypes     on/off      write reference calls into the filtered variants vcf [on]\n");
-  printf("     --suppress-no-calls                on/off      write filtered variants into the filtered variants vcf [on]\n");
-  printf("     --suppress-nocall-genotypes        on/off      do not report a genotype for filtered variants [on]\n");
   printf("\n");
 
   printf("Variant candidate generation (FreeBayes):\n");
@@ -127,8 +123,6 @@ void VariantCallerHelp() {
   printf("     --filter-deletion-predictions      FLOAT       check post-evaluation systematic bias in deletions; a high value like 100 effectively turns off this filter [100.0]\n");
   printf("     --filter-insertion-predictions     FLOAT       check post-evaluation systematic bias in insertions; a high value like 100 effectively turns off this filter [100.0]\n");
   printf("\n");
-  printf("     --heal-snps                        on/off      suppress in/dels not participating in diploid variant genotypes if the genotype contains a SNP or MNP [on].\n");
-  printf("\n");
 
   printf("Debugging:\n");
   printf("  -d,--debug                            INT         (0/1/2) display extra debug messages [0]\n");
@@ -155,19 +149,12 @@ ControlCallAndFilters::ControlCallAndFilters() {
 
   sbias_tune = 0.5f;
   downSampleCoverage = 2000;
-
-  // wanted by downstream
-  suppress_reference_genotypes = true;
-  suppress_nocall_genotypes = true;
-  suppress_no_calls = true;
-  heal_snps = true;
 }
 
 ProgramControlSettings::ProgramControlSettings() {
   nVariantsPerThread = 1000;
   nThreads = 1;
   DEBUG = 0;
-  do_indel_assembly = true;
 
   is_multi_min_allele_freq = false;
   snp_multi_min_allele_freq.clear();
@@ -546,12 +533,6 @@ void ControlCallAndFilters::SetOpts(OptArgs &opts, Json::Value& tvc_params) {
   //xbias_tune                            = RetrieveParameterDouble(opts, tvc_params, '-', "tune-xbias", 0.005f);
   sbias_tune                            = RetrieveParameterDouble(opts, tvc_params, '-', "tune-sbias", 0.01f);
 
-  suppress_reference_genotypes          = RetrieveParameterBool   (opts, tvc_params, '-', "suppress-reference-genotypes", true);
-  suppress_nocall_genotypes             = RetrieveParameterBool   (opts, tvc_params, '-', "suppress-nocall-genotypes", true);
-  suppress_no_calls                     = RetrieveParameterBool   (opts, tvc_params, '-', "suppress-no-calls", true);
-
-  heal_snps                             = RetrieveParameterBool   (opts, tvc_params, '-', "heal-snps", true);
-
   // SNPS are my usual variants
   filter_snps.min_cov_each_strand       = RetrieveParameterInt   (opts, tvc_params, 'C', "snp-min-cov-each-strand", 0);
   filter_snps.min_quality_score         = RetrieveParameterDouble(opts, tvc_params, 'B', "snp-min-variant-score", 10.0);
@@ -604,8 +585,6 @@ void ProgramControlSettings::SetOpts(OptArgs &opts, Json::Value &tvc_params) {
   DEBUG                                 = opts.GetFirstInt   ('d', "debug", 0);
   nThreads                              = RetrieveParameterInt   (opts, tvc_params, 'n', "num-threads", 12);
   nVariantsPerThread                    = RetrieveParameterInt   (opts, tvc_params, 'N', "num-variants-per-thread", 250);
-
-  do_indel_assembly                     = RetrieveParameterBool  (opts, tvc_params, '-', "do-indel-assembly", true);
 
   RetrieveParameterVectorFloat(opts, tvc_params, '-', "snp-multi-min-allele-freq", "0.05,0.1,0.15,0.2", snp_multi_min_allele_freq);
   string snp_multi_min_allele_freq_str = "";
