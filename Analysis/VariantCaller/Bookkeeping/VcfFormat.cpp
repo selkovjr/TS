@@ -106,8 +106,7 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
 
     << "##INFO=<ID=TYPE,Number=A,Type=String,Description=\"The type of allele, either snp, mnp, ins, del, or complex.\">" << endl
 
-    << "##INFO=<ID=LEN,Number=A,Type=Integer,Description=\"allele length\">" << endl
-    << "##INFO=<ID=HRUN,Number=A,Type=Integer,Description=\"Run length: the number of consecutive repeats of the alternate allele in the reference genome\">" << endl;
+    << "##INFO=<ID=LEN,Number=A,Type=Integer,Description=\"allele length\">" << endl;
 
   if(parameters->my_controls.use_lod_filter){
     headerss << "##INFO=<ID=LOD,Number=A,Type=Float,Description=\"Limit of Detection at genomic location.\">" << endl;
@@ -192,11 +191,6 @@ void clearInfoTags(vcf::Variant &var) {
     var.info["DP"].clear();
 
 
-  it = var.info.find("HRUN");
-  if (it != var.info.end())
-    var.info["HRUN"].clear();
-
-
   it = var.info.find("MLLD");
   if (it != var.info.end())
     var.info["MLLD"].clear();
@@ -212,7 +206,6 @@ void NullInfoFields(vcf::Variant &var, bool use_position_bias){
     var.info["AO"].push_back(convertToString(0));
     var.info["SAF"].push_back(convertToString(0));
     var.info["SAR"].push_back(convertToString(0));
-    var.info["HRUN"].push_back(convertToString(0));
   }
   var.info["DP"].push_back(convertToString(0));
   var.info["RO"].push_back(convertToString(0));

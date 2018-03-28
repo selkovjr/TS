@@ -90,7 +90,6 @@ public:
         break;
       for (deque<VariantCandidate>::iterator current_variant = slot_dropbox_[num_slots_written_].begin();
           current_variant != slot_dropbox_[num_slots_written_].end(); ++current_variant) {
-        cerr << "    " << current_variant->variant << endl;
         output_vcf_stream_ << current_variant->variant << endl;
       }
       slot_dropbox_[num_slots_written_].clear();

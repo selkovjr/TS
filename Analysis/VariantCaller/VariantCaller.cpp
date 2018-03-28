@@ -334,7 +334,6 @@ void * VariantCallerWorker(void *input)
 
       pthread_mutex_unlock(&vc.candidate_generation_mutex);
 
-      cerr << "writing candidates\n";
       vc.vcf_writer->WriteSlot(vcf_writer_slot, variant_candidates);
 
       variant_candidates.clear();

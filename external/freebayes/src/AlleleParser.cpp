@@ -352,7 +352,6 @@ void AlleleParser::PileUpAlleles(
   bool scan_haplotype,
   list<PositionInProgress>::iterator& position_ticket
 ) {
-  cerr << "1. PileUpAlleles(allowed: " << allowed_allele_types << ", haplotype length: " << haplotype_length << ", scan_haplotype: " << scan_haplotype << ", position_ticket" << endl;
   allele_pileup_.clear();
   ref_pileup_.initialize_reference(position_ticket->pos, num_samples_);
   // cerr << "haplotype length: " << haplotype_length << ", scan_haplotype: " << scan_haplotype << endl; // ZZ
@@ -388,7 +387,6 @@ void AlleleParser::PileUpAlleles(
         // cerr << "Adding sample " << rai->sample_index << " observation at " << allele.position <<  ", read_pos " << read_pos << ", alt_length " << allele.alt_length << " from " << ref << " to " << allele_seq << endl;
         // /* Debug by Zheng */
 
-        cerr << "add_observation(1)" << endl;
         allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
       }
     }
@@ -435,7 +433,6 @@ void AlleleParser::PileUpAlleles(
           Allele& allele = rai->refmap_allele[read_pos];
           string tmp(allele.alt_sequence, allele.alt_length);
           cerr << "2nd pass Adding observation at " << allele.position <<  ", read_pos " << read_pos << ", alt_length " << allele.alt_length << " from " << tmp1 << " to " << tmp << ", Q-score " << string(allele.quality_string).substr(0, allele.ref_length) << endl; // ZZ
-          cerr << "add_observation(2)" << endl;
           allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
         }
       }
@@ -501,7 +498,6 @@ void AlleleParser::PileUpAlleles(
         //cerr << "Final pass: Adding alt observation at " << allele.position <<  ", read_pos " << read_start << ", alt_length " << allele.alt_length <<  " to " << tmp << ", Q-score " << string(allele.quality_string).substr(0, allele.ref_length) << endl; // ZZ
         string ref = ref_reader_->substr(position_ticket->chr, position_ticket->pos, allele.alt_length);
         cerr << "Final pass: Adding alt observation (" << allele.type << ") at " << allele.position <<  ", read_pos " << read_start << ", alt_length " << allele.alt_length <<  " from " << ref << " to " << tmp << endl;
-        cerr << "add_observation(3)" << endl;
         allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
       }
     }
@@ -882,10 +878,9 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   // For the purposes of of blacklist generation; the less smart this step is,
   // the better. Disabled until better times.
   //
-  // if (not only_use_input_alleles_) {
+  if (not only_use_input_alleles_) {
     // Detect multi-base haplotypes and redo the pileup if needed
 
-  if (0) {
 
     for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
       AlleleDetails& allele = I->second;
@@ -940,17 +935,6 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
 
   // Alleles pileup is complete, now actually finalize the candidates
   long next_pos = min(position_ticket->pos + haplotype_length, position_ticket->target_end);
-
-  // Each allele that has passed filters represents a genotype
-  int num_genotypes = 0;
-  for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
-    if (not I->second.filtered)
-      num_genotypes++;
-  }
-
-  if (num_genotypes == 0) {
-    return;
-  }
 
   // Pad alleles to common reference length
   // ZZ: need to enumerate haplotype instead of reference seq padded with reference.
@@ -1104,50 +1088,50 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
     // cerr << " common_prefix/suffix " << common_prefix << " " << common_suffix << endl; // ZZ
   }
 
-  // Build Variant object
+  // Calculate totals
+  total_cov_fwd += ref_pileup_.coverage_fwd;
+  total_cov_rev += ref_pileup_.coverage_rev;
+  for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
+    AlleleDetails& allele = I->second;
+    // Filtering upses allele counts
+    // if (allele.filtered)
+    //   continue;
 
-  cerr << "----------- selecting candidate ----------------" << endl;
-  variant_candidates.push_back(VariantCandidate(vcf_writer_->VariantInitializer()));
-  VariantCandidate& candidate = variant_candidates.back();
-  vcf::Variant& var = candidate.variant;
-
-  candidate.variant.sequenceName = ref_reader_->chr_str(position_ticket->chr);
-  candidate.variant.position = position_ticket->pos + common_prefix + 1;
-  candidate.variant.id = ".";
-  candidate.variant.filter = ".";
-  candidate.variant.quality = 0.0;
-
-  SetUpFormatString(candidate.variant);
-
-  candidate.variant.ref = ref_reader_->substr(position_ticket->chr, position_ticket->pos + common_prefix,
-      common_ref_length - common_prefix - common_suffix);
-
-  candidate.variant.info["RO"].push_back(convertToString(ref_pileup_.coverage));
-  candidate.variant.info["SRF"].push_back(convertToString(ref_pileup_.coverage_fwd));
-  candidate.variant.info["SRR"].push_back(convertToString(ref_pileup_.coverage_rev));
-
-  for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
-    map<string, vector<string> >& format = candidate.variant.samples[sample_manager_->sample_names_[sample_idx]];
-    format["RO"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage));
-    format["SRF"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage_fwd));
-    format["SRR"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage_rev));
-    format["RQ"].push_back(convertToString(1.0 * ref_pileup_.samples[sample_idx].ref_q / ref_pileup_.samples[sample_idx].coverage));
-    format["RQF"].push_back(convertToString(1.0 * ref_pileup_.samples[sample_idx].ref_q_fwd / ref_pileup_.samples[sample_idx].coverage_fwd));
-    format["RQR"].push_back(convertToString(1.0 * ref_pileup_.samples[sample_idx].ref_q_rev / ref_pileup_.samples[sample_idx].coverage_rev));
+    // total_cov += allele.coverage;
+    total_cov_fwd += allele.coverage_fwd;
+    total_cov_rev += allele.coverage_rev;
   }
 
-  total_cov = ref_pileup_.coverage;
-  total_cov_fwd = ref_pileup_.coverage_fwd;
-  total_cov_rev = ref_pileup_.coverage_rev;
 
+  // Build Variant object
   for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
     AlleleDetails& allele = I->second;
 
-    total_cov += allele.coverage;
-    total_cov_fwd += allele.coverage_fwd;
-    total_cov_rev += allele.coverage_rev;
     if (allele.filtered)
       continue;
+
+    variant_candidates.push_back(VariantCandidate(vcf_writer_->VariantInitializer()));
+    VariantCandidate& candidate = variant_candidates.back();
+    vcf::Variant& var = candidate.variant;
+
+    candidate.variant.sequenceName = ref_reader_->chr_str(position_ticket->chr);
+    candidate.variant.position = position_ticket->pos + common_prefix + 1;
+    candidate.variant.id = ".";
+    candidate.variant.filter = ".";
+    candidate.variant.quality = 0.0;
+
+    SetUpFormatString(candidate.variant);
+
+    candidate.variant.ref = ref_reader_->substr(position_ticket->chr, position_ticket->pos + common_prefix,
+        common_ref_length - common_prefix - common_suffix);
+
+    candidate.variant.info["DP"].push_back(convertToString(total_cov));
+    candidate.variant.info["DPF"].push_back(convertToString(total_cov_fwd));
+    candidate.variant.info["DPR"].push_back(convertToString(total_cov_rev));
+
+    candidate.variant.info["RO"].push_back(convertToString(ref_pileup_.coverage));
+    candidate.variant.info["SRF"].push_back(convertToString(ref_pileup_.coverage_fwd));
+    candidate.variant.info["SRR"].push_back(convertToString(ref_pileup_.coverage_rev));
 
     if (common_prefix or common_suffix)
       candidate.variant.alt.push_back(allele.alt_sequence.substr(common_prefix, allele.alt_sequence.size() - common_suffix - common_prefix));
@@ -1159,12 +1143,25 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
     candidate.variant.info["AO"].push_back(convertToString(allele.coverage));
     candidate.variant.info["SAF"].push_back(convertToString(allele.coverage_fwd));
     candidate.variant.info["SAR"].push_back(convertToString(allele.coverage_rev));
-    //   candidate.variant.info["JUNK"].push_back(convertToString(allele.hp_repeat_len));
-    candidate.variant.info["HRUN"].push_back("0");
     candidate.variant_specific_params.push_back(VariantSpecificParams());
     if (hp_max_lenght_override_value > 0) {
       candidate.variant_specific_params.back().hp_max_length = hp_max_lenght_override_value;
       candidate.variant_specific_params.back().hp_max_length_override = true;
+    }
+
+    for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
+      map<string, vector<string> >& format = candidate.variant.samples[sample_manager_->sample_names_[sample_idx]];
+      format["DP"].push_back(convertToString(coverage_by_sample_[sample_idx]));
+    }
+
+    for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
+      map<string, vector<string> >& format = candidate.variant.samples[sample_manager_->sample_names_[sample_idx]];
+      format["RO"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage));
+      format["SRF"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage_fwd));
+      format["SRR"].push_back(convertToString(ref_pileup_.samples[sample_idx].coverage_rev));
+      format["RQ"].push_back(convertToString(1.0 * ref_pileup_.samples[sample_idx].ref_q / ref_pileup_.samples[sample_idx].coverage));
+      format["RQF"].push_back(convertToString(1.0 * ref_pileup_.samples[sample_idx].ref_q_fwd / ref_pileup_.samples[sample_idx].coverage_fwd));
+      format["RQR"].push_back(convertToString(1.0 * ref_pileup_.samples[sample_idx].ref_q_rev / ref_pileup_.samples[sample_idx].coverage_rev));
     }
 
     for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
@@ -1176,21 +1173,11 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
       format["AQF"].push_back(convertToString(1.0 * allele.samples[sample_idx].alt_q_fwd / allele.samples[sample_idx].coverage_fwd));
       format["AQR"].push_back(convertToString(1.0 * allele.samples[sample_idx].alt_q_rev / allele.samples[sample_idx].coverage_rev));
     }
-  } // multiallelic tags: TYPE, LEN, AO, SAF, SAR, HRUN
-
-  candidate.variant.info["DP"].push_back(convertToString(total_cov));
-  candidate.variant.info["DPF"].push_back(convertToString(total_cov_fwd));
-  candidate.variant.info["DPR"].push_back(convertToString(total_cov_rev));
-
-  for (int sample_idx = 0; sample_idx < num_samples_; ++sample_idx) {
-    map<string, vector<string> >& format = candidate.variant.samples[sample_manager_->sample_names_[sample_idx]];
-    format["DP"].push_back(convertToString(coverage_by_sample_[sample_idx]));
-  }
+  } // Each allele in a multiallelic variant
 }
 
 void AlleleParser::PileUpAlleles(int pos, int haplotype_length,  list<PositionInProgress>::iterator& position_ticket)
 {
-  cerr << "2. PileUpAlleles(pos: " << pos << ", haplotype length: " << haplotype_length << ", position_ticket" << endl;
   allele_pileup_.clear();
   ref_pileup_.initialize_reference(pos, num_samples_);
   int haplotypeEnd = pos + haplotype_length;
@@ -1245,7 +1232,6 @@ void AlleleParser::PileUpAlleles(int pos, int haplotype_length,  list<PositionIn
     else {
       string tmp(allele.alt_sequence, allele.alt_length);
       //cerr << "Adding observation at " << allele.position <<  ", read_pos " << read_start << ", alt_length " << allele.alt_length <<  " to " << tmp << endl; // ZZ
-      cerr << "add_observation(4)" << endl;
       allele_pileup_[allele].add_observation(allele, rai->sample_index, rai->alignment.IsReverseStrand(), position_ticket->chr, num_samples_, rai->read_count);
     }
   }
