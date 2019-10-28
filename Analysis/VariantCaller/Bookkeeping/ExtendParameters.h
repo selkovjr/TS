@@ -46,7 +46,6 @@ class BasicFilters {
 class ControlCallAndFilters {
   public:
     int downSampleCoverage;
-    int RandSeed;                  //!< Seed for random number generator to reservoir sample reads.
 
     // position bias probably should not be variant specific
     bool use_position_bias;

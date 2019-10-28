@@ -7,7 +7,6 @@
 #include "ExtendedReadInfo.h"
 #include "ReferenceReader.h"
 #include "BAMWalkerEngine.h"
-#include "RandSchrange.h"
 #include "MiscUtil.h"
 
 
