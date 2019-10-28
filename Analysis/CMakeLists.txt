@@ -1,7 +1,7 @@
 # Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved
 cmake_minimum_required (VERSION 2.6)
 project (ion-analysis)
-set(PROJECT_DESCRIPTION "Ion Torrent Data Processing Pipeline")
+set(PROJECT_DESCRIPTION "Tempus variant candidate generator (extracted from Torrent Variant Caller)")
 enable_testing()
 
 set(CMAKE_CXX_STANDARD 11)
@@ -13,7 +13,7 @@ include(CheckCCompilerFlag)
 check_c_compiler_flag( -malign-double HAS_ALIGN_DOUBLE )
 
 set(CMAKE_CXX_FLAGS -g3)
-add_compile_options(-fprofile-arcs -ftest-coverage -Wfatal-errors)
+add_compile_options(-fprofile-arcs -ftest-coverage -Wfatal-errors -Wno-sign-compare)
 set(CMAKE_CXX_STANDARD_LIBRARIES -lgcov)
 
 include(../buildTools/cmake/CMakeLists.version.txt)
@@ -22,19 +22,19 @@ include(../buildTools/cmake/CMakeLists.compiler.txt)
 FIND_PACKAGE(PythonInterp)
 # Determine python site-packages or dist-packages directory
 execute_process (
-        COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
-        OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
-        OUTPUT_STRIP_TRAILING_WHITESPACE
+  COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
+  OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
+  OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 execute_process (
-        COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_lib; print get_python_lib(prefix='/usr/local')"
-        OUTPUT_VARIABLE PYTHON_LOCAL_SITE_PACKAGES
-        OUTPUT_STRIP_TRAILING_WHITESPACE
+  COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_lib; print get_python_lib(prefix='/usr/local')"
+  OUTPUT_VARIABLE PYTHON_LOCAL_SITE_PACKAGES
+  OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 execute_process (
-        COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_version; print get_python_version()"
-        OUTPUT_VARIABLE PYTHON_VERSION
-        OUTPUT_STRIP_TRAILING_WHITESPACE
+  COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_version; print get_python_version()"
+  OUTPUT_VARIABLE PYTHON_VERSION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
 
@@ -59,7 +59,6 @@ include_directories("${PROJECT_SOURCE_DIR}/Util")
 
 # Ion Analysis Library
 add_library(ion-analysis
-
     ${PROJECT_BINARY_DIR}/IonVersion.cpp
 
     Util/IonErr.cpp
@@ -90,7 +89,7 @@ add_library(ion-analysis
 )
 add_dependencies(ion-analysis IONVERSION samtools bamtools)
 
-target_link_libraries(ion-analysis ${EXTRA_LIBS} z)
+target_link_libraries(ion-analysis z)
 
 set_target_properties(ion-analysis PROPERTIES
     VERSION   "${ION_VERSION_MAJOR}.${ION_VERSION_MINOR}.${ION_VERSION_RELEASE}.${ION_VERSION_BUILDNUM}"
@@ -145,7 +144,7 @@ set(tvcSRCS
 
 
 add_executable(bamwalker ${tvcSRCS})
-target_link_libraries(bamwalker ${ION_BAMTOOLS_LIBS} ${EXTRA_LIBS} z pthread)
+target_link_libraries(bamwalker ${ION_BAMTOOLS_LIBS} z pthread)
 add_dependencies(bamwalker IONVERSION bamtools htslib_proj)
 install(TARGETS bamwalker DESTINATION bin)
 
@@ -154,50 +153,47 @@ install(TARGETS bamwalker DESTINATION bin)
 enable_testing()
 find_package(GTest QUIET)
 if(GTEST_FOUND)
-
-# Copy over test data...
-   configure_file (
-     "utest/reference.txt"
-     "${CMAKE_CURRENT_BINARY_DIR}/reference.txt"
-     COPYONLY
+  # Copy over test data...
+  configure_file (
+    "utest/reference.txt"
+    "${CMAKE_CURRENT_BINARY_DIR}/reference.txt"
+    COPYONLY
     )
-   configure_file (
-     "utest/traces.txt"
-     "${CMAKE_CURRENT_BINARY_DIR}/traces.txt"
-      COPYONLY
-   )
-   configure_file (
-     "utest/reference.txt"
-     "${CMAKE_CURRENT_BINARY_DIR}/reference.txt"
-     COPYONLY
-   )
+  configure_file (
+    "utest/traces.txt"
+    "${CMAKE_CURRENT_BINARY_DIR}/traces.txt"
+    COPYONLY
+    )
+  configure_file (
+    "utest/reference.txt"
+    "${CMAKE_CURRENT_BINARY_DIR}/reference.txt"
+    COPYONLY
+    )
 
-        configure_file (
-          "utest/comp_clean_test_data.txt"
-          "${CMAKE_CURRENT_BINARY_DIR}/comp_clean_test_data.txt"
-          COPYONLY
-        )
+  configure_file (
+    "utest/comp_clean_test_data.txt"
+    "${CMAKE_CURRENT_BINARY_DIR}/comp_clean_test_data.txt"
+    COPYONLY
+    )
 
-        configure_file (
-          "utest/comp_clean_test_ev_3.txt"
-          "${CMAKE_CURRENT_BINARY_DIR}/comp_clean_test_ev_3.txt"
-          COPYONLY
-        )
+  configure_file (
+    "utest/comp_clean_test_ev_3.txt"
+    "${CMAKE_CURRENT_BINARY_DIR}/comp_clean_test_ev_3.txt"
+    COPYONLY
+    )
 
-        add_executable(IonErr_Test utest/IonErr_Test.cpp)
-        target_link_libraries(IonErr_Test ion-analysis ${GTEST_BOTH_LIBRARIES} pthread)
-        add_test(IonErrTest IonErr_Test --gtest_output=xml:./)
+  add_executable(IonErr_Test utest/IonErr_Test.cpp)
+  target_link_libraries(IonErr_Test ion-analysis ${GTEST_BOTH_LIBRARIES} pthread)
+  add_test(IonErrTest IonErr_Test --gtest_output=xml:./)
 
-        add_executable(OptArgs_Test utest/OptArgs_Test.cpp)
-        target_link_libraries(OptArgs_Test ion-analysis ${GTEST_BOTH_LIBRARIES} pthread)
-        add_test(OptArgsTest OptArgs_Test --gtest_output=xml:./)
+  add_executable(OptArgs_Test utest/OptArgs_Test.cpp)
+  target_link_libraries(OptArgs_Test ion-analysis ${GTEST_BOTH_LIBRARIES} pthread)
+  add_test(OptArgsTest OptArgs_Test --gtest_output=xml:./)
 
-        add_executable(OptionArgs_Test utest/OptionArgs_Test.cpp)
-        target_link_libraries(OptionArgs_Test ion-analysis ${GTEST_BOTH_LIBRARIES} pthread)
-        add_test(OptionArgsTest OptionArgs_Test --gtest_output=xml:./)
-
+  add_executable(OptionArgs_Test utest/OptionArgs_Test.cpp)
+  target_link_libraries(OptionArgs_Test ion-analysis ${GTEST_BOTH_LIBRARIES} pthread)
+  add_test(OptionArgsTest OptionArgs_Test --gtest_output=xml:./)
 endif()
-
 
 
 include(../buildTools/cmake/CMakeLists.cpack.txt)
@@ -209,7 +205,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "libatlas3gf-base,
     libstdc++6,
 ")
 
-set(CPACK_PACKAGE_DESCRIPTION "ion-analysis provides the command line workflow and supporting tools to process raw DAT files into bam and  fastq files.")
+set(CPACK_PACKAGE_DESCRIPTION "ion-analysis provides the command line workflow and supporting tools to process raw DAT files into bam and fastq files.")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
     ${CMAKE_CURRENT_BINARY_DIR}/debian/postinst
     ${CMAKE_CURRENT_BINARY_DIR}/debian/prerm
