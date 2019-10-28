@@ -7,6 +7,8 @@ enable_testing()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(ARFLAGS cr)
+
 include(CheckCCompilerFlag)
 check_c_compiler_flag( -malign-double HAS_ALIGN_DOUBLE )
 
