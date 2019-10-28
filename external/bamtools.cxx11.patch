@@ -1,0 +1,56 @@
+--- src/toolkit/bamtools_resolve.cpp	2015-07-02 15:50:08.000000000 -0500
++++ src/toolkit/bamtools_resolve.cpp	2019-10-04 15:05:04.420732838 -0500
+@@ -204,7 +204,7 @@
+         Models.push_back( ModelType(i+1) );
+ }
+
+-bool ReadGroupResolver::IsValidInsertSize(const BamAlignment& al) const {
++bool ReadGroupResolver::IsValidInsertSize(const BamAlignment& al) const {
+     const int32_t absInsertSize = abs(al.InsertSize);
+     return ( absInsertSize >= MinFragmentLength &&
+              absInsertSize <= MaxFragmentLength );
+@@ -230,7 +230,7 @@
+     if ( activeModelCountSum == 0 ) return; // skip if no data in this read group
+     const unsigned int unusedModelCountSum = Models[2].size() + Models[3].size() +
+                                              Models[4].size() + Models[5].size() +
+-                                             Models[6].size() + Models[7].size();
++                                             Models[6].size() + Models[7].size();
+     const double unusedPercentage = (double)unusedModelCountSum / (double)activeModelCountSum;
+     if ( unusedPercentage > UnusedModelThreshold ) {
+         cerr << "WARNING: " << readGroupName << " does not have clearly defined 'top models'" << endl
+@@ -410,7 +410,7 @@
+         ReadGroupResolver& resolver = (*rgIter).second;
+
+         // store read name with resolver
+-        resolver.ReadNames.insert( make_pair<string,bool>(fields[1], true) ) ;
++        resolver.ReadNames.insert( make_pair<string, bool>((string)fields[1], true) );
+     }
+
+     // if here, return success
+@@ -607,7 +607,7 @@
+     resolver.IsAmbiguous = ( fields.at(6) == TRUE_KEYWORD );
+
+     // store RG entry and return success
+-    readGroups.insert( make_pair<string, ReadGroupResolver>(name, resolver) );
++    readGroups.insert( make_pair<string, ReadGroupResolver>((string)name, (ReadGroupResolver)resolver) );
+     return true;
+ }
+
+@@ -1014,7 +1014,7 @@
+         }
+
+         // if read name not found, store new entry
+-        else resolver.ReadNames.insert( make_pair<string, bool>(al.Name, isCurrentMateUnique) );
++        else resolver.ReadNames.insert( make_pair<string, bool>((string)al.Name, (bool)isCurrentMateUnique) );
+     }
+
+     // close files
+@@ -1046,7 +1046,7 @@
+     SamReadGroupConstIterator rgEnd  = header.ReadGroups.ConstEnd();
+     for ( ; rgIter != rgEnd; ++rgIter ) {
+         const SamReadGroup& rg = (*rgIter);
+-        m_readGroups.insert( make_pair<string, ReadGroupResolver>(rg.ID, ReadGroupResolver()) );
++        m_readGroups.insert( make_pair<string, ReadGroupResolver>((string)rg.ID, (ReadGroupResolver)ReadGroupResolver()) );
+     }
+ }
+

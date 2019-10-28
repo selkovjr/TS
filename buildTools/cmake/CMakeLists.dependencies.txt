@@ -49,7 +49,8 @@ if (${LSB_RELEASE_CODENAME} STREQUAL "sid" OR
     ${LSB_RELEASE_CODENAME} STREQUAL "core" OR # CentOS Linux release 7.2.1511 (Core)
     ${LSB_RELEASE_CODENAME} STREQUAL "xenial" OR
     ${LSB_RELEASE_CODENAME} STREQUAL "vivid" OR
-    ${LSB_RELEASE_CODENAME} STREQUAL "trusty")
+    ${LSB_RELEASE_CODENAME} STREQUAL "trusty" OR
+    ${LSB_RELEASE_CODENAME} STREQUAL "bionic")
   option(ION_USE_SYSTEM_HDF5 "Use hdf5 system libraries" ON)
 else()
   option(ION_USE_SYSTEM_HDF5 "Use hdf5 system libraries" OFF)
@@ -239,6 +240,7 @@ if (NOT ION_USE_SYSTEM_BAMTOOLS)
       BINARY_DIR ${PROJECT_BINARY_DIR}/../${proj_name_version}-build
       CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX:PATH=${PROJECT_BINARY_DIR}/../${proj_name_version}-install
+      PATCH_COMMAND patch -p0 -t -N -l < "${ION_TS_EXTERNAL}/bamtools.cxx11.patch"
     )
     include_directories("${PROJECT_BINARY_DIR}/../${proj_name_version}-install/include/bamtools")
     set(ION_BAMTOOLS_LIBS "${PROJECT_BINARY_DIR}/../${proj_name_version}-install/lib/bamtools/libbamtools.a")

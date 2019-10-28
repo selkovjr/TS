@@ -4,11 +4,14 @@ project (ion-analysis)
 set(PROJECT_DESCRIPTION "Ion Torrent Data Processing Pipeline")
 enable_testing()
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include(CheckCCompilerFlag)
 check_c_compiler_flag( -malign-double HAS_ALIGN_DOUBLE )
 
 set(CMAKE_CXX_FLAGS -g3)
-add_compile_options(-fprofile-arcs -ftest-coverage)
+add_compile_options(-fprofile-arcs -ftest-coverage -Wfatal-errors)
 set(CMAKE_CXX_STANDARD_LIBRARIES -lgcov)
 
 include(../buildTools/cmake/CMakeLists.version.txt)
