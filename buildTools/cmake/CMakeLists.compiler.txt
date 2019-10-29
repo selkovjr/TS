@@ -18,7 +18,8 @@ endif(LSB_RELEASE_COMMAND)
 # char is per default signed on x86_64 systems but unsigned on ARM, use signed-char
 if ( ${LSB_RELEASE_CODENAME} STREQUAL "trusty" OR
     ${LSB_RELEASE_CODENAME} STREQUAL "bionic")
-    set(ION_COMMON_FLAGS "${ION_COMMON_FLAGS} -Wall -Wextra -Werror -fPIC -fsigned-char -fprofile-arcs -ftest-coverage")
+    #set(ION_COMMON_FLAGS "${ION_COMMON_FLAGS} -Wall -Wextra -Werror -fPIC -fsigned-char -fprofile-arcs -ftest-coverage")
+    set(ION_COMMON_FLAGS "${ION_COMMON_FLAGS} -Wextra -Werror -fPIC -fsigned-char -fprofile-arcs -ftest-coverage")
 else()
     set(ION_COMMON_FLAGS "${ION_COMMON_FLAGS} -Wall -Wextra -fPIC -fsigned-char")
 endif()

@@ -160,6 +160,13 @@ if(NOT ION_USE_SYSTEM_HTSLIB)
   set(proj_name "htslib")
   set(proj_version "1.2.1+ion0")
   set(proj_name_version "${proj_name}-${proj_version}")
+  set(GCC_OPTIONS -g
+                  -O2
+  )
+  # Convert the list of flags to a space-delimited string
+  FOREACH( ITEM ${GCC_OPTIONS})
+    SET( CFLAGS "${CFLAGS} ${ITEM}" )
+  ENDFOREACH()
   ExternalProject_add(${proj_name}_proj
     URL "http://${ION_UPDATE_SERVER}/updates/software/external/htslib-1.2.1.tar.gz"
     #URL_MD5 028c9110bd80d40e13dbd8270ee7eb2b
@@ -168,7 +175,7 @@ if(NOT ION_USE_SYSTEM_HTSLIB)
     #BINARY_DIR ${PROJECT_BINARY_DIR}/../${proj_name_version}-build
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND make
+    BUILD_COMMAND make CFLAGS=${CFLAGS}
     INSTALL_COMMAND ""
     PATCH_COMMAND patch -p1 -t -N < "${ION_TS_EXTERNAL}/htslib-1.2+ion0.patch"
   )
@@ -188,6 +195,13 @@ if (NOT ION_USE_SYSTEM_SAMTOOLS)
   set(proj_name "samtools")
   set(proj_version "1.2+ion2")
   set(proj_name_version "${proj_name}-${proj_version}")
+  set(GCC_OPTIONS -g
+                  -O2
+  )
+  # Convert the list of flags to a space-delimited string
+  FOREACH( ITEM ${GCC_OPTIONS})
+    SET( CFLAGS "${CFLAGS} ${ITEM}" )
+  ENDFOREACH()
   ExternalProject_add(${proj_name}
     DEPENDS htslib_proj
     URL "http://${ION_UPDATE_SERVER}/updates/software/external/samtools-1.2.tar.gz"
@@ -196,7 +210,7 @@ if (NOT ION_USE_SYSTEM_SAMTOOLS)
     SOURCE_DIR ${PROJECT_BINARY_DIR}/../${proj_name_version}
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND make
+    BUILD_COMMAND make CFLAGS=${CFLAGS}
     INSTALL_COMMAND ""
     PATCH_COMMAND patch -p1 -t -N < "${ION_TS_EXTERNAL}/samtools-1.2+ion2.patch"
   )
@@ -231,16 +245,28 @@ if (NOT ION_USE_SYSTEM_BAMTOOLS)
     set(revision_tag 15eadb925f)#set date below accordingly
     set(proj_version "2.4.0.20150702+git${revision_tag}")
     set(proj_name_version "${proj_name}-${proj_version}")
-    ExternalProject_add(${proj_name}
+    set(GCC_OPTIONS -Wno-sign-compare
+                    -Wno-misleading-indentation
+                    -Wno-unused-but-set-variable
+                    -Wno-unused-result
+    )
+    # Convert the list of flags to a space-delimited string
+    FOREACH( ITEM ${GCC_OPTIONS})
+      SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ITEM}" )
+      SET( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ITEM}" )
+    ENDFOREACH()
 
+    ExternalProject_add(${proj_name}
       URL "http://${ION_UPDATE_SERVER}/updates/software/external/bamtools-2.4.0.20150702+git15eadb925f.tar.gz"
-#      GIT_REPOSITORY "https://github.com/iontorrent/bamtools.git"
-#      GIT_TAG ${revision_tag}
+      #  GIT_REPOSITORY "https://github.com/iontorrent/bamtools.git"
+      #  GIT_TAG ${revision_tag}
       PREFIX ${PROJECT_BINARY_DIR}/../${proj_name_version}-prefix
       SOURCE_DIR ${PROJECT_BINARY_DIR}/../${proj_name_version}
       BINARY_DIR ${PROJECT_BINARY_DIR}/../${proj_name_version}-build
       CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX:PATH=${PROJECT_BINARY_DIR}/../${proj_name_version}-install
+        -DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS}
+        -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
       PATCH_COMMAND patch -p0 -t -N -l < "${ION_TS_EXTERNAL}/bamtools.cxx11.patch"
     )
     include_directories("${PROJECT_BINARY_DIR}/../${proj_name_version}-install/include/bamtools")
