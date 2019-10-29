@@ -76,15 +76,6 @@ add_library(ion-analysis
     Region.cpp
     LinuxCompat.cpp
 
-    SamUtils/types/Cigar.cpp
-    SamUtils/types/Qual.cpp
-    SamUtils/types/Sequence.cpp
-    SamUtils/types/BAMRead.cpp
-    SamUtils/types/MD.cpp
-    SamUtils/BAMReader.cpp
-    SamUtils/BAMUtils.cpp
-    SamUtils/alignStats.cpp
-
     ${ION_TS_EXTERNAL}/jsoncpp-src-amalgated0.6.0-rc1/jsoncpp.cpp
 )
 add_dependencies(ion-analysis IONVERSION samtools bamtools)
