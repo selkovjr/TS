@@ -15,6 +15,8 @@ set(CMAKE_CXX_FLAGS -g3)
 
 ## There is something wrong with the run part of this coverage test but it actually builds and if run normally, leaves the coverage data
 ## in ./build, which can be recovered thus:
+##   cd build/Analysis
+##   make bamwalker_coverage
 ##   find build/Analysis/ | ack 'gc(no|da)$' | perl -npe 's/\.gc(da|no)$//' | sort -Vu > files.touched
 ##   lcov --capture --directory . --output-file coverage.info
 ##   genhtml coverage.info --output-directory coverage-html
