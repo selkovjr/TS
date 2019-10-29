@@ -133,16 +133,4 @@ public:
   void Initialize(ExtendParameters &parameters, const ReferenceReader& ref_reader, const SamHeader &bam_header);
 };
 
-// ==============================================================================
-
-// A collections of objects that are shared and reused throughout the execution of one tread
-class PersistingThreadObjects {
-public:
-
-    PersistingThreadObjects(const InputStructures &global_context);
-    ~PersistingThreadObjects() {};
-
-    Realigner              realigner;             // realignment tool
-};
-
 #endif //INPUTSTRUCTURES_H

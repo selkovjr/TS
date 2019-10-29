@@ -156,7 +156,6 @@ void * VariantCallerWorker(void *input)
   Alignment * new_read[kReadBatchSize];
   bool success[kReadBatchSize];
   list<PositionInProgress>::iterator position_ticket;
-  PersistingThreadObjects  thread_objects(*vc.global_context);
   bool more_positions = true;
 
   pthread_mutex_lock(&vc.bam_walker_mutex);
