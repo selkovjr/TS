@@ -2,7 +2,6 @@
 cmake_minimum_required (VERSION 2.6)
 project (ion-analysis)
 set(PROJECT_DESCRIPTION "Tempus variant candidate generator (extracted from Torrent Variant Caller)")
-enable_testing()
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,29 +12,20 @@ include(CheckCCompilerFlag)
 check_c_compiler_flag( -malign-double HAS_ALIGN_DOUBLE )
 
 set(CMAKE_CXX_FLAGS -g3)
-add_compile_options(-fprofile-arcs -ftest-coverage -Wfatal-errors -Wno-sign-compare)
-set(CMAKE_CXX_STANDARD_LIBRARIES -lgcov)
+
+## There is something wrong with the run part of this coverage test but it actually builds and if run normally, leaves the coverage data
+## in ./build, which can be recovered thus:
+##   find build/Analysis/ | ack 'gc(no|da)$' | perl -npe 's/\.gc(da|no)$//' | sort -Vu > files.touched
+##   lcov --capture --directory . --output-file coverage.info
+##   genhtml coverage.info --output-directory coverage-html
+##
+# set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+# include(CodeCoverage)
+# APPEND_COVERAGE_COMPILER_FLAGS()
+# setup_target_for_coverage_lcov(NAME bamwalker_coverage EXECUTABLE bamwalker --output-dir . --debug 2 --reference /data3/selkov_workdir/data/reference/human_g1k_v37.fasta --target-file ./xt_probe_gene_targets.bed --parameters-file "/data3/selkov_workdir/src/TS/plugin/variantCaller/pluginMedia/configs/somatic_low_stringency.json" --use-best-n-alleles 100 --min-var-freq 0.001 --snp-min-allele-freq 0.001 --gen-min-alt-allele-freq 0.001 --gen-min-indel-alt-allele-freq 0.001 --allow-snps on --allow-mnps off --input-bam test.bam --output-vcf test.vcf DEPENDENCY bamwalker)
 
 include(../buildTools/cmake/CMakeLists.version.txt)
 include(../buildTools/cmake/CMakeLists.compiler.txt)
-
-FIND_PACKAGE(PythonInterp)
-# Determine python site-packages or dist-packages directory
-execute_process (
-  COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"
-  OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-execute_process (
-  COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_lib; print get_python_lib(prefix='/usr/local')"
-  OUTPUT_VARIABLE PYTHON_LOCAL_SITE_PACKAGES
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-execute_process (
-  COMMAND "${PYTHON_EXECUTABLE}" -c "from distutils.sysconfig import get_python_version; print get_python_version()"
-  OUTPUT_VARIABLE PYTHON_VERSION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
 
 
 # Where to install - override with: -DION_INSTALL_PREFIX
@@ -128,53 +118,6 @@ add_executable(bamwalker ${tvcSRCS})
 target_link_libraries(bamwalker ${ION_BAMTOOLS_LIBS} z pthread)
 add_dependencies(bamwalker IONVERSION bamtools htslib_proj)
 install(TARGETS bamwalker DESTINATION bin)
-
-
-# Setup for testing and gtest in particular, only needed once in file before tests.
-enable_testing()
-find_package(GTest QUIET)
-if(GTEST_FOUND)
-  # Copy over test data...
-  configure_file (
-    "utest/reference.txt"
-    "${CMAKE_CURRENT_BINARY_DIR}/reference.txt"
-    COPYONLY
-    )
-  configure_file (
-    "utest/traces.txt"
-    "${CMAKE_CURRENT_BINARY_DIR}/traces.txt"
-    COPYONLY
-    )
-  configure_file (
-    "utest/reference.txt"
-    "${CMAKE_CURRENT_BINARY_DIR}/reference.txt"
-    COPYONLY
-    )
-
-  configure_file (
-    "utest/comp_clean_test_data.txt"
-    "${CMAKE_CURRENT_BINARY_DIR}/comp_clean_test_data.txt"
-    COPYONLY
-    )
-
-  configure_file (
-    "utest/comp_clean_test_ev_3.txt"
-    "${CMAKE_CURRENT_BINARY_DIR}/comp_clean_test_ev_3.txt"
-    COPYONLY
-    )
-
-  add_executable(IonErr_Test utest/IonErr_Test.cpp)
-  target_link_libraries(IonErr_Test ion-analysis ${GTEST_BOTH_LIBRARIES} pthread)
-  add_test(IonErrTest IonErr_Test --gtest_output=xml:./)
-
-  add_executable(OptArgs_Test utest/OptArgs_Test.cpp)
-  target_link_libraries(OptArgs_Test ion-analysis ${GTEST_BOTH_LIBRARIES} pthread)
-  add_test(OptArgsTest OptArgs_Test --gtest_output=xml:./)
-
-  add_executable(OptionArgs_Test utest/OptionArgs_Test.cpp)
-  target_link_libraries(OptionArgs_Test ion-analysis ${GTEST_BOTH_LIBRARIES} pthread)
-  add_test(OptionArgsTest OptionArgs_Test --gtest_output=xml:./)
-endif()
 
 
 include(../buildTools/cmake/CMakeLists.cpack.txt)

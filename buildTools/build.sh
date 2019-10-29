@@ -45,7 +45,7 @@ for MODULE in $MODULES; do
         make -j13
       fi
     if [ "$?" != 0 ]; then LOCALERR=1; fi
-      make test
+      # make test
     if [ "$?" != 0 ]; then LOCALERR=1; fi
 
     make package
