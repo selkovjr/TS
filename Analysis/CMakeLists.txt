@@ -13,18 +13,17 @@ check_c_compiler_flag( -malign-double HAS_ALIGN_DOUBLE )
 
 set(CMAKE_CXX_FLAGS -g3)
 
-## There is something wrong with the run part of this coverage test but it actually builds and if run normally, leaves the coverage data
-## in ./build, which can be recovered thus:
+## To generate coverage report:
+##
 ##   cd build/Analysis
 ##   make bamwalker_coverage
-##   find build/Analysis/ | ack 'gc(no|da)$' | perl -npe 's/\.gc(da|no)$//' | sort -Vu > files.touched
-##   lcov --capture --directory . --output-file coverage.info
-##   genhtml coverage.info --output-directory coverage-html
 ##
-# set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
-# include(CodeCoverage)
-# APPEND_COVERAGE_COMPILER_FLAGS()
-# setup_target_for_coverage_lcov(NAME bamwalker_coverage EXECUTABLE bamwalker --output-dir . --debug 2 --reference /data3/selkov_workdir/data/reference/human_g1k_v37.fasta --target-file ./xt_probe_gene_targets.bed --parameters-file "/data3/selkov_workdir/src/TS/plugin/variantCaller/pluginMedia/configs/somatic_low_stringency.json" --use-best-n-alleles 100 --min-var-freq 0.001 --snp-min-allele-freq 0.001 --gen-min-alt-allele-freq 0.001 --gen-min-indel-alt-allele-freq 0.001 --allow-snps on --allow-mnps off --input-bam test.bam --output-vcf test.vcf DEPENDENCY bamwalker)
+## The results will be written to ./bamwalker_coverage
+##
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
+include(CodeCoverage)
+APPEND_COVERAGE_COMPILER_FLAGS()
+setup_target_for_coverage_lcov(NAME bamwalker_coverage EXECUTABLE bamwalker --output-dir . --debug 2 --reference /data3/selkov_workdir/data/reference/human_g1k_v37.fasta --target-file ../../xt_probe_gene_targets.bed --parameters-file "/data3/selkov_workdir/src/TS/plugin/variantCaller/pluginMedia/configs/somatic_low_stringency.json" --use-best-n-alleles 100 --min-var-freq 0.001 --snp-min-allele-freq 0.001 --gen-min-alt-allele-freq 0.001 --gen-min-indel-alt-allele-freq 0.001 --allow-snps on --allow-mnps off --input-bam ../../test.bam --output-vcf test.vcf DEPENDENCY bamwalker)
 
 include(../buildTools/cmake/CMakeLists.version.txt)
 include(../buildTools/cmake/CMakeLists.compiler.txt)
