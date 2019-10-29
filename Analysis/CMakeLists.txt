@@ -55,8 +55,6 @@ add_library(ion-analysis
   Util/OptionArgs.cpp
   Util/LoggerBase.cpp
   Util/Logger.cpp
-  Util/WorkerInfoQueue.cpp
-  Util/RingBuffer.cpp
 
   LinuxCompat.cpp
 
