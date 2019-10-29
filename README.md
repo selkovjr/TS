@@ -19,3 +19,11 @@ Because this repo has been trimmed to a small portion of TVC's original code, wh
 ```
 rm -rf build;  ./buildTools/build.sh
 ```
+
+For debugging and coverage analysis,
+
+```
+rm -rf build; ./buildTools/build.sh -DCMAKE_BUILD_TYPE=Debug
+cd build/Analyssis
+make code_coverage
+```

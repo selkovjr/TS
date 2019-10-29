@@ -8,6 +8,9 @@
 #include "MiscUtil.h"
 #include "ExtendParameters.h"
 #include "TVCVersion.h"
+#include <stdlib.h>     /* getenv */
+#include <libgen.h>     /* basename */
+
 
 
 // current date string in YYYYMMDD format
@@ -38,7 +41,7 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
     << "##fileformat=VCFv4.1" << endl
     << "##fileDate=" << dateStr() << endl
     << "##fileUTCtime=" << get_time_iso_string(time(NULL)) << endl
-    << "##source=\"bamwalker " << TVCVersion::GetVersion() << "-" << TVCVersion::GetRelease() << " (" << TVCVersion::GetGitHash() << ") - Torrent Variant Caller - candidate generator\"" << endl
+    << "##source=\"" << basename(getenv("_")) << " " << TVCVersion::GetVersion() << "-" << TVCVersion::GetRelease() << " (" << TVCVersion::GetGitHash() << ") - Torrent Variant Caller - candidate generator\"" << endl
     << "##bams=\"";
 
   for(size_t i = 0; i < parameters->bams.size(); ++i) {

@@ -15,15 +15,16 @@ set(CMAKE_CXX_FLAGS -g3)
 
 ## To generate coverage report:
 ##
+##   rm -rf build; ./buildTools/build.sh -DCMAKE_BUILD_TYPE=Debug
 ##   cd build/Analysis
-##   make bamwalker_coverage
+##   make code_coverage
 ##
-## The results will be written to ./bamwalker_coverage
+## The results will be written to ./code_coverage
 ##
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeModules)
 include(CodeCoverage)
 APPEND_COVERAGE_COMPILER_FLAGS()
-setup_target_for_coverage_lcov(NAME bamwalker_coverage EXECUTABLE bamwalker --output-dir . --debug 2 --reference /data3/selkov_workdir/data/reference/human_g1k_v37.fasta --target-file ../../xt_probe_gene_targets.bed --parameters-file "/data3/selkov_workdir/src/TS/plugin/variantCaller/pluginMedia/configs/somatic_low_stringency.json" --use-best-n-alleles 100 --min-var-freq 0.001 --snp-min-allele-freq 0.001 --gen-min-alt-allele-freq 0.001 --gen-min-indel-alt-allele-freq 0.001 --allow-snps on --allow-mnps off --input-bam ../../test.bam --output-vcf test.vcf DEPENDENCY bamwalker)
+setup_target_for_coverage_lcov(NAME code_coverage EXECUTABLE tvc-candidate-generator --output-dir . --debug 2 --reference /data3/selkov_workdir/data/reference/human_g1k_v37.fasta --target-file ../../xt_probe_gene_targets.bed --parameters-file "/data3/selkov_workdir/src/TS/plugin/variantCaller/pluginMedia/configs/somatic_low_stringency.json" --use-best-n-alleles 100 --min-var-freq 0.001 --snp-min-allele-freq 0.001 --gen-min-alt-allele-freq 0.001 --gen-min-indel-alt-allele-freq 0.001 --allow-snps on --allow-mnps off --input-bam ../../test.bam --output-vcf test.vcf DEPENDENCY tvc-candidate-generator)
 
 include(../buildTools/cmake/CMakeLists.version.txt)
 include(../buildTools/cmake/CMakeLists.compiler.txt)
@@ -115,10 +116,10 @@ set(SOURCESS
 )
 
 
-add_executable(bamwalker ${SOURCESS})
-target_link_libraries(bamwalker ${ION_BAMTOOLS_LIBS} z pthread)
-add_dependencies(bamwalker TVCVERSION bamtools htslib_proj)
-install(TARGETS bamwalker DESTINATION bin)
+add_executable(tvc-candidate-generator ${SOURCESS})
+target_link_libraries(tvc-candidate-generator ${ION_BAMTOOLS_LIBS} z pthread)
+add_dependencies(tvc-candidate-generator TVCVERSION bamtools htslib_proj)
+install(TARGETS tvc-candidate-generator DESTINATION bin)
 
 
 include(../buildTools/cmake/CMakeLists.cpack.txt)
