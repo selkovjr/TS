@@ -875,12 +875,11 @@ void AlleleParser::GenerateCandidateVariant(deque<VariantCandidate>& variant_can
   // ATTTTTTTTTTTTTTTTTTTTTTTTTTTTA
   //
   // Insertions disappear and a SNP is gained instead -- what's up with that?
-  // For the purposes of of blacklist generation; the less smart this step is,
+  // For the purposes of of blacklist generation, the less smart this step is,
   // the better. Disabled until better times.
   //
   if (not only_use_input_alleles_) {
     // Detect multi-base haplotypes and redo the pileup if needed
-
 
     for (pileup::iterator I = allele_pileup_.begin(); I != allele_pileup_.end(); ++I) {
       AlleleDetails& allele = I->second;
