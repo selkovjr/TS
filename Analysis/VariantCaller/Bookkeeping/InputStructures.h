@@ -17,7 +17,6 @@
 #include <VariantCaller/OrderedBAMWriter.h>
 
 #include "ExtendParameters.h"
-#include "Realigner.h"
 
 using namespace std;
 using namespace BamTools;

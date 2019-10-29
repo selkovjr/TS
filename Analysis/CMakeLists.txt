@@ -96,7 +96,6 @@ include_directories(${ION_FREEBAYES_DIR}/src)
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Bookkeeping")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Reads")
-include_directories("${PROJECT_SOURCE_DIR}/realignment")
 
 set(tvcSRCS
   VariantCaller/VariantCaller.cpp
@@ -127,7 +126,6 @@ set(tvcSRCS
   ${ION_FREEBAYES_DIR}/src/AlleleParser.cpp
 
   Util/OptArgs.cpp
-  realignment/Realigner.cpp
   ${ION_TS_EXTERNAL}/jsoncpp-src-amalgated0.6.0-rc1/jsoncpp.cpp
   ${PROJECT_BINARY_DIR}/IonVersion.cpp
 )
