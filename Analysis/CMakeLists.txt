@@ -36,8 +36,8 @@ set(CPACK_PACKAGING_INSTALL_PREFIX ${ION_INSTALL_PREFIX})
 set(CPACK_SET_DESTDIR "ON")
 
 configure_file (
-    "${PROJECT_SOURCE_DIR}/debian/postinst.in"
-    "${PROJECT_BINARY_DIR}/debian/postinst" @ONLY
+  "${PROJECT_SOURCE_DIR}/debian/postinst.in"
+  "${PROJECT_BINARY_DIR}/debian/postinst" @ONLY
 )
 
 include(../buildTools/cmake/CMakeLists.dependencies.txt)
@@ -46,27 +46,27 @@ include_directories("${PROJECT_SOURCE_DIR}/Util")
 
 # Ion Analysis Library
 add_library(ion-analysis
-    ${PROJECT_BINARY_DIR}/IonVersion.cpp
+  ${PROJECT_BINARY_DIR}/TVCVersion.cpp
 
-    Util/IonErr.cpp
-    Util/OptArgs.cpp
-    Util/OptionArgsBase.cpp
-    Util/OptionArgs.cpp
-    Util/LoggerBase.cpp
-    Util/Logger.cpp
-    Util/WorkerInfoQueue.cpp
-    Util/RingBuffer.cpp
+  Util/IonErr.cpp
+  Util/OptArgs.cpp
+  Util/OptionArgsBase.cpp
+  Util/OptionArgs.cpp
+  Util/LoggerBase.cpp
+  Util/Logger.cpp
+  Util/WorkerInfoQueue.cpp
+  Util/RingBuffer.cpp
 
-    LinuxCompat.cpp
+  LinuxCompat.cpp
 
-    ${ION_TS_EXTERNAL}/jsoncpp-src-amalgated0.6.0-rc1/jsoncpp.cpp
+  ${ION_TS_EXTERNAL}/jsoncpp-src-amalgated0.6.0-rc1/jsoncpp.cpp
 )
-add_dependencies(ion-analysis IONVERSION samtools bamtools)
+add_dependencies(ion-analysis TVCVERSION samtools bamtools)
 
 target_link_libraries(ion-analysis z)
 
 set_target_properties(ion-analysis PROPERTIES
-    VERSION   "${ION_VERSION_MAJOR}.${ION_VERSION_MINOR}.${ION_VERSION_RELEASE}.${ION_VERSION_BUILDNUM}"
+  VERSION   "${TVC_VERSION_MAJOR}.${TVC_VERSION_MINOR}.${TVC_VERSION_RELEASE}.${TVC_VERSION_BUILDNUM}"
 )
 install(TARGETS ion-analysis DESTINATION lib)
 
@@ -81,7 +81,7 @@ include_directories("${PROJECT_SOURCE_DIR}/VariantCaller")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Bookkeeping")
 include_directories("${PROJECT_SOURCE_DIR}/VariantCaller/Reads")
 
-set(tvcSRCS
+set(SOURCESS
   VariantCaller/VariantCaller.cpp
   VariantCaller/BAMWalkerEngine.cpp
   VariantCaller/OrderedBAMWriter.cpp
@@ -111,28 +111,28 @@ set(tvcSRCS
 
   Util/OptArgs.cpp
   ${ION_TS_EXTERNAL}/jsoncpp-src-amalgated0.6.0-rc1/jsoncpp.cpp
-  ${PROJECT_BINARY_DIR}/IonVersion.cpp
+  ${PROJECT_BINARY_DIR}/TVCVersion.cpp
 )
 
 
-add_executable(bamwalker ${tvcSRCS})
+add_executable(bamwalker ${SOURCESS})
 target_link_libraries(bamwalker ${ION_BAMTOOLS_LIBS} z pthread)
-add_dependencies(bamwalker IONVERSION bamtools htslib_proj)
+add_dependencies(bamwalker TVCVERSION bamtools htslib_proj)
 install(TARGETS bamwalker DESTINATION bin)
 
 
 include(../buildTools/cmake/CMakeLists.cpack.txt)
 #% nice to automate this
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libatlas3gf-base,
-    libblas3gf,
-    libc6,
-    libgcc1,
-    libstdc++6,
+  libblas3gf,
+  libc6,
+  libgcc1,
+  libstdc++6,
 ")
 
 set(CPACK_PACKAGE_DESCRIPTION "ion-analysis provides the command line workflow and supporting tools to process raw DAT files into bam and fastq files.")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-    ${CMAKE_CURRENT_BINARY_DIR}/debian/postinst
-    ${CMAKE_CURRENT_BINARY_DIR}/debian/prerm
+  ${CMAKE_CURRENT_BINARY_DIR}/debian/postinst
+  ${CMAKE_CURRENT_BINARY_DIR}/debian/prerm
 )
 include(CPack)

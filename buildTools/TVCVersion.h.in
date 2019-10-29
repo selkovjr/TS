@@ -1,10 +1,10 @@
 /* Copyright (C) 2011 Ion Torrent Systems, Inc. All Rights Reserved */
-#ifndef IONVERSION_H
-#define IONVERSION_H
+#ifndef TVCVERSION_H
+#define TVCVERSION_H
 
 #include <string>
 
-struct IonVersion {
+struct TVCVersion {
 	static std::string GetMajor();
 	static std::string GetMinor();
 	static std::string GetRelease();
@@ -17,5 +17,5 @@ struct IonVersion {
 	static std::string GetVersion();
 };
 
-#endif // IONVERSION_H
+#endif // TVCVERSION_H
 

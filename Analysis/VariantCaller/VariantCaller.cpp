@@ -21,7 +21,7 @@
 #include "TargetsManager.h"
 #include "MetricsManager.h"
 
-#include "IonVersion.h"
+#include "TVCVersion.h"
 
 #include <boost/math/distributions/poisson.hpp>
 
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 {
 
   printf("bamwalker %s-%s (%s) - Torrent Variant Caller (hacked)\n\n",
-         IonVersion::GetVersion().c_str(), IonVersion::GetRelease().c_str(), IonVersion::GetGitHash().c_str());
+         TVCVersion::GetVersion().c_str(), TVCVersion::GetRelease().c_str(), TVCVersion::GetGitHash().c_str());
 
   time_t start_time = time(NULL);
 

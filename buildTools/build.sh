@@ -59,5 +59,5 @@ if [ $ERR != 0 ]; then
   echo "FAILURES: $ERR modules failed to build."
   exit $ERR
 else
-  echo "SUCCESS: All modules built."
+  echo "SUCCESS: built the executable ./build/Analysis/tvc-candidate-generator"
 fi

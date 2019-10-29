@@ -1,7 +1,7 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
 #include "Utils.h"
 #ifndef ALIGNSTATS_IGNORE
-#include "IonVersion.h"
+#include "TVCVersion.h"
 #include "Region.h"
 #endif
 #include <cstdio>
@@ -607,11 +607,11 @@ void FillInDirName (const string &path, string &dir, string &file)
 void init_salute()
 {
   char banner[256];
-  sprintf (banner, "/usr/bin/figlet -m0 Analysis %s 2>/dev/null", IonVersion::GetVersion().c_str());
+  sprintf (banner, "/usr/bin/figlet -m0 Analysis %s 2>/dev/null", TVCVersion::GetVersion().c_str());
   if (system (banner))
   {
     // figlet did not execute;
-    fprintf (stdout, "%s\n", IonVersion::GetVersion().c_str());
+    fprintf (stdout, "%s\n", TVCVersion::GetVersion().c_str());
   }
 }
 #endif

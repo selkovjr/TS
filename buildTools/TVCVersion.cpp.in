@@ -1,0 +1,44 @@
+/* Copyright (C) 2011 Ion Torrent Systems, Inc. All Rights Reserved */
+#include "TVCVersion.h"
+
+using namespace std;
+
+string TVCVersion::GetMajor()     {return "@TVC_VERSION_MAJOR@";}
+string TVCVersion::GetMinor()     {return "@TVC_VERSION_MINOR@";}
+string TVCVersion::GetRelease()   {return "@TVC_VERSION_RELEASE@";}
+string TVCVersion::GetGitHash()   {return "@TVC_VERSION_GITHASH@";}
+string TVCVersion::GetGitPath()   {return "@TVC_VERSION_GITPATH@";}
+string TVCVersion::GetBuildNum()  {return "@TVC_VERSION_BUILDNUM@";}
+string TVCVersion::GetBuildTag()  {return "@TVC_VERSION_BUILDTAG@";}
+string TVCVersion::GetBuildHost() {return "@TVC_VERSION_BUILDHOST@";}
+
+string TVCVersion::GetFullVersion(std::string module)
+{
+  string v = module;
+  v += " (";
+  v += "@TVC_VERSION_MAJOR@";
+  v += ".";
+  v += "@TVC_VERSION_MINOR@";
+  v += ".";
+  v += "@TVC_VERSION_RELEASE@";
+  v += ")\n";
+  v += "Build: ";
+  v += "@TVC_VERSION_BUILDTAG@";
+  v += " (";
+  v += "@TVC_VERSION_BUILDNUM@";
+  v += ")\nSource: ";
+  v += "@TVC_VERSION_GITPATH@";
+  v += " (";
+  v += "@TVC_VERSION_GITHASH@";
+  v += ")\n";
+  return v;
+}
+
+string TVCVersion::GetVersion()
+{
+  string v = "@TVC_VERSION_MAJOR@";
+  v += ".";
+  v += "@TVC_VERSION_MINOR@";
+    return (v);
+}
+

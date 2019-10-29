@@ -7,7 +7,7 @@
 #include "VcfFormat.h"
 #include "MiscUtil.h"
 #include "ExtendParameters.h"
-#include "IonVersion.h"
+#include "TVCVersion.h"
 
 
 // current date string in YYYYMMDD format
@@ -38,7 +38,7 @@ string getVCFHeader(const ExtendParameters *parameters, ReferenceReader& ref_rea
     << "##fileformat=VCFv4.1" << endl
     << "##fileDate=" << dateStr() << endl
     << "##fileUTCtime=" << get_time_iso_string(time(NULL)) << endl
-    << "##source=\"bamwalker " << IonVersion::GetVersion() << "-" << IonVersion::GetRelease() << " (" << IonVersion::GetGitHash() << ") - Torrent Variant Caller - candidate generator\"" << endl
+    << "##source=\"bamwalker " << TVCVersion::GetVersion() << "-" << TVCVersion::GetRelease() << " (" << TVCVersion::GetGitHash() << ") - Torrent Variant Caller - candidate generator\"" << endl
     << "##bams=\"";
 
   for(size_t i = 0; i < parameters->bams.size(); ++i) {
