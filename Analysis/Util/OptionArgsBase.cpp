@@ -5,48 +5,16 @@
 #include <iterator>
 #include <map>
 
-#include "Logger.h"
 #include "OptionArgsBase.h"
 
 using namespace std;
 using namespace ION;
 
 /**
- * Process the command line parameters.  Does not throw exceptions.
- * @param argc
- * @param argv
- * @return 
- */
-bool OptionArgsBase::ProcessNX( int argc, char** argv )
-{
-    try
-    {
-        // Call Process and catch and handle any exception here
-        // to prevent exceptions from propagating to the caller.
-        // For errors, false is returned.
-        Process( argc, argv );
-    }
-    catch( runtime_error& e )
-    {
-        // Catch and log runtime_error exceptions.
-        LOG( e.what() )
-        return false;
-    }
-    catch( ... )
-    {
-        // Catch and log an unknown type of exception.
-        LOG( "Exception: Unknown exception has occurred..." )
-        return false;
-    }
-    
-    return true;
-}
-
-/**
  * Base class to process the command line parameters.  Throws exceptions.
  * This base class version does not do much processing, just some bookkeeping.
  * All the substantial processing occurs in the derived class.
- * 
+ *
  * @param argc is the argument count.
  * @param argv is the array of arguments.
  */
@@ -87,10 +55,10 @@ void OptionArgsBase::SplitString( const std::string &str,
 void OptionArgsBase::GetNonOptionList( STRINGVEC& vecNonOptionList )
 {
     // Clear the return vector prior to use.
-    vecNonOptionList.clear();    
+    vecNonOptionList.clear();
 
     // Iterate the vector of non-options and copy each item into the return vector.
-    STRINGVEC::iterator iter = _vecNonOptions.begin();    
+    STRINGVEC::iterator iter = _vecNonOptions.begin();
     for( ; iter != _vecNonOptions.end(); iter++ )
     {
         vecNonOptionList.push_back( *iter );
