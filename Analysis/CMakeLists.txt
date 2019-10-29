@@ -51,10 +51,6 @@ configure_file (
 
 include(../buildTools/cmake/CMakeLists.dependencies.txt)
 
-add_custom_target(compileall ALL
-    COMMAND ${PYTHON_EXECUTABLE} -m compileall -q -f "${PROJECT_SOURCE_DIR}/pynvml/"
-)
-
 include_directories("${PROJECT_SOURCE_DIR}/Util")
 
 # Ion Analysis Library
@@ -62,8 +58,6 @@ add_library(ion-analysis
     ${PROJECT_BINARY_DIR}/IonVersion.cpp
 
     Util/IonErr.cpp
-    #    Util/Utils.cpp
-    #Util/HandleExpLog.cpp
     Util/OptArgs.cpp
     Util/OptionArgsBase.cpp
     Util/OptionArgs.cpp
@@ -71,7 +65,6 @@ add_library(ion-analysis
     Util/Logger.cpp
     Util/WorkerInfoQueue.cpp
     Util/RingBuffer.cpp
-    #Util/SeqUtils.cpp
 
     LinuxCompat.cpp
 
