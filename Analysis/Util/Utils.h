@@ -13,7 +13,6 @@
 #include <sys/time.h>
 #ifndef ALIGNSTATS_IGNORE
 #include "LinuxCompat.h"
-#include "Region.h"
 #endif
 // Transition states used in Analysis main function for progress tracking
 #define WELL_TO_IMAGE 1
@@ -50,9 +49,7 @@ int   GetNumLines (char *filename);
 std::string get_time_iso_string(time_t time);
 
 char  *GetProcessParam (const char *, const char *);
-#ifndef ALIGNSTATS_IGNORE
-void  defineSubRegion (int rows, int cols, int runIndex, int regionIdx, Region *cropRegions);
-#endif
+
 // Break a path to an indiviual file into the usual directory and file used for Analysis and libraries
 void FillInDirName (const std::string &path, std::string &dir, std::string &file);
 void  init_salute();

@@ -62,8 +62,8 @@ add_library(ion-analysis
     ${PROJECT_BINARY_DIR}/IonVersion.cpp
 
     Util/IonErr.cpp
-    Util/Utils.cpp
-    Util/HandleExpLog.cpp
+    #    Util/Utils.cpp
+    #Util/HandleExpLog.cpp
     Util/OptArgs.cpp
     Util/OptionArgsBase.cpp
     Util/OptionArgs.cpp
@@ -71,9 +71,8 @@ add_library(ion-analysis
     Util/Logger.cpp
     Util/WorkerInfoQueue.cpp
     Util/RingBuffer.cpp
-    Util/SeqUtils.cpp
+    #Util/SeqUtils.cpp
 
-    Region.cpp
     LinuxCompat.cpp
 
     ${ION_TS_EXTERNAL}/jsoncpp-src-amalgated0.6.0-rc1/jsoncpp.cpp
